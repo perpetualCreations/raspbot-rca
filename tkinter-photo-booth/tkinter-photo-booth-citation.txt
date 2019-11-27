@@ -1,0 +1,6 @@
+The folder under the Raspbot Remote Control Application - Graphics (Raspbot RCA-G), labeled tkinter-photo-booth is from the following source:
+
+Adrian Rosebrock, Displaying a video feed with OpenCV and Tkinter, PyImageSearch, https://www.pyimagesearch.com/2016/05/30/displaying-a-video-feed-with-opencv-and-tkinter/, accessed on 4 November 2019
+
+The files have been modified slightly from the original, and an additional ICO file has been added.
+Code re-used from source previously mentioned is with permission, please refer to the FAQ section about code re-use at pyimagesearch.com.
