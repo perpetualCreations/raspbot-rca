@@ -8,9 +8,13 @@
 try:
     print("[INFO]: Starting imports...")
     import tkinter
+    from tkinter import messagebox
     from subprocess import call
     from time import gmtime
     from time import strftime
+    from time import sleep
+    from sense_hat import SenseHat
+    import serial
 except ImportError as e:
     tkinter = None
     call = None
@@ -25,108 +29,95 @@ except ImportWarning as e:
 pass
 
 class nav:
-    """Creates a GUI interface for user to start navigations."""
+    """Creates a GUI interface for user to start navigating."""
     def __init__(self):
         print("[INFO]: Nav loaded!")
-        print("[INFO]: Loading graphics...")
+        print("[INFO]: Starting serial connection with Arduino microcontroller...")
+        self.arduino = serial.Serial('/dev/ttyACM0', 9600)
+        print("[INFO]: Declaring variables...")
         self.content = ""
+        self.task = ""
+        self.nav_task_active = False
+        self.nav_time = 0
+        self.distance_check = True
+        print("[INFO]: Loading graphics...")
         root = tkinter.Tk()
         root.title("Raspbot RCA-G: Navigation")
         root.configure(bg = "#344561")
         root.geometry('{}x{}'.format(300, 300))
-        root.resizable(width=False, height=False)
+        root.resizable(width = False, height = False)
         graphics_title = tkinter.Label(root, text = "Nav Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
         graphics_title.grid(row = 0, column = 0)
         self.graphics_nav = tkinter.Text(root, width = 4, height = 2)
         self.graphics_nav.configure(state = tkinter.DISABLED)
         self.graphics_nav.grid(row = 1, column = 0, pady = (5, 14))
         graphics_nav_frame_buttons = tkinter.Frame(root, bg = "#344561")
-        graphics_nav_button_reload = tkinter.Button(graphics_nav_frame_buttons, text = "Refresh", fg = "white", bg = "#344561", width = 40, font = ("Calibri", 12), command = lambda: nav_gui.nav_get(self))
-        graphics_nav_button_reload.pack(side = tkinter.TOP)
-        graphics_nav_button_save = tkinter.Button(graphics_nav_frame_buttons, text = "Save", fg = "white", bg = "#344561", width = 40, font = ("Calibri", 12), command = lambda: nav_gui.nav_save(self))
-        graphics_nav_button_save.pack(side = tkinter.BOTTOM)
-        graphics_nav_frame_buttons.grid(row = 2, column = 0, padx = (0, 250))
+        graphics_nav_button_forward = tkinter.Button(graphics_nav_frame_buttons, text = "F", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "F"))
+        graphics_nav_button_forward.pack(side = tkinter.TOP)
+        graphics_nav_button_backward = tkinter.Button(graphics_nav_frame_buttons, text = "B", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "B"))
+        graphics_nav_button_backward.pack(side = tkinter.BOTTOM)
+        graphics_nav_frame_buttons_left = tkinter.Frame(graphics_nav_frame_buttons, bg = "#344561")
+        graphics_nav_button_left_forward = tkinter.Button(graphics_nav_frame_buttons_left, text = "LF", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "W")) # TODO confirm correct byte command
+        graphics_nav_button_left_forward.pack(side = tkinter.TOP)
+        graphics_nav_button_left_backward = tkinter.Button(graphics_nav_frame_buttons_left, text = "LB", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "X"))
+        graphics_nav_button_left_backward.pack(side = tkinter.BOTTOM)
+        graphics_nav_frame_buttons_left.pack(side = tkinter.LEFT)
+        graphics_nav_frame_buttons_right = tkinter.Frame(graphics_nav_frame_buttons, bg = "#344561")
+        graphics_nav_buttons_right_forward = tkinter.Button(graphics_nav_frame_buttons_right, text = "RF", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "Y"))
+        graphics_nav_buttons_right_forward.pack(side = tkinter.TOP)
+        graphics_nav_buttons_right_backwards = tkinter.Button(graphics_nav_frame_buttons_right, text = "RB", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "Z"))
+        graphics_nav_buttons_right_backwards.pack(side = tkinter.BOTTOM)
+        graphics_nav_frame_buttons_right.pack(side = tkinter.RIGHT)
+        graphics_nav_frame_buttons.grid(row = 2, column = 0, padx = (0, 50))
         root.mainloop()
     pass
-    def vitals_get(self):
-        """Calls vitals module and collects output into self.content for displaying."""
-        print("[INFO]: Refreshing vitals information...")
-        v = vitals()
-        v.str_conversion()
-        self.content = v.report()
-        self.graphics_vitals.configure(state = tkinter.NORMAL)
-        self.graphics_vitals.delete("1.0", tkinter.END)
-        self.graphics_vitals.insert("1.0", self.content)
-        self.graphics_vitals.configure(stat = tkinter.DISABLED)
+    def set_task(self, task):
+        """Sets task variable, because lambda doesn't support variable assignment."""
+        self.task = task
     pass
-    def vitals_save(self):
-        """Collects self.content for saving to a text file."""
-        if self.content == "":
-            print("[FAIL]: No vitals data found, early exiting the function...")
-            return None
+    def process_command(self, direction, time):
+        """Asks user for confirmation and does pre-navigation check for existing navigation , then finally executes movement."""
+        confirm = messagebox.askyesno("Raspbot RCA-G: Nav Confirm", "Are you sure you want to execute this navigation?")
+        if confirm is True:
+            print("[INFO]: Confirmed navigation by user.")
+            if self.nav_task_active is True:
+                nav.stop(self)
+            pass
+            direction_byte = direction.encode(encoding = "ascii", errors = "replace")
+            self.arduino.write(direction_byte)
+            while self.nav_time != 0:
+                self.arduino.write(b"T")
+                distance = self.arduino.read_until()
+                distance.encode(encoding = "utf-8", errors = "replace")
+                if distance > 30 and self.distance_check is True:
+                    print("[FAIL]: Distance from object facing front of vehicle is less than 30mm! Collision warning!")
+                    nav.stop(self)
+                    messagebox.showwarning("Raspbot RCA-G: Collision Warning!", "The ToF distance sensor has detected an object less than 30mm away. A dialogue will appear to resume or stop navigation.")
+                    str_nav_time = str(self.nav_time)
+                    override = messagebox.askyesno("Raspbot RCA-G: Nav Confirm", "Override and resume navigation? Your current nav has " + str_nav_time + " left.")
+                    if override is True:
+                        print("[INFO]: Continued navigation.")
+                        self.distance_check = False
+                    else:
+                        print("[INFO]: Ended navigation early due to collision warning.")
+                        return None # TODO test and see if not clearing navigation variables has any negative effects on next navigation
+                    pass
+                else:
+                    sleep(1)
+                pass
+            pass
+            if self.nav_time == 0:
+                nav.stop(self)
+                print("[INFO]: Ended navigation, task complete!")
+            pass
+        else:
+            print("[INFO]: Cancelled navigation by user.")
         pass
-        print("[INFO]: Generating timestamps...")
-        timestamp = strftime("%b%d%Y%H%M%S"), gmtime()
-        timestamp_output = timestamp[0]
-        timestamp_str = str(timestamp_output)
-        file_report_name = "vitals-report-" + timestamp_str + ".txt"
-        print("[INFO]: Generating text file report...")
-        file_report = open(file_report_name, "w+")
-        file_report.write(self.content)
-        file_report.close()
-        print("[INFO]: Done!")
     pass
-pass
-
-vg = vitals_gui()
-
-print("[INFO]: Please enter the number the seconds to run motors.")
-nav_input = input("Navigation input ~ ")
-if "." in nav_input:
-    try:
-        nav_duration = float(nav_input)
-    except ValueError:
-        print("[FAIL]: Invalid value, not a decimal or integer, or exit command.")
-        Raspbot.nav(self)
+    def stop(self):
+        """Stops navigation."""
+        print("[INFO]: Stopped navigation.")
+        self.arduino.write(b"A")
     pass
-else:
-    try:
-        nav_duration = int(nav_input)
-    except ValueError:
-        print("[FAIL]: Invalid value, not a decimal or integer, or exit command.")
-        Raspbot.nav(self)
-    pass
-pass
-nav_input_str = str(nav_input)
-print("You commanded to move " + movement + " for " + nav_input_str + ". Please enter Y/N to confirm/cancel.")
-confirm = input("Y/N ~ ")
-if confirm == "y" or confirm == "Y":
-    if nav_task_active is True:
-        Raspbot.nav_stop(self)
-    pass
-    print("[INFO]: Navigation active.")
-    nav_type_byte = str.encode(nav_type)
-    arduino = serial.Serial('/dev/ttyACM0', 9600)
-    arduino.write(nav_type_byte)
-    time.sleep(nav_duration)
-    arduino.write(b"A")
-    Raspbot.input(self)
-elif confirm == "n" or confirm == "N":
-    print("[INFO]: Navigation cancelled.")
-    Raspbot.input(self)
-else:
-    print("[FAIL]: Invalid input.")
-    Raspbot.nav(self)
-pass
-pass
-
-
-def nav_stop(self):
-    """Stops navigation."""
-    arduino = serial.Serial('/dev/ttyACM0', 9600)
-    arduino.write(b"A")
-    Raspbot.input(self)
-
-
 pass
 
