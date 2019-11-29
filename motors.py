@@ -38,8 +38,9 @@ class nav:
         self.content = ""
         self.task = ""
         self.nav_task_active = False
-        self.nav_time = 0
         self.distance_check = True
+        print("[INFO]: Creating SenseHAT interface object...")
+        self.sense = SenseHat()
         print("[INFO]: Loading graphics...")
         root = tkinter.Tk()
         root.title("Raspbot RCA-G: Navigation")
@@ -48,9 +49,9 @@ class nav:
         root.resizable(width = False, height = False)
         graphics_title = tkinter.Label(root, text = "Nav Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
         graphics_title.grid(row = 0, column = 0)
-        self.graphics_nav = tkinter.Text(root, width = 4, height = 2)
-        self.graphics_nav.configure(state = tkinter.DISABLED)
-        self.graphics_nav.grid(row = 1, column = 0, pady = (5, 14))
+        self.graphics_nav_telemetry = tkinter.Text(root, width = 4, height = 2)
+        self.graphics_nav_telemetry.configure(state = tkinter.DISABLED)
+        self.graphics_nav_telemetry.grid(row = 1, column = 0, pady = (5, 14))
         graphics_nav_frame_buttons = tkinter.Frame(root, bg = "#344561")
         graphics_nav_button_forward = tkinter.Button(graphics_nav_frame_buttons, text = "F", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "F"))
         graphics_nav_button_forward.pack(side = tkinter.TOP)
@@ -84,17 +85,20 @@ class nav:
                 nav.stop(self)
             pass
             direction_byte = direction.encode(encoding = "ascii", errors = "replace")
+            print("[INFO]: Started navigation.")
             self.arduino.write(direction_byte)
-            while self.nav_time != 0:
+            while time != 0:
+                print("[INFO]: Collecting distance data...")
                 self.arduino.write(b"T")
                 distance = self.arduino.read_until()
                 distance.encode(encoding = "utf-8", errors = "replace")
+                print("[INFO]: Checking distance data for incoming collisions...")
                 if distance > 30 and self.distance_check is True:
                     print("[FAIL]: Distance from object facing front of vehicle is less than 30mm! Collision warning!")
                     nav.stop(self)
                     messagebox.showwarning("Raspbot RCA-G: Collision Warning!", "The ToF distance sensor has detected an object less than 30mm away. A dialogue will appear to resume or stop navigation.")
-                    str_nav_time = str(self.nav_time)
-                    override = messagebox.askyesno("Raspbot RCA-G: Nav Confirm", "Override and resume navigation? Your current nav has " + str_nav_time + " left.")
+                    str_time = str(time)
+                    override = messagebox.askyesno("Raspbot RCA-G: Nav Confirm", "Override and resume navigation? Your current nav has " + str_time + " left.")
                     if override is True:
                         print("[INFO]: Continued navigation.")
                         self.distance_check = False
@@ -103,6 +107,30 @@ class nav:
                         return None # TODO test and see if not clearing navigation variables has any negative effects on next navigation
                     pass
                 else:
+                    print("[INFO]: Collecting orientation, compass, and acceleration data...")
+                    orientation_raw = self.sense.get_orientation_degrees()
+                    compass_raw = self.sense.compass
+                    compass = round(compass_raw, 2)
+                    print("[INFO]: Processing raw data...")
+                    accelerometer_data = self.sense.get_accelerometer_raw()
+                    orientation_roll = str(round(orientation_raw["roll"], 2))
+                    orientation_pitch = str(round(orientation_raw["pitch"], 2))
+                    orientation_yaw = str(round(orientation_raw["yaw"], 2))
+                    orientation = "[Orientation in Degrees]" + "\n" + "Roll: " + orientation_roll + "\n" + "Pitch: " + orientation_pitch + "\n" + "Yaw: " + orientation_yaw
+                    compass_str = "[Compass]" + "\n" + str(compass) + " Degrees (0 being North)"
+                    accelerometer_x = str(round(accelerometer_data["x"], 2) * 9.81)
+                    accelerometer_y = str(round(accelerometer_data["y"], 2) * 9.81)
+                    accelerometer_z = str(round(accelerometer_data["z"], 2) * 9.81)
+                    accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
+                    distance_str = "[Distance to Closest Object in Path]" + "\n" + str(distance) + " mm"
+                    self.content = orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_str
+                    print("[INFO]: Outputing...")
+                    self.graphics_nav_telemetry.configure(state=tkinter.NORMAL)
+                    self.graphics_nav_telemetry.delete("1.0", tkinter.END)
+                    self.graphics_nav_telemetry.insert("1.0", self.content)
+                    self.graphics_nav_telemetry.configure(state=tkinter.DISABLED)
+                    print("[INFO]: Process cycle complete.")
+                    time =- 1
                     sleep(1)
                 pass
             pass
