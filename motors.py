@@ -20,6 +20,10 @@ except ImportError as e:
     call = None
     gmtime = None
     strftime = None
+    messagebox = None
+    sleep = None
+    SenseHat = None
+    serial = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
     exit(1)
@@ -46,13 +50,13 @@ class nav:
         root = tkinter.Tk()
         root.title("Raspbot RCA-G: Navigation")
         root.configure(bg = "#344561")
-        root.geometry('{}x{}'.format(300, 300))
+        root.geometry('{}x{}'.format(300, 280))
         root.resizable(width = False, height = False)
         graphics_title = tkinter.Label(root, text = "Nav Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
         graphics_title.grid(row = 0, column = 0)
-        self.graphics_nav_telemetry = tkinter.Text(root, width = 4, height = 2)
+        self.graphics_nav_telemetry = tkinter.Text(root, width = 25, height = 8)
         self.graphics_nav_telemetry.configure(state = tkinter.DISABLED)
-        self.graphics_nav_telemetry.grid(row = 1, column = 0, pady = (5, 14))
+        self.graphics_nav_telemetry.grid(row = 1, column = 0, padx = (10, 15), pady = (0, 14))
         graphics_nav_frame_buttons = tkinter.Frame(root, bg = "#344561")
         graphics_nav_button_forward = tkinter.Button(graphics_nav_frame_buttons, text = "F", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "F"))
         graphics_nav_button_forward.pack(side = tkinter.TOP)
@@ -70,21 +74,21 @@ class nav:
         graphics_nav_buttons_right_backwards = tkinter.Button(graphics_nav_frame_buttons_right, text = "RB", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "Z"))
         graphics_nav_buttons_right_backwards.pack(side = tkinter.BOTTOM)
         graphics_nav_frame_buttons_right.pack(side = tkinter.RIGHT)
-        graphics_nav_frame_buttons.grid(row = 2, column = 1, padx = (0, 50))
+        graphics_nav_frame_buttons.grid(row = 1, column = 1, padx = (0, 10))
         graphics_nav_frame_buttons_spin = tkinter.Frame(root, bg = "#344561")
         graphics_nav_buttons_spin_clockwise = tkinter.Button(graphics_nav_frame_buttons_spin, text = "S", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "S"))
         graphics_nav_buttons_spin_clockwise.pack(side = tkinter.LEFT)
         graphics_nav_buttons_spin_counterclockwise = tkinter.Button(graphics_nav_frame_buttons_spin, text = "C", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "C"))
         graphics_nav_buttons_spin_counterclockwise.pack(side = tkinter.RIGHT)
-        graphics_nav_frame_buttons_spin.grid(row= 3, column = 1, padx = (0, 50))
-        graphics_nav_frame_entry = tkinter.Frame(root, bg = "#344561") # TODO add set width and height
+        graphics_nav_frame_buttons_spin.grid(row= 2, column = 1, padx = (0, 10), pady = (10, 0))
+        graphics_nav_frame_entry = tkinter.Frame(root, bg = "#344561")
         self.graphics_nav_entry_time = tkinter.Entry(graphics_nav_frame_entry, fg = "white", bg = "#344561", font = ("Calibri", 12))
         self.graphics_nav_entry_time.pack(side = tkinter.LEFT)
-        graphics_nav_button_time_submit = tkinter.Button(graphics_nav_frame_entry, fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.time_check)
+        graphics_nav_button_time_submit = tkinter.Button(graphics_nav_frame_entry, text = "<", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.time_check)
         graphics_nav_button_time_submit.pack(side = tkinter.RIGHT)
         graphics_nav_frame_entry.grid(row = 2, column = 0)
-        graphics_nav_buttons_execute = tkinter.Button(root, text = "Execute Nav", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.process_command(self, self.task, self.nav_time)) # TODO add set width
-        graphics_nav_buttons_execute.grid(row = 3, column = 0 ) # TODO validate to make sure there are no grid conflicts
+        graphics_nav_buttons_execute = tkinter.Button(root, text = "Execute Nav", fg = "white", bg = "#344561", width = 20, font = ("Calibri", 12), command = lambda: nav.process_command(self, self.task, self.nav_time))
+        graphics_nav_buttons_execute.grid(row = 3, column = 0, padx = (60, 0), pady = (10, 0))
         root.mainloop()
     pass
     def set_task(self, task):
@@ -177,3 +181,4 @@ class nav:
     pass
 pass
 
+n = nav()
