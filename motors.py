@@ -39,6 +39,7 @@ class nav:
         self.task = ""
         self.nav_task_active = False
         self.distance_check = True
+        self.nav_time = 0
         print("[INFO]: Creating SenseHAT interface object...")
         self.sense = SenseHat()
         print("[INFO]: Loading graphics...")
@@ -69,12 +70,39 @@ class nav:
         graphics_nav_buttons_right_backwards = tkinter.Button(graphics_nav_frame_buttons_right, text = "RB", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "Z"))
         graphics_nav_buttons_right_backwards.pack(side = tkinter.BOTTOM)
         graphics_nav_frame_buttons_right.pack(side = tkinter.RIGHT)
-        graphics_nav_frame_buttons.grid(row = 2, column = 0, padx = (0, 50))
+        graphics_nav_frame_buttons.grid(row = 2, column = 1, padx = (0, 50))
+        graphics_nav_frame_buttons_spin = tkinter.Frame(root, bg = "#344561")
+        graphics_nav_buttons_spin_clockwise = tkinter.Button(graphics_nav_frame_buttons_spin, text = "S", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "S"))
+        graphics_nav_buttons_spin_clockwise.pack(side = tkinter.LEFT)
+        graphics_nav_buttons_spin_counterclockwise = tkinter.Button(graphics_nav_frame_buttons_spin, text = "C", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "C"))
+        graphics_nav_buttons_spin_counterclockwise.pack(side = tkinter.RIGHT)
+        graphics_nav_frame_buttons_spin.grid(row= 3, column = 1, padx = (0, 50))
+        graphics_nav_frame_entry = tkinter.Frame(root, bg = "#344561") # TODO add set width and height
+        self.graphics_nav_entry_time = tkinter.Entry(graphics_nav_frame_entry, fg = "white", bg = "#344561", font = ("Calibri", 12))
+        self.graphics_nav_entry_time.pack(side = tkinter.LEFT)
+        graphics_nav_button_time_submit = tkinter.Button(graphics_nav_frame_entry, fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.time_check)
+        graphics_nav_button_time_submit.pack(side = tkinter.RIGHT)
+        graphics_nav_frame_entry.grid(row = 2, column = 0)
+        graphics_nav_buttons_execute = tkinter.Button(root, text = "Execute Nav", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.process_command(self, self.task, self.nav_time)) # TODO add set width
+        graphics_nav_buttons_execute.grid(row = 3, column = 0 ) # TODO validate to make sure there are no grid conflicts
         root.mainloop()
     pass
     def set_task(self, task):
         """Sets task variable, because lambda doesn't support variable assignment."""
         self.task = task
+    pass
+    def time_check(self):
+        """Checks if inputted time value is a number."""
+        time_input_raw = self.graphics_nav_entry_time.get()
+        time_input = 0
+        try:
+            time_input = int(time_input_raw)
+        except ValueError:
+            messagebox.showerror("Raspbot RCA-G: Bad Nav Time", "Submitted nav time is invalid, not an integer!")
+            self.graphics_nav_entry_time.delete("0", tkinter.END)
+        pass
+        messagebox.showinfo("Raspbot RCA-G: Valid Nav Time", "Nav time submission successful!")
+        self.nav_time = time_input
     pass
     def process_command(self, direction, time):
         """Asks user for confirmation and does pre-navigation check for existing navigation , then finally executes movement."""
@@ -124,7 +152,7 @@ class nav:
                     accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
                     distance_str = "[Distance to Closest Object in Path]" + "\n" + str(distance) + " mm"
                     self.content = orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_str
-                    print("[INFO]: Outputing...")
+                    print("[INFO]: Outputting...")
                     self.graphics_nav_telemetry.configure(state=tkinter.NORMAL)
                     self.graphics_nav_telemetry.delete("1.0", tkinter.END)
                     self.graphics_nav_telemetry.insert("1.0", self.content)
@@ -134,7 +162,7 @@ class nav:
                     sleep(1)
                 pass
             pass
-            if self.nav_time == 0:
+            if time == 0:
                 nav.stop(self)
                 print("[INFO]: Ended navigation, task complete!")
             pass
