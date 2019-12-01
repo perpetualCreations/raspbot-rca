@@ -199,7 +199,7 @@ void loop() {
       Status=VL53L0X.PerformSingleRangingMeasurement(&RangingMeasurementData);
       if(VL53L0X_ERROR_NONE==Status) {
         if(RangingMeasurementData.RangeMilliMeter>=2000) {
-          Serial.write("Out of Range!");
+          Serial.write("(out of range)");
           Serial.write('\n');
         }
         else {
@@ -208,7 +208,7 @@ void loop() {
         }
       }
       else {
-        Serial.write("Failed!");
+        Serial.write("(fail)");
         Serial.write('\n');
       }
     }

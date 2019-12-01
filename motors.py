@@ -50,7 +50,7 @@ class nav:
         root = tkinter.Tk()
         root.title("Raspbot RCA-G: Navigation")
         root.configure(bg = "#344561")
-        root.geometry('{}x{}'.format(300, 280))
+        root.geometry('{}x{}'.format(380, 280))
         root.resizable(width = False, height = False)
         graphics_title = tkinter.Label(root, text = "Nav Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
         graphics_title.grid(row = 0, column = 0)
@@ -63,15 +63,15 @@ class nav:
         graphics_nav_button_backward = tkinter.Button(graphics_nav_frame_buttons, text = "B", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "B"))
         graphics_nav_button_backward.pack(side = tkinter.BOTTOM)
         graphics_nav_frame_buttons_left = tkinter.Frame(graphics_nav_frame_buttons, bg = "#344561")
-        graphics_nav_button_left_forward = tkinter.Button(graphics_nav_frame_buttons_left, text = "LF", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "W")) # TODO confirm correct byte command
+        graphics_nav_button_left_forward = tkinter.Button(graphics_nav_frame_buttons_left, text = "LF", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "Y")) # TODO confirm correct byte command
         graphics_nav_button_left_forward.pack(side = tkinter.TOP)
-        graphics_nav_button_left_backward = tkinter.Button(graphics_nav_frame_buttons_left, text = "LB", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "X"))
+        graphics_nav_button_left_backward = tkinter.Button(graphics_nav_frame_buttons_left, text = "LB", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "Z"))
         graphics_nav_button_left_backward.pack(side = tkinter.BOTTOM)
         graphics_nav_frame_buttons_left.pack(side = tkinter.LEFT)
         graphics_nav_frame_buttons_right = tkinter.Frame(graphics_nav_frame_buttons, bg = "#344561")
-        graphics_nav_buttons_right_forward = tkinter.Button(graphics_nav_frame_buttons_right, text = "RF", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "Y"))
+        graphics_nav_buttons_right_forward = tkinter.Button(graphics_nav_frame_buttons_right, text = "RF", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "W"))
         graphics_nav_buttons_right_forward.pack(side = tkinter.TOP)
-        graphics_nav_buttons_right_backwards = tkinter.Button(graphics_nav_frame_buttons_right, text = "RB", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "Z"))
+        graphics_nav_buttons_right_backwards = tkinter.Button(graphics_nav_frame_buttons_right, text = "RB", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "X"))
         graphics_nav_buttons_right_backwards.pack(side = tkinter.BOTTOM)
         graphics_nav_frame_buttons_right.pack(side = tkinter.RIGHT)
         graphics_nav_frame_buttons.grid(row = 1, column = 1, padx = (0, 10))
@@ -84,7 +84,7 @@ class nav:
         graphics_nav_frame_entry = tkinter.Frame(root, bg = "#344561")
         self.graphics_nav_entry_time = tkinter.Entry(graphics_nav_frame_entry, fg = "white", bg = "#344561", font = ("Calibri", 12))
         self.graphics_nav_entry_time.pack(side = tkinter.LEFT)
-        graphics_nav_button_time_submit = tkinter.Button(graphics_nav_frame_entry, text = "<", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.time_check)
+        graphics_nav_button_time_submit = tkinter.Button(graphics_nav_frame_entry, text = "<", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.time_check(self))
         graphics_nav_button_time_submit.pack(side = tkinter.RIGHT)
         graphics_nav_frame_entry.grid(row = 2, column = 0)
         graphics_nav_buttons_execute = tkinter.Button(root, text = "Execute Nav", fg = "white", bg = "#344561", width = 20, font = ("Calibri", 12), command = lambda: nav.process_command(self, self.task, self.nav_time))
@@ -94,18 +94,23 @@ class nav:
     def set_task(self, task):
         """Sets task variable, because lambda doesn't support variable assignment."""
         self.task = task
+        print("[INFO]: Set task variable to " + self.task + ".")
     pass
     def time_check(self):
         """Checks if inputted time value is a number."""
+        print("[INFO]: Checking submitted nav time...")
         time_input_raw = self.graphics_nav_entry_time.get()
         time_input = 0
         try:
             time_input = int(time_input_raw)
         except ValueError:
+            print("[FAIL]: Submitted nav time is invalid, is not an integer!")
             messagebox.showerror("Raspbot RCA-G: Bad Nav Time", "Submitted nav time is invalid, not an integer!")
             self.graphics_nav_entry_time.delete("0", tkinter.END)
         pass
         messagebox.showinfo("Raspbot RCA-G: Valid Nav Time", "Nav time submission successful!")
+        time_input_str = str(time_input)
+        print("[INFO]: Submission valid, accepted value. (submitted value was " + time_input_str + ")")
         self.nav_time = time_input
     pass
     def process_command(self, direction, time):
