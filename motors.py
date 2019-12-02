@@ -13,7 +13,7 @@ try:
     from time import gmtime
     from time import strftime
     from time import sleep
-    from sense_hat import SenseHat
+    # from sense_hat import SenseHat
     import serial
 except ImportError as e:
     tkinter = None
@@ -37,7 +37,7 @@ class nav:
     def __init__(self):
         print("[INFO]: Nav loaded!")
         print("[INFO]: Starting serial connection with Arduino microcontroller...")
-        self.arduino = serial.Serial('/dev/ttyACM0', 9600)
+        self.arduino = serial.Serial("COM5", timeout = 5)
         print("[INFO]: Declaring variables...")
         self.content = ""
         self.task = ""
@@ -45,7 +45,7 @@ class nav:
         self.distance_check = True
         self.nav_time = 0
         print("[INFO]: Creating SenseHAT interface object...")
-        self.sense = SenseHat()
+        # self.sense = SenseHat()
         print("[INFO]: Loading graphics...")
         root = tkinter.Tk()
         root.title("Raspbot RCA-G: Navigation")
@@ -154,12 +154,13 @@ class nav:
                         return None
                     pass
                 else:
+                    '''
                     print("[INFO]: Collecting orientation, compass, and acceleration data...")
                     orientation_raw = self.sense.get_orientation_degrees()
                     compass_raw = self.sense.compass
+                    accelerometer_data = self.sense.get_accelerometer_raw()
                     compass = round(compass_raw, 2)
                     print("[INFO]: Processing raw data...")
-                    accelerometer_data = self.sense.get_accelerometer_raw()
                     orientation_roll = str(round(orientation_raw["roll"], 2))
                     orientation_pitch = str(round(orientation_raw["pitch"], 2))
                     orientation_yaw = str(round(orientation_raw["yaw"], 2))
@@ -170,7 +171,8 @@ class nav:
                     accelerometer_z = str(round(accelerometer_data["z"], 2) * 9.81)
                     accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
                     distance_output = "[Distance to Collision]" + "\n" + str(distance_str) + " mm"
-                    self.content = orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
+                    '''
+                    self.content = "none" # orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
                     print("[INFO]: Outputting...")
                     self.graphics_nav_telemetry.configure(state=tkinter.NORMAL)
                     self.graphics_nav_telemetry.delete("1.0", tkinter.END)
