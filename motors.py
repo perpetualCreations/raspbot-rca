@@ -178,7 +178,7 @@ class nav:
                     self.graphics_nav_telemetry.configure(state=tkinter.DISABLED)
                     print("[INFO]: Process cycle complete.")
                     time -= 1
-                    sleep(10)
+                    sleep(1)
                 pass
             pass
             if time == 0:
