@@ -113,6 +113,17 @@ class nav:
         print("[INFO]: Submission valid, accepted value. (submitted value was " + time_input_str + ")")
         self.nav_time = time_input
     pass
+    def get_distance(self):
+        """Gets distance from ToF sensor and returns as list, indexed as 0 being a string output, 1 being a integer output."""
+        print("[INFO]: Collecting distance data...")
+        self.arduino.write(b"T")
+        print("[INFO]: Decoding byte data...")
+        distance = self.arduino.read_until()
+        distance = distance.decode(encoding="utf-8", errors="replace")
+        distance = distance.rstrip('\n')
+        distance_int = int(distance)
+        return [distance, distance_int]
+    pass
     def process_command(self, direction, time):
         """Asks user for confirmation and does pre-navigation check for existing navigation , then finally executes movement."""
         confirm = messagebox.askyesno("Raspbot RCA-G: Nav Confirm", "Are you sure you want to execute this navigation?")
@@ -125,12 +136,11 @@ class nav:
             print("[INFO]: Started navigation.")
             self.arduino.write(direction_byte)
             while time != 0:
-                print("[INFO]: Collecting distance data...")
-                self.arduino.write(b"T")
-                distance = self.arduino.read_until()
-                distance.encode(encoding = "utf-8", errors = "replace")
+                distance_data = nav.get_distance(self)
+                distance_str = distance_data[0]
+                distance_int = distance_data[1]
                 print("[INFO]: Checking distance data for incoming collisions...")
-                if distance > 30 and self.distance_check is True:
+                if distance_int < 40 and self.distance_check is True:
                     print("[FAIL]: Distance from object facing front of vehicle is less than 30mm! Collision warning!")
                     nav.stop(self)
                     messagebox.showwarning("Raspbot RCA-G: Collision Warning!", "The ToF distance sensor has detected an object less than 30mm away. A dialogue will appear to resume or stop navigation.")
@@ -141,7 +151,7 @@ class nav:
                         self.distance_check = False
                     else:
                         print("[INFO]: Ended navigation early due to collision warning.")
-                        return None # TODO test and see if not clearing navigation variables has any negative effects on next navigation
+                        return None
                     pass
                 else:
                     print("[INFO]: Collecting orientation, compass, and acceleration data...")
@@ -154,21 +164,21 @@ class nav:
                     orientation_pitch = str(round(orientation_raw["pitch"], 2))
                     orientation_yaw = str(round(orientation_raw["yaw"], 2))
                     orientation = "[Orientation in Degrees]" + "\n" + "Roll: " + orientation_roll + "\n" + "Pitch: " + orientation_pitch + "\n" + "Yaw: " + orientation_yaw
-                    compass_str = "[Compass]" + "\n" + str(compass) + " Degrees (0 being North)"
+                    compass_str = "[Compass]" + "\n" + str(compass) + " Degrees"
                     accelerometer_x = str(round(accelerometer_data["x"], 2) * 9.81)
                     accelerometer_y = str(round(accelerometer_data["y"], 2) * 9.81)
                     accelerometer_z = str(round(accelerometer_data["z"], 2) * 9.81)
                     accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
-                    distance_str = "[Distance to Closest Object in Path]" + "\n" + str(distance) + " mm"
-                    self.content = orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_str
+                    distance_output = "[Distance to Collision]" + "\n" + str(distance_str) + " mm"
+                    self.content = orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
                     print("[INFO]: Outputting...")
                     self.graphics_nav_telemetry.configure(state=tkinter.NORMAL)
                     self.graphics_nav_telemetry.delete("1.0", tkinter.END)
                     self.graphics_nav_telemetry.insert("1.0", self.content)
                     self.graphics_nav_telemetry.configure(state=tkinter.DISABLED)
                     print("[INFO]: Process cycle complete.")
-                    time =- 1
-                    sleep(1)
+                    time -= 1
+                    sleep(10)
                 pass
             pass
             if time == 0:

@@ -86,8 +86,8 @@ class science:
         print("[INFO]: Collecting data from serial.")
         arduino.write(b"D")
         grove_sensor_dust_lpo_data = arduino.read_until()
-        dust_lpo = grove_sensor_dust_lpo_data.encode(encoding = "utf-8", errors = "replace") + " (μs)"
-        grove_sensor_dust_ratio_data = arduino.read_until()
+        dust_lpo = grove_sensor_dust_lpo_data.encode(encoding = "utf-8", errors = "replace") + " (μs)" # TODO change encode to decode (see python3 docs for more info)
+        grove_sensor_dust_ratio_data = arduino.read_until() # TODO rstrip '/n' after decode
         dust_ratio = grove_sensor_dust_ratio_data.encode(encoding = "utf-8", errors = "replace")
         grove_sensor_dust_concentration_data = arduino.read_until()
         dust_concentration = grove_sensor_dust_concentration_data.encode(encoding = "utf-8", errors = "replace") + " (pcs/L)"
