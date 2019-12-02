@@ -86,17 +86,22 @@ class science:
         print("[INFO]: Collecting data from serial.")
         arduino.write(b"D")
         grove_sensor_dust_lpo_data = arduino.read_until()
-        dust_lpo = grove_sensor_dust_lpo_data.encode(encoding = "utf-8", errors = "replace") + " (μs)" # TODO change encode to decode (see python3 docs for more info)
-        grove_sensor_dust_ratio_data = arduino.read_until() # TODO rstrip '/n' after decode
-        dust_ratio = grove_sensor_dust_ratio_data.encode(encoding = "utf-8", errors = "replace")
+        dust_lpo = grove_sensor_dust_lpo_data.decode(encoding = "utf-8", errors = "replace")
+        dust_lpo = dust_lpo.restrip("\n") + " (μs)"
+        grove_sensor_dust_ratio_data = arduino.read_until()
+        dust_ratio = grove_sensor_dust_ratio_data.decode(encoding = "utf-8", errors = "replace")
+        dust_ratio = dust_ratio.rstrip("\n")
         grove_sensor_dust_concentration_data = arduino.read_until()
-        dust_concentration = grove_sensor_dust_concentration_data.encode(encoding = "utf-8", errors = "replace") + " (pcs/L)"
+        dust_concentration = grove_sensor_dust_concentration_data.decode(encoding = "utf-8", errors = "replace")
+        dust_concentration = dust_concentration.rstrip("\n") + " (pcs/L)"
         arduino.write(b"T")
         grove_sensor_distance_data = arduino.read_until()
-        distance = grove_sensor_distance_data.encode(encoding = "utf-8", errors = "replace") + " (mm)"
+        distance = grove_sensor_distance_data.decode(encoding = "utf-8", errors = "replace")
+        distance = distance.rstrip("\n") + " (mm)"
         # NOTICE: Grove Light Sensor is not connected on official build, uncomment and configure in Arduino Instructions at your own will.
         # grove_sensor_light_data = arduino.read_until()
-        # light = grove_sensor_light_data.encode(encoding = "utf-8", errors = "replace")
+        # light = grove_sensor_light_data.decode(encoding = "utf-8", errors = "replace")
+        # light = light.rstrip("\n")
         print("[INFO]: Generating timestamps...")
         timestamp = strftime("%b%d%Y%H%M%S"), gmtime()
         timestamp_output = timestamp[0]
