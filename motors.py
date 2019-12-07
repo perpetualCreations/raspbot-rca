@@ -15,6 +15,7 @@ try:
     from time import sleep
     # from sense_hat import SenseHat
     import serial
+    from sys import exit
 except ImportError as e:
     tkinter = None
     call = None
@@ -37,7 +38,13 @@ class nav:
     def __init__(self):
         print("[INFO]: Nav loaded!")
         print("[INFO]: Starting serial connection with Arduino microcontroller...")
-        self.arduino = serial.Serial("COM5", timeout = 5)
+        try:
+            self.arduino = serial.Serial("COM5", timeout = 5)
+        except serial.serialutil.SerialException:
+            print("[FAIL]: Failed to create connection with Arduino microcontroller!")
+            exit(1)
+        pass
+        sleep(5)
         print("[INFO]: Declaring variables...")
         self.content = ""
         self.task = ""
@@ -135,6 +142,7 @@ class nav:
         nav.display(self, "Collecting distance data...")
         self.arduino.write(b"T")
         print("[INFO]: Decoding byte data...")
+        sleep(0.1)
         distance = self.arduino.read_until()
         distance = distance.decode(encoding="utf-8", errors="replace")
         distance = distance.rstrip('\n')
@@ -219,7 +227,31 @@ class nav:
                     return None
                 pass
             else:
-
+                '''
+                print("[INFO]: Collecting orientation, compass, and acceleration data...")
+                orientation_raw = self.sense.get_orientation_degrees()
+                compass_raw = self.sense.compass
+                accelerometer_data = self.sense.get_accelerometer_raw()
+                compass = round(compass_raw, 2)
+                print("[INFO]: Processing raw data...")
+                orientation_roll = str(round(orientation_raw["roll"], 2))
+                orientation_pitch = str(round(orientation_raw["pitch"], 2))
+                orientation_yaw = str(round(orientation_raw["yaw"], 2))
+                orientation = "[Orientation in Degrees]" + "\n" + "Roll: " + orientation_roll + "\n" + "Pitch: " + orientation_pitch + "\n" + "Yaw: " + orientation_yaw
+                compass_str = "[Compass]" + "\n" + str(compass) + " Degrees"
+                accelerometer_x = str(round(accelerometer_data["x"], 2) * 9.81)
+                accelerometer_y = str(round(accelerometer_data["y"], 2) * 9.81)
+                accelerometer_z = str(round(accelerometer_data["z"], 2) * 9.81)
+                accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
+                '''
+                self.content = "none"  # orientation + "\n" + accelerometer + "\n" + compass_str
+                nav.display(self, self.content)
+                print("[INFO]: Process cycle complete.")
+                time -= 1
+                sleep(1)
+                nav.runtime(self, time)
+                return None
+            pass
         elif time == 0:
             nav.stop(self)
             print("[INFO]: Ended navigation, task complete!")

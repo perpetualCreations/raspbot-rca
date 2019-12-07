@@ -12,12 +12,14 @@ try:
     from time import gmtime
     from time import strftime
     import serial
+    from time import sleep
 except ImportError as e:
     tkinter = None
     gmtime = None
     strftime = None
     SenseHat = None
     serial = None
+    sleep = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
     exit(1)
@@ -82,7 +84,13 @@ class science:
         accelerometer_z = str(round(accelerometer_data["z"], 2))
         accelerometer = "Acceleration in Gs, X: " + accelerometer_x + ", Y: " + accelerometer_y + ", Z: " + accelerometer_z
         print("[INFO]: Starting serial connection with Grove Arduino integration...")
-        arduino = serial.Serial('/dev/ttyACM0', 9600)
+        try:
+            arduino = serial.Serial('/dev/ttyACM0', 9600)
+        except serial.serialutil.SerialException:
+            print("[FAIL]: Failed to create connection with Grove Arduino intergration!")
+            return None
+        pass
+        sleep(5)
         print("[INFO]: Collecting data from serial.")
         arduino.write(b"D")
         grove_sensor_dust_lpo_data = arduino.read_until()
