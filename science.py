@@ -93,6 +93,7 @@ class science:
         sleep(5)
         print("[INFO]: Collecting data from serial.")
         arduino.write(b"D")
+        sleep(0.1)
         grove_sensor_dust_lpo_data = arduino.read_until()
         dust_lpo = grove_sensor_dust_lpo_data.decode(encoding = "utf-8", errors = "replace")
         dust_lpo = dust_lpo.restrip("\n") + " (μs)"
@@ -103,6 +104,7 @@ class science:
         dust_concentration = grove_sensor_dust_concentration_data.decode(encoding = "utf-8", errors = "replace")
         dust_concentration = dust_concentration.rstrip("\n") + " (pcs/L)"
         arduino.write(b"T")
+        sleep(0.1)
         grove_sensor_distance_data = arduino.read_until()
         distance = grove_sensor_distance_data.decode(encoding = "utf-8", errors = "replace")
         distance = distance.rstrip("\n") + " (mm)"
