@@ -87,7 +87,7 @@ class nav:
         graphics_nav_button_time_submit = tkinter.Button(graphics_nav_frame_entry, text = "<", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.time_check(self))
         graphics_nav_button_time_submit.pack(side = tkinter.RIGHT)
         graphics_nav_frame_entry.grid(row = 2, column = 0)
-        graphics_nav_buttons_execute = tkinter.Button(root, text = "Execute Nav", fg = "white", bg = "#344561", width = 20, font = ("Calibri", 12), command = lambda: nav.process_command(self, self.task, self.nav_time))
+        graphics_nav_buttons_execute = tkinter.Button(root, text = "Execute Nav", fg = "white", bg = "#344561", width = 20, font = ("Calibri", 12), command = lambda: nav.process_command(self, self.task))
         graphics_nav_buttons_execute.grid(row = 3, column = 0, padx = (60, 0), pady = (10, 0))
         root.mainloop()
     pass
@@ -108,46 +108,84 @@ class nav:
             messagebox.showerror("Raspbot RCA-G: Bad Nav Time", "Submitted nav time is invalid, not an integer!")
             self.graphics_nav_entry_time.delete("0", tkinter.END)
         pass
-        messagebox.showinfo("Raspbot RCA-G: Valid Nav Time", "Nav time submission successful!")
-        time_input_str = str(time_input)
-        print("[INFO]: Submission valid, accepted value. (submitted value was " + time_input_str + ")")
-        self.nav_time = time_input
+        if time_input < 5:
+            messagebox.showwarning("Raspbot RCA-G: Distance Check Unavailable", "Navigation time was less than 5 seconds. This means that distance check will only occur once before navigation starts and not throughout the navigation. If you want constant distance checks please set time to greater than 5 seconds.")
+            time_input_str = str(time_input)
+            print("[INFO]: Submission valid, accepted value. (submitted value was " + time_input_str + ")")
+            print("[INFO]: Distance check cannot be ran constantly, navigation time is less than 5 seconds.")
+            self.nav_time = time_input
+        else:
+            messagebox.showinfo("Raspbot RCA-G: Valid Nav Time", "Nav time submission successful!")
+            time_input_str = str(time_input)
+            print("[INFO]: Submission valid, accepted value. (submitted value was " + time_input_str + ")")
+            self.nav_time = time_input
+        pass
+    pass
+    def display(self, content):
+        """Accepts string input and displays it on GUI text box."""
+        print("[INFO]: Displaying to text box...")
+        self.graphics_nav_telemetry.configure(state=tkinter.NORMAL)
+        self.graphics_nav_telemetry.delete("1.0", tkinter.END)
+        self.graphics_nav_telemetry.insert("1.0", content)
+        self.graphics_nav_telemetry.configure(state=tkinter.DISABLED)
     pass
     def get_distance(self):
         """Gets distance from ToF sensor and returns as list, indexed as 0 being a string output, 1 being a integer output."""
         print("[INFO]: Collecting distance data...")
+        nav.display(self, "Collecting distance data...")
         self.arduino.write(b"T")
         print("[INFO]: Decoding byte data...")
         distance = self.arduino.read_until()
         distance = distance.decode(encoding="utf-8", errors="replace")
         distance = distance.rstrip('\n')
         distance_int = int(distance)
+        print("[INFO]: Collected distance data, returning...")
+        nav.display(self, "Collected distance data, returning...")
         return [distance, distance_int]
     pass
-    def process_command(self, direction, time):
-        """Asks user for confirmation and does pre-navigation check for existing navigation , then finally executes movement."""
-        confirm = messagebox.askyesno("Raspbot RCA-G: Nav Confirm", "Are you sure you want to execute this navigation?")
-        if confirm is True:
-            print("[INFO]: Confirmed navigation by user.")
-            if self.nav_task_active is True:
+    def runtime(self, time):
+        """Function containing runtime processes while a navigation is active."""
+        if time < 5:
+            print("[INFO]: Navigation time is less than 5 seconds, running pre-nav distance check...")
+            nav.display(self, "Starting pre-nav distance check...")
+            distance_data = nav.get_distance(self)
+            distance_str = distance_data[0]
+            distance_int = distance_data[1]
+            if distance_int < 640 and self.distance_check is True:
+                print("[FAIL]: Distance from object facing front of vehicle is less than 640mm, when navigation executed collision will occur!")
+                nav.display(self, "Object less than 640 mm away." + "\n" + "When navigation executed, collision will occur!")
                 nav.stop(self)
+                messagebox.showwarning("Raspbot RCA-G: Collision Warning!", "The ToF distance sensor has detected an object less than 640mm away. A dialogue will appear to continue anyways with the navigation.")
+                override = messagebox.askyesno("Raspbot RCA-G: Nav Confirm", "Override and execute navigation? If executed collision may occur.")
+                if override is True:
+                    print("[INFO]: Warning ignored, executing navigation...")
+                    nav.display(self, "Continuing with navigation...")
+                    self.distance_check = False
+                else:
+                    print("[INFO]: Ended navigation early due to collision warning.")
+                    return None
+                pass
+            else:
+                print("[INFO]: Pre-nav distance check cleared.")
+                nav.display(self, "Cleared distance check.")
             pass
-            direction_byte = direction.encode(encoding = "ascii", errors = "replace")
-            print("[INFO]: Started navigation.")
-            self.arduino.write(direction_byte)
-            while time != 0:
+        pass
+        if time != 0:
+            if time > 5:
                 distance_data = nav.get_distance(self)
                 distance_str = distance_data[0]
                 distance_int = distance_data[1]
                 print("[INFO]: Checking distance data for incoming collisions...")
                 if distance_int < 40 and self.distance_check is True:
                     print("[FAIL]: Distance from object facing front of vehicle is less than 30mm! Collision warning!")
+                    nav.display(self, "Collision warning!" + "\n" + "Object less than 30mm away.")
                     nav.stop(self)
                     messagebox.showwarning("Raspbot RCA-G: Collision Warning!", "The ToF distance sensor has detected an object less than 30mm away. A dialogue will appear to resume or stop navigation.")
                     str_time = str(time)
                     override = messagebox.askyesno("Raspbot RCA-G: Nav Confirm", "Override and resume navigation? Your current nav has " + str_time + " left.")
                     if override is True:
-                        print("[INFO]: Continued navigation.")
+                        print("[INFO]: Warning ignored, continued navigation.")
+                        nav.display(self, "Continuing with navigation...")
                         self.distance_check = False
                     else:
                         print("[INFO]: Ended navigation early due to collision warning.")
@@ -172,21 +210,37 @@ class nav:
                     accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
                     distance_output = "[Distance to Collision]" + "\n" + str(distance_str) + " mm"
                     '''
-                    self.content = "none" # orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
-                    print("[INFO]: Outputting...")
-                    self.graphics_nav_telemetry.configure(state=tkinter.NORMAL)
-                    self.graphics_nav_telemetry.delete("1.0", tkinter.END)
-                    self.graphics_nav_telemetry.insert("1.0", self.content)
-                    self.graphics_nav_telemetry.configure(state=tkinter.DISABLED)
+                    self.content = "none"  # orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
+                    nav.display(self, self.content)
                     print("[INFO]: Process cycle complete.")
                     time -= 1
                     sleep(1)
+                    nav.runtime(self, time)
+                    return None
                 pass
-            pass
-            if time == 0:
+            else:
+
+        elif time == 0:
+            nav.stop(self)
+            print("[INFO]: Ended navigation, task complete!")
+            return None
+        else:
+            raise Exception("Navigation time variable is a negative or otherwise invalid variable type!")
+        pass
+    pass
+    def process_command(self, direction):
+        """Asks user for confirmation and does pre-navigation check for existing navigation , then finally executes movement."""
+        confirm = messagebox.askyesno("Raspbot RCA-G: Nav Confirm", "Are you sure you want to execute this navigation?")
+        if confirm is True:
+            print("[INFO]: Confirmed navigation by user.")
+            if self.nav_task_active is True:
                 nav.stop(self)
-                print("[INFO]: Ended navigation, task complete!")
             pass
+            direction_byte = direction.encode(encoding = "ascii", errors = "replace")
+            print("[INFO]: Started navigation.")
+            self.arduino.write(direction_byte)
+            print("[INFO]: Starting runtime loop...")
+            nav.runtime(self, self.nav_time)
         else:
             print("[INFO]: Cancelled navigation by user.")
         pass
