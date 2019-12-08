@@ -117,18 +117,10 @@ class nav:
             self.graphics_nav_entry_time.delete("0", tkinter.END)
             return None
         pass
-        if time_input < 5:
-            messagebox.showwarning("Raspbot RCA-G: Distance Check Unavailable", "Navigation time was less than 5 seconds. This means that distance check will only occur once before navigation starts and not throughout the navigation. If you want constant distance checks please set time to greater than 5 seconds.")
-            time_input_str = str(time_input)
-            print("[INFO]: Submission valid, accepted value. (submitted value was " + time_input_str + ")")
-            print("[INFO]: Distance check cannot be ran constantly, navigation time is less than 5 seconds.")
-            self.nav_time = time_input
-        else:
-            messagebox.showinfo("Raspbot RCA-G: Valid Nav Time", "Nav time submission successful!")
-            time_input_str = str(time_input)
-            print("[INFO]: Submission valid, accepted value. (submitted value was " + time_input_str + ")")
-            self.nav_time = time_input
-        pass
+        messagebox.showinfo("Raspbot RCA-G: Valid Nav Time", "Nav time submission successful!")
+        time_input_str = str(time_input)
+        print("[INFO]: Submission valid, accepted value. (submitted value was " + time_input_str + ")")
+        self.nav_time = time_input
     pass
     def display(self, content):
         """Accepts string input and displays it on GUI text box."""
@@ -162,6 +154,7 @@ class nav:
                     self.distance_request = False
                 else:
                     print("[INFO]: Ended navigation early due to failed ToF sensor.")
+                pass
             elif distance == "":
                 distance_int = None
             else:
@@ -176,87 +169,28 @@ class nav:
     pass
     def runtime(self, time):
         """Function containing runtime processes while a navigation is active."""
-        if time < 5:
-            print("[INFO]: Navigation time is less than 5 seconds, running pre-nav distance check...")
-            nav.display(self, "Starting pre-nav distance check...")
+        if time != 0:
             distance_data = nav.get_distance(self)
             distance_str = distance_data[0]
             distance_int = distance_data[1]
             if distance_int is None:
                 distance_int = 1999
             pass
-            if distance_int < 640 and self.distance_check is True:
-                print("[FAIL]: Distance from object facing front of vehicle is less than 640mm, when navigation executed collision will occur!")
-                nav.display(self, "Object less than 640 mm" + "\n" + "away." + "\n" + "When navigation executed, collision will occur!")
+            print("[INFO]: Checking distance data for incoming collisions...")
+            if distance_int < 40 and self.distance_check is True:
+                print("[FAIL]: Distance from object facing front of vehicle is less than 30mm! Collision warning!")
+                nav.display(self, "Collision warning!" + "\n" + "Object less than 30mm away.")
                 nav.stop(self)
-                messagebox.showwarning("Raspbot RCA-G: Collision Warning!", "The ToF distance sensor has detected an object less than 640mm away. A dialogue will appear to continue anyways with the navigation.")
-                override = messagebox.askyesno("Raspbot RCA-G: Override Distance Check?", "Override and execute navigation? If executed collision may occur.")
+                messagebox.showwarning("Raspbot RCA-G: Collision Warning!", "The ToF distance sensor has detected an object less than 30mm away. A dialogue will appear to resume or stop navigation.")
+                str_time = str(time)
+                override = messagebox.askyesno("Raspbot RCA-G: Override Distance Check?", "Override and resume navigation? Your current nav has " + str_time + " left.")
                 if override is True:
-                    print("[INFO]: Warning ignored, executing navigation...")
+                    print("[INFO]: Warning ignored, continued navigation.")
                     nav.display(self, "Continuing with navigation...")
                     self.distance_check = False
                 else:
                     print("[INFO]: Ended navigation early due to collision warning.")
-                    nav.display(self, "Navigation stopped.")
-                    return None
-                pass
-            elif distance_int > 640:
-                print("[INFO]: Pre-nav distance check cleared.")
-                nav.display(self, "Cleared distance check.")
-            else:
-                print("[INFO]: Distance check disabled, passing...")
-            pass
-        pass
-        if time != 0:
-            if time > 5:
-                distance_data = nav.get_distance(self)
-                distance_str = distance_data[0]
-                distance_int = distance_data[1]
-                if distance_int is None:
-                    distance_int = 1999
-                pass
-                print("[INFO]: Checking distance data for incoming collisions...")
-                if distance_int < 40 and self.distance_check is True:
-                    print("[FAIL]: Distance from object facing front of vehicle is less than 30mm! Collision warning!")
-                    nav.display(self, "Collision warning!" + "\n" + "Object less than 30mm away.")
-                    nav.stop(self)
-                    messagebox.showwarning("Raspbot RCA-G: Collision Warning!", "The ToF distance sensor has detected an object less than 30mm away. A dialogue will appear to resume or stop navigation.")
-                    str_time = str(time)
-                    override = messagebox.askyesno("Raspbot RCA-G: Override Distance Check?", "Override and resume navigation? Your current nav has " + str_time + " left.")
-                    if override is True:
-                        print("[INFO]: Warning ignored, continued navigation.")
-                        nav.display(self, "Continuing with navigation...")
-                        self.distance_check = False
-                    else:
-                        print("[INFO]: Ended navigation early due to collision warning.")
-                        nav.display(self, "Navigation ended.")
-                        return None
-                    pass
-                else:
-                    '''
-                    print("[INFO]: Collecting orientation, compass, and acceleration data...")
-                    orientation_raw = self.sense.get_orientation_degrees()
-                    compass_raw = self.sense.compass
-                    accelerometer_data = self.sense.get_accelerometer_raw()
-                    compass = round(compass_raw, 2)
-                    print("[INFO]: Processing raw data...")
-                    orientation_roll = str(round(orientation_raw["roll"], 2))
-                    orientation_pitch = str(round(orientation_raw["pitch"], 2))
-                    orientation_yaw = str(round(orientation_raw["yaw"], 2))
-                    orientation = "[Orientation in Degrees]" + "\n" + "Roll: " + orientation_roll + "\n" + "Pitch: " + orientation_pitch + "\n" + "Yaw: " + orientation_yaw
-                    compass_str = "[Compass]" + "\n" + str(compass) + " Degrees"
-                    accelerometer_x = str(round(accelerometer_data["x"], 2) * 9.81)
-                    accelerometer_y = str(round(accelerometer_data["y"], 2) * 9.81)
-                    accelerometer_z = str(round(accelerometer_data["z"], 2) * 9.81)
-                    accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
-                    distance_output = "[Distance to Collision]" + "\n" + distance_str + " mm"
-                    '''
-                    self.content = "none"  # orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
-                    nav.display(self, self.content)
-                    print("[INFO]: Process cycle complete.")
-                    time -= 1
-                    sleep(1)
-                    nav.runtime(self, time)
+                    nav.display(self, "Navigation ended.")
                     return None
                 pass
             else:
@@ -276,8 +210,9 @@ class nav:
                 accelerometer_y = str(round(accelerometer_data["y"], 2) * 9.81)
                 accelerometer_z = str(round(accelerometer_data["z"], 2) * 9.81)
                 accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
+                distance_output = "[Distance to Collision]" + "\n" + distance_str + " mm"
                 '''
-                self.content = "none"  # orientation + "\n" + accelerometer + "\n" + compass_str
+                self.content = "none"  # orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
                 nav.display(self, self.content)
                 print("[INFO]: Process cycle complete.")
                 time -= 1
