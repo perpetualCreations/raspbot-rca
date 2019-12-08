@@ -115,6 +115,7 @@ class nav:
             print("[FAIL]: Submitted nav time is invalid, is not an integer!")
             messagebox.showerror("Raspbot RCA-G: Bad Nav Time", "Submitted nav time is invalid, not an integer!")
             self.graphics_nav_entry_time.delete("0", tkinter.END)
+            return None
         pass
         if time_input < 5:
             messagebox.showwarning("Raspbot RCA-G: Distance Check Unavailable", "Navigation time was less than 5 seconds. This means that distance check will only occur once before navigation starts and not throughout the navigation. If you want constant distance checks please set time to greater than 5 seconds.")
