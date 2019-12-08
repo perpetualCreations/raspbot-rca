@@ -50,6 +50,7 @@ class nav:
         self.task = ""
         self.nav_task_active = False
         self.distance_check = True
+        self.distance_request = True
         self.nav_time = 0
         print("[INFO]: Creating SenseHAT interface object...")
         # self.sense = SenseHat()
@@ -138,18 +139,37 @@ class nav:
     pass
     def get_distance(self):
         """Gets distance from ToF sensor and returns as list, indexed as 0 being a string output, 1 being a integer output."""
-        print("[INFO]: Collecting distance data...")
-        nav.display(self, "Collecting distance data...")
-        self.arduino.write(b"T")
-        print("[INFO]: Decoding byte data...")
-        sleep(0.1)
-        distance = self.arduino.read_until()
-        distance = distance.decode(encoding="utf-8", errors="replace")
-        distance = distance.rstrip('\n')
-        distance_int = int(distance)
-        print("[INFO]: Collected distance data, returning...")
-        nav.display(self, "Collected distance data, returning...")
-        return [distance, distance_int]
+        if self.distance_request is True:
+            print("[INFO]: Collecting distance data...")
+            nav.display(self, "Collecting distance data...")
+            self.arduino.write(b"T")
+            print("[INFO]: Decoding byte data...")
+            sleep(0.1)
+            distance = self.arduino.read_until()
+            distance = distance.decode(encoding="utf-8", errors="replace")
+            distance = distance.rstrip('\n')
+            if distance == "(out of range)":
+                distance_int = None
+            elif distance == "(fail)":
+                distance_int = None
+                print("[FAIL]: ToF sensor failed!")
+                nav.stop(self)
+                messagebox.showerror("Raspbot RCA-G: ToF Sensor Failed!", "The Time of Flight (ToF) sensor has failed! Without it Raspbot cannot perform distance checks. A dialogue will appear to disable distance checks and continue with the navigation.")
+                override = messagebox.askyesno("Raspbot RCA-G: Override Distance Check?", "Disable distance checks and continue with the navigation?")
+                if override is True:
+                    print("[INFO]: Disabled distance check.")
+                    self.distance_request = False
+                else:
+                    print("[INFO]: Ended navigation early due to failed ToF sensor.")
+            else:
+                distance_int = int(distance)
+            pass
+            print("[INFO]: Collected distance data, returning...")
+            nav.display(self, "Collected distance data, returning...")
+            return [distance, distance_int]
+        else:
+            return ["n/a", None]
+        pass
     pass
     def runtime(self, time):
         """Function containing runtime processes while a navigation is active."""
@@ -164,7 +184,7 @@ class nav:
                 nav.display(self, "Object less than 640 mm away." + "\n" + "When navigation executed, collision will occur!")
                 nav.stop(self)
                 messagebox.showwarning("Raspbot RCA-G: Collision Warning!", "The ToF distance sensor has detected an object less than 640mm away. A dialogue will appear to continue anyways with the navigation.")
-                override = messagebox.askyesno("Raspbot RCA-G: Nav Confirm", "Override and execute navigation? If executed collision may occur.")
+                override = messagebox.askyesno("Raspbot RCA-G: Override Distance Check?", "Override and execute navigation? If executed collision may occur.")
                 if override is True:
                     print("[INFO]: Warning ignored, executing navigation...")
                     nav.display(self, "Continuing with navigation...")
@@ -173,9 +193,11 @@ class nav:
                     print("[INFO]: Ended navigation early due to collision warning.")
                     return None
                 pass
-            else:
+            elif distance_int > 640:
                 print("[INFO]: Pre-nav distance check cleared.")
                 nav.display(self, "Cleared distance check.")
+            else:
+                print("[INFO]: Distance check disabled, passing...")
             pass
         pass
         if time != 0:
@@ -190,7 +212,7 @@ class nav:
                     nav.stop(self)
                     messagebox.showwarning("Raspbot RCA-G: Collision Warning!", "The ToF distance sensor has detected an object less than 30mm away. A dialogue will appear to resume or stop navigation.")
                     str_time = str(time)
-                    override = messagebox.askyesno("Raspbot RCA-G: Nav Confirm", "Override and resume navigation? Your current nav has " + str_time + " left.")
+                    override = messagebox.askyesno("Raspbot RCA-G: Override Distance Check?", "Override and resume navigation? Your current nav has " + str_time + " left.")
                     if override is True:
                         print("[INFO]: Warning ignored, continued navigation.")
                         nav.display(self, "Continuing with navigation...")
