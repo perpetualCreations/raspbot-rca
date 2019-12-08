@@ -162,6 +162,8 @@ class nav:
                     self.distance_request = False
                 else:
                     print("[INFO]: Ended navigation early due to failed ToF sensor.")
+            elif distance == "":
+                distance_int = None
             else:
                 distance_int = int(distance)
             pass
@@ -180,9 +182,12 @@ class nav:
             distance_data = nav.get_distance(self)
             distance_str = distance_data[0]
             distance_int = distance_data[1]
+            if distance_int is None:
+                distance_int = 1999
+            pass
             if distance_int < 640 and self.distance_check is True:
                 print("[FAIL]: Distance from object facing front of vehicle is less than 640mm, when navigation executed collision will occur!")
-                nav.display(self, "Object less than 640 mm away." + "\n" + "When navigation executed, collision will occur!")
+                nav.display(self, "Object less than 640 mm" + "\n" + "away." + "\n" + "When navigation executed, collision will occur!")
                 nav.stop(self)
                 messagebox.showwarning("Raspbot RCA-G: Collision Warning!", "The ToF distance sensor has detected an object less than 640mm away. A dialogue will appear to continue anyways with the navigation.")
                 override = messagebox.askyesno("Raspbot RCA-G: Override Distance Check?", "Override and execute navigation? If executed collision may occur.")
@@ -192,6 +197,7 @@ class nav:
                     self.distance_check = False
                 else:
                     print("[INFO]: Ended navigation early due to collision warning.")
+                    nav.display(self, "Navigation stopped.")
                     return None
                 pass
             elif distance_int > 640:
@@ -223,6 +229,7 @@ class nav:
                         self.distance_check = False
                     else:
                         print("[INFO]: Ended navigation early due to collision warning.")
+                        nav.display(self, "Navigation ended.")
                         return None
                     pass
                 else:
@@ -281,6 +288,7 @@ class nav:
         elif time == 0:
             nav.stop(self)
             print("[INFO]: Ended navigation, task complete!")
+            nav.display(self, "Navigation complete.")
             return None
         else:
             raise Exception("Navigation time variable is a negative or otherwise invalid variable type!")
