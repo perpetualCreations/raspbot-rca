@@ -205,6 +205,9 @@ class nav:
                 distance_data = nav.get_distance(self)
                 distance_str = distance_data[0]
                 distance_int = distance_data[1]
+                if distance_int is None:
+                    distance_int = 1999
+                pass
                 print("[INFO]: Checking distance data for incoming collisions...")
                 if distance_int < 40 and self.distance_check is True:
                     print("[FAIL]: Distance from object facing front of vehicle is less than 30mm! Collision warning!")
@@ -238,7 +241,7 @@ class nav:
                     accelerometer_y = str(round(accelerometer_data["y"], 2) * 9.81)
                     accelerometer_z = str(round(accelerometer_data["z"], 2) * 9.81)
                     accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
-                    distance_output = "[Distance to Collision]" + "\n" + str(distance_str) + " mm"
+                    distance_output = "[Distance to Collision]" + "\n" + distance_str + " mm"
                     '''
                     self.content = "none"  # orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
                     nav.display(self, self.content)
