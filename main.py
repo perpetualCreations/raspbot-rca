@@ -40,7 +40,7 @@ class Raspbot:
         print("[INFO]: Starting module vitals-gui...")
         Popen("sudo python3 vitals-gui.py", shell = True)
         print("[INFO]: Starting module nav...")
-        Popen("sudo python3 motors.py", shell = True)
+        Popen("sudo python3 nav.py", shell = True)
         print("[INFO]: Starting module led_graphics...")
         Popen("sudo python3 led_graphics.py", shell = True)
         print("[INFO]: Starting live view from Pyimagesearch.")
