@@ -77,17 +77,18 @@ class science:
         orientation_roll = str(round(orientation_raw["roll"], 2))
         orientation_pitch = str(round(orientation_raw["pitch"], 2))
         orientation_yaw = str(round(orientation_raw["yaw"], 2))
-        orientation = "Orientation in Degrees, Roll: " + orientation_roll + ", Pitch: " + orientation_pitch + ", Yaw: " + orientation_yaw
+        orientation = "Roll: " + orientation_roll + ", Pitch: " + orientation_pitch + ", Yaw: " + orientation_yaw
         compass_str = str(compass) + " Degrees (0 being North)"
         accelerometer_x = str(round(accelerometer_data["x"], 2))
         accelerometer_y = str(round(accelerometer_data["y"], 2))
         accelerometer_z = str(round(accelerometer_data["z"], 2))
-        accelerometer = "Acceleration in Gs, X: " + accelerometer_x + ", Y: " + accelerometer_y + ", Z: " + accelerometer_z
+        accelerometer = "X: " + accelerometer_x + ", Y: " + accelerometer_y + ", Z: " + accelerometer_z
         print("[INFO]: Starting serial connection with Grove Arduino integration...")
         try:
             arduino = serial.Serial('/dev/ttyACM0', timeout = 5)
-        except serial.serialutil.SerialException:
-            print("[FAIL]: Failed to create connection with Grove Arduino integration!")
+        except serial.serialutil.SerialException as se:
+            print("[FAIL]: Failed to create connection with Grove Arduino integration! See details below.")
+            print(se)
             return None
         pass
         sleep(5)
@@ -118,7 +119,7 @@ class science:
         timestamp_str = str(timestamp_output)
         self.content = "Timestamp: " + timestamp_str + "\n" + "Temperature: " + temperature_str + "\n"\
                        + "Atm. Pressure: " + pressure_str + "\n" + "Atm. Humidity: " + humidity_str + "\n"\
-                       + "Orientation: " + orientation + "\n" + "Compass: " + compass_str + "\n" + "Acceleration" \
+                       + "Orientation: " + "\n" + orientation + "\n" + "Compass: " + compass_str + "\n" + "Acceleration: " \
                        + accelerometer + "\n" + "Dust LPO Time: " + dust_lpo + "\n" \
                        + "Dust LPO/Observation Time Ratio: " + dust_ratio + "\n" + "Dust Concentration: " \
                        + dust_concentration + "\n" + "ToF Distance: " + distance

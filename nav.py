@@ -39,9 +39,10 @@ class nav:
         print("[INFO]: Nav loaded!")
         print("[INFO]: Starting serial connection with Arduino microcontroller...")
         try:
-            self.arduino = serial.Serial("/dev/ttyAMC0", timeout = 5)
-        except serial.serialutil.SerialException:
-            print("[FAIL]: Failed to create connection with Arduino microcontroller!")
+            self.arduino = serial.Serial("/dev/ttyACM0", timeout = 5)
+        except serial.serialutil.SerialException as se:
+            print("[FAIL]: Failed to create connection with Arduino microcontroller! Details below.")
+            print(se)
             exit(1)
         pass
         sleep(5)
