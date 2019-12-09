@@ -55,17 +55,17 @@ class nav:
         print("[INFO]: Creating SenseHAT interface object...")
         # self.sense = SenseHat()
         print("[INFO]: Loading graphics...")
-        root = tkinter.Tk()
-        root.title("Raspbot RCA-G: Navigation")
-        root.configure(bg = "#344561")
-        root.geometry('{}x{}'.format(380, 280))
-        root.resizable(width = False, height = False)
-        graphics_title = tkinter.Label(root, text = "Nav Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
+        self.root = tkinter.Tk()
+        self.root.title("Raspbot RCA-G: Navigation")
+        self.root.configure(bg = "#344561")
+        self.root.geometry('{}x{}'.format(380, 280))
+        self.root.resizable(width = False, height = False)
+        graphics_title = tkinter.Label(self.root, text = "Nav Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
         graphics_title.grid(row = 0, column = 0)
-        self.graphics_nav_telemetry = tkinter.Text(root, width = 25, height = 8)
+        self.graphics_nav_telemetry = tkinter.Text(self.root, width = 25, height = 8)
         self.graphics_nav_telemetry.configure(state = tkinter.DISABLED)
         self.graphics_nav_telemetry.grid(row = 1, column = 0, padx = (10, 15), pady = (0, 14))
-        graphics_nav_frame_buttons = tkinter.Frame(root, bg = "#344561")
+        graphics_nav_frame_buttons = tkinter.Frame(self.root, bg = "#344561")
         graphics_nav_button_forward = tkinter.Button(graphics_nav_frame_buttons, text = "F", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "F"))
         graphics_nav_button_forward.pack(side = tkinter.TOP)
         graphics_nav_button_backward = tkinter.Button(graphics_nav_frame_buttons, text = "B", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "B"))
@@ -83,21 +83,21 @@ class nav:
         graphics_nav_buttons_right_backwards.pack(side = tkinter.BOTTOM)
         graphics_nav_frame_buttons_right.pack(side = tkinter.RIGHT)
         graphics_nav_frame_buttons.grid(row = 1, column = 1, padx = (0, 10))
-        graphics_nav_frame_buttons_spin = tkinter.Frame(root, bg = "#344561")
+        graphics_nav_frame_buttons_spin = tkinter.Frame(self.root, bg = "#344561")
         graphics_nav_buttons_spin_clockwise = tkinter.Button(graphics_nav_frame_buttons_spin, text = "S", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "S"))
         graphics_nav_buttons_spin_clockwise.pack(side = tkinter.LEFT)
         graphics_nav_buttons_spin_counterclockwise = tkinter.Button(graphics_nav_frame_buttons_spin, text = "C", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.set_task(self, "C"))
         graphics_nav_buttons_spin_counterclockwise.pack(side = tkinter.RIGHT)
         graphics_nav_frame_buttons_spin.grid(row= 2, column = 1, padx = (0, 10), pady = (10, 0))
-        graphics_nav_frame_entry = tkinter.Frame(root, bg = "#344561")
+        graphics_nav_frame_entry = tkinter.Frame(self.root, bg = "#344561")
         self.graphics_nav_entry_time = tkinter.Entry(graphics_nav_frame_entry, fg = "white", bg = "#344561", font = ("Calibri", 12))
         self.graphics_nav_entry_time.pack(side = tkinter.LEFT)
         graphics_nav_button_time_submit = tkinter.Button(graphics_nav_frame_entry, text = "<", fg = "white", bg = "#344561", font = ("Calibri", 12), command = lambda: nav.time_check(self))
         graphics_nav_button_time_submit.pack(side = tkinter.RIGHT)
         graphics_nav_frame_entry.grid(row = 2, column = 0)
-        graphics_nav_buttons_execute = tkinter.Button(root, text = "Execute Nav", fg = "white", bg = "#344561", width = 20, font = ("Calibri", 12), command = lambda: nav.process_command(self, self.task))
+        graphics_nav_buttons_execute = tkinter.Button(self.root, text = "Execute Nav", fg = "white", bg = "#344561", width = 20, font = ("Calibri", 12), command = lambda: nav.process_command(self, self.task))
         graphics_nav_buttons_execute.grid(row = 3, column = 0, padx = (60, 0), pady = (10, 0))
-        root.mainloop()
+        self.root.mainloop()
     pass
     def set_task(self, task):
         """Sets task variable, because lambda doesn't support variable assignment."""
@@ -129,6 +129,7 @@ class nav:
         self.graphics_nav_telemetry.delete("1.0", tkinter.END)
         self.graphics_nav_telemetry.insert("1.0", content)
         self.graphics_nav_telemetry.configure(state=tkinter.DISABLED)
+        self.root.update_idletasks()
     pass
     def get_distance(self):
         """Gets distance from ToF sensor and returns as list, indexed as 0 being a string output, 1 being a integer output."""
@@ -161,8 +162,8 @@ class nav:
             else:
                 distance_int = int(distance)
             pass
-            print("this shouldve gone through")
-            print("[INFO]: Collected distance data, returning... " + "(returned value was: " + distance + ")")
+            print(distance)
+            print("[INFO]: Collected distance data, returning...")
             nav.display(self, "Collected distance data, returning...")
             return [distance, distance_int]
         else:
@@ -214,6 +215,7 @@ class nav:
                 accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
                 distance_output = "[Distance to Collision]" + "\n" + distance_str + " mm"
                 '''
+                print("display!")
                 self.content = "none"  # orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
                 nav.display(self, self.content)
                 print("[INFO]: Process cycle complete.")
