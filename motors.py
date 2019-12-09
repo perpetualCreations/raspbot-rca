@@ -161,7 +161,6 @@ class nav:
             else:
                 distance_int = int(distance)
             pass
-            print(distance)
             print("[INFO]: Collected distance data, returning...")
             nav.display(self, "Collected distance data, returning...")
             return [distance, distance_int]
