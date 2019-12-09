@@ -138,9 +138,10 @@ class nav:
             self.arduino.write(b"T")
             print("[INFO]: Decoding byte data...")
             sleep(0.1)
-            distance = self.arduino.read_until()
+            distance = self.arduino.readline()
             distance = distance.decode(encoding="utf-8", errors="replace")
             distance = distance.rstrip('\n')
+            distance = str(distance)
             if distance == "(out of range)":
                 distance_int = None
             elif distance == "(fail)":
@@ -160,7 +161,8 @@ class nav:
             else:
                 distance_int = int(distance)
             pass
-            print("[INFO]: Collected distance data, returning...")
+            print("this shouldve gone through")
+            print("[INFO]: Collected distance data, returning... " + "(returned value was: " + distance + ")")
             nav.display(self, "Collected distance data, returning...")
             return [distance, distance_int]
         else:
