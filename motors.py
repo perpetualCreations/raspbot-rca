@@ -13,7 +13,7 @@ try:
     from time import gmtime
     from time import strftime
     from time import sleep
-    # from sense_hat import SenseHat
+    from sense_hat import SenseHat
     import serial
     from sys import exit
 except ImportError as e:
@@ -39,7 +39,7 @@ class nav:
         print("[INFO]: Nav loaded!")
         print("[INFO]: Starting serial connection with Arduino microcontroller...")
         try:
-            self.arduino = serial.Serial("COM5", timeout = 5)
+            self.arduino = serial.Serial("/dev/ttyAMC0", timeout = 5)
         except serial.serialutil.SerialException:
             print("[FAIL]: Failed to create connection with Arduino microcontroller!")
             exit(1)
@@ -53,7 +53,7 @@ class nav:
         self.distance_request = True
         self.nav_time = 0
         print("[INFO]: Creating SenseHAT interface object...")
-        # self.sense = SenseHat()
+        self.sense = SenseHat()
         print("[INFO]: Loading graphics...")
         self.root = tkinter.Tk()
         self.root.title("Raspbot RCA-G: Navigation")
@@ -138,7 +138,6 @@ class nav:
             nav.display(self, "Collecting distance data...")
             self.arduino.write(b"T")
             print("[INFO]: Decoding byte data...")
-            sleep(0.1)
             distance = self.arduino.readline()
             distance = distance.decode(encoding="utf-8", errors="replace")
             distance = distance.rstrip('\n')
@@ -197,7 +196,6 @@ class nav:
                     return None
                 pass
             else:
-                '''
                 print("[INFO]: Collecting orientation, compass, and acceleration data...")
                 orientation_raw = self.sense.get_orientation_degrees()
                 compass_raw = self.sense.compass
@@ -214,7 +212,6 @@ class nav:
                 accelerometer_z = str(round(accelerometer_data["z"], 2) * 9.81)
                 accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
                 distance_output = "[Distance to Collision]" + "\n" + distance_str + " mm"
-                '''
                 print("display!")
                 self.content = "none"  # orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
                 nav.display(self, self.content)
