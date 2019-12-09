@@ -58,11 +58,11 @@ class nav:
         self.root = tkinter.Tk()
         self.root.title("Raspbot RCA-G: Navigation")
         self.root.configure(bg = "#344561")
-        self.root.geometry('{}x{}'.format(380, 280))
+        self.root.geometry('{}x{}'.format(380, 375))
         self.root.resizable(width = False, height = False)
         graphics_title = tkinter.Label(self.root, text = "Nav Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
         graphics_title.grid(row = 0, column = 0)
-        self.graphics_nav_telemetry = tkinter.Text(self.root, width = 25, height = 8)
+        self.graphics_nav_telemetry = tkinter.Text(self.root, width = 25, height = 14)
         self.graphics_nav_telemetry.configure(state = tkinter.DISABLED)
         self.graphics_nav_telemetry.grid(row = 1, column = 0, padx = (10, 15), pady = (0, 14))
         graphics_nav_frame_buttons = tkinter.Frame(self.root, bg = "#344561")
@@ -211,8 +211,7 @@ class nav:
                 accelerometer_z = str(round(accelerometer_data["z"], 2) * 9.81)
                 accelerometer = "[Acceleration in m/s]" + "\n" + "X: " + accelerometer_x + "\n" + "Y: " + accelerometer_y + "\n" + "Z: " + accelerometer_z
                 distance_output = "[Distance to Collision]" + "\n" + distance_str + " mm"
-                print("display!")
-                self.content = "none"  # orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
+                self.content = orientation + "\n" + accelerometer + "\n" + compass_str + "\n" + distance_output
                 nav.display(self, self.content)
                 print("[INFO]: Process cycle complete.")
                 time -= 1
