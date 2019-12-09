@@ -91,7 +91,6 @@ class science:
             print(se)
             return None
         pass
-        sleep(5)
         print("[INFO]: Collecting data from serial.")
         arduino.write(b"D")
         sleep(0.1)

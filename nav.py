@@ -45,7 +45,6 @@ class nav:
             print(se)
             exit(1)
         pass
-        sleep(5)
         print("[INFO]: Declaring variables...")
         self.content = ""
         self.task = ""
