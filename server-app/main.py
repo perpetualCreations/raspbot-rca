@@ -5,8 +5,10 @@
 
 try:
     import configparser
+    import socket
 except ImportError as e:
     configparser = None
+    socket = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
 except ImportWarning as e:
