@@ -6,9 +6,15 @@
 try:
     import configparser
     import socket
+    from subprocess import call
+    import multiprocessing
+    from sys import exit as app_end
 except ImportError as e:
     configparser = None
     socket = None
+    call = None
+    multiprocessing = None
+    app_end = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
 except ImportWarning as e:
@@ -20,4 +26,55 @@ class server:
     """Main class."""
     def __init__(self):
         """Initiation function of RCA. Reads configs and starts boot processes."""
-        print("[INFO]: ")
+        print("[INFO]: Starting host Raspbot RC Application...")
+        # TODO collect configurations from file
+        self.port = 67777
+        print("[INFO]: Creating open server socket...")
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.bind((socket.gethostname(), self.port))
+        self.socket.listen(1)
+        connection, from_address = self.socket.accept()
+        with connection:
+            print("[INFO]: Received connection from ", from_address, ".")
+            connection.sendall(b"rca-1.2:connection_acknowledge")
+            while True:
+                data = connection.recv(1024)
+                data = data.decode(encoding = "utf-8", errors = "replace") # TODO perform auth check and rsa events
+            pass
+        pass
+    pass
+    def create_process(self, target, args):
+        """Creates a new process from multiprocessing."""
+        if __name__ == '__main__':
+            try:
+                dummy = multiprocessing.Process(target = target, args = args)
+                dummy.start()
+                dummy.join()
+            except multiprocessing.ProcessError as e:
+                print("[FAIL]: Process creation failed! Details below.")
+                print(e)
+                return None
+            pass
+            return dummy
+        else:
+            return None
+        pass
+    pass
+    def shutdown(self):
+        """Shuts down bot."""
+        call("sudo shutdown now", shell = True)
+    pass
+    def reboot(self):
+        """Reboots bot."""
+        call("sudo reboot now", shell = True)
+    pass
+    def exit(self):
+        """Stops host application."""
+        app_end(0)
+    pass
+    def os_update(self):
+        """Updates apt packages and host operating system."""
+        call("sudo apt-get update && sudo apt-get upgrade -y", shell = True)
+        return True
+    pass
+pass
