@@ -9,12 +9,16 @@ try:
     from subprocess import call
     import multiprocessing
     from sys import exit as app_end
+    import hashlib
+    from crypto.PublicKey import RSA
 except ImportError as e:
     configparser = None
     socket = None
     call = None
     multiprocessing = None
     app_end = None
+    hashlib = None
+    RSA = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
 except ImportWarning as e:
@@ -40,6 +44,7 @@ class server:
             while True:
                 data = connection.recv(1024)
                 data = data.decode(encoding = "utf-8", errors = "replace") # TODO perform auth check and rsa events
+
             pass
         pass
     pass
@@ -50,9 +55,9 @@ class server:
                 dummy = multiprocessing.Process(target = target, args = args)
                 dummy.start()
                 dummy.join()
-            except multiprocessing.ProcessError as e:
+            except multiprocessing.ProcessError as me:
                 print("[FAIL]: Process creation failed! Details below.")
-                print(e)
+                print(me)
                 return None
             pass
             return dummy
