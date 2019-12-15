@@ -31,21 +31,31 @@ class server:
     def __init__(self):
         """Initiation function of RCA. Reads configs and starts boot processes."""
         print("[INFO]: Starting host Raspbot RC Application...")
-        # TODO collect configurations from file
+        print("[INFO]: Declaring variables...")
         self.port = 67777
+        print("[INFO]: Loading configurations...")
+        config_parse = configparser.ConfigParser()
+        try:
+            config_parse.read("main.cfg")
+            self.port = config_parse["NET"]["PORT"]
+        except configparser.Error as ce:
+            print("[FAIL]: Failed to load configurations! See below for details.")
+            print(ce)
+        except FileNotFoundError:
+            print("[FAIL]: Failed to load configurations! Configuration file is missing.")
+        pass
         print("[INFO]: Creating open server socket...")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setblocking(False)
+        self.socket.settimeout(10)
         self.socket.bind((socket.gethostname(), self.port))
         self.socket.listen(1)
         connection, from_address = self.socket.accept()
         with connection:
             print("[INFO]: Received connection from ", from_address, ".")
             connection.sendall(b"rca-1.2:connection_acknowledge")
-            while True:
-                data = connection.recv(1024)
-                data = data.decode(encoding = "utf-8", errors = "replace") # TODO perform auth check and rsa events
-
-            pass
+            data = connection.recv(1024)
+            data = data.decode(encoding = "utf-8", errors = "replace") # TODO perform auth check and rsa events
         pass
     pass
     def create_process(self, target, args):

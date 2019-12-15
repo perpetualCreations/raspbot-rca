@@ -57,6 +57,8 @@ class Raspbot:
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
+        except FileNotFoundError:
+            print("[FAIL]: Failed to load configurations! Configuration file is missing.")
         pass
         print("[INFO]: Starting GUI...")
         self.root = tkinter.Tk()
@@ -64,11 +66,6 @@ class Raspbot:
         self.root.configure(bg = "#344561")
         self.root.geometry('{}x{}'.format(400, 370))
         self.root.resizable(width=False, height=False)
-        graphics_title = tkinter.Label(self.root, text = "Science", fg = "white", bg = "#344561", font = ("Calibri", 16))
-        graphics_title.grid(row = 0, column = 0, padx = (0, 500))
-        self.graphics_science = tkinter.Text(self.root, height = 15)
-        self.graphics_science.configure(state = tkinter.DISABLED)
-        self.graphics_science.grid(row = 1, column = 0, pady = (5, 14))
         self.root.mainloop()
     pass
     def connect(self):
@@ -131,3 +128,4 @@ class Raspbot:
 pass
 
 r = Raspbot()
+r.connect()
