@@ -42,9 +42,22 @@ class Raspbot:
         self.host = ""
         self.port = 67777
         self.connect_retries = 0
+        self.components = [None, None, None, None, None] # [Camera, SenseHAT, Distance, Dust, Charger]
         print("[INFO]: Loading configurations...")
-        with configparser as c:
-            c.open("main.cfg", "w+")
+        config_parse = configparser.ConfigParser()
+        try:
+            config_parse.read("main.cfg")
+            self.components[0] = config_parse["HARDWARE"]["CAM"]
+            self.components[1] = config_parse["HARDWARE"]["SenseHAT"]
+            self.components[2] = config_parse["HARDWARE"]["DISTANCE"]
+            self.components[3] = config_parse["HARDWARE"]["DUST"]
+            self.components[4] = config_parse["HARDWARE"]["CHARGER"]
+            self.host = config_parse["NET"]["IP"]
+            self.port = config_parse["NET"]["PORT"]
+        except configparser.Error as ce:
+            print("[FAIL]: Failed to load configurations! See below for details.")
+            print(ce)
+        pass
         print("[INFO]: Starting GUI...")
         self.root = tkinter.Tk()
         self.root.title("Raspbot RCA: Client")
@@ -56,12 +69,6 @@ class Raspbot:
         self.graphics_science = tkinter.Text(self.root, height = 15)
         self.graphics_science.configure(state = tkinter.DISABLED)
         self.graphics_science.grid(row = 1, column = 0, pady = (5, 14))
-        graphics_science_frame_buttons = tkinter.Frame(self.root, bg = "#344561")
-        graphics_science_button_reload = tkinter.Button(graphics_science_frame_buttons, text = "Refresh", fg = "white", bg = "#344561", width = 40, font = ("Calibri", 12), command = lambda: science.science_get(self))
-        graphics_science_button_reload.pack(side = tkinter.TOP)
-        graphics_science_button_save = tkinter.Button(graphics_science_frame_buttons, text = "Save", fg = "white", bg = "#344561", width = 40, font = ("Calibri", 12), command = lambda: science.science_save(self))
-        graphics_science_button_save.pack(side = tkinter.BOTTOM)
-        graphics_science_frame_buttons.grid(row = 2, column = 0, padx = (0, 250))
         self.root.mainloop()
     pass
     def connect(self):
