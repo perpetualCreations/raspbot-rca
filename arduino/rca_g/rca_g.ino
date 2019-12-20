@@ -60,11 +60,29 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly: 
+  // key
+  // & = Compatability Check
+  // * = Voltage Check
+  // F, B, Arrest = Forwards, Backwards, Arrest
+  // W, X = Right Forwards, Backwards
+  // Y, Z = Left Forwards, Backwards
+  // D = Dust Sensor (Enceladus RFP)
+  // T = Distance (Enceladus RFP)
 
   if (Serial.available() > 0) {
 
     incomingData = Serial.read();
+
+    if (incomingData == '&') {
+      // TODO hardware check here
+    }
+
+    if (incomingData == '*') {
+      int value = analogRead(A0);
+      float voltage = value * (5.0 / 1023.0);
+      Serial.write(voltage);
+      Serial.write('\n')
+    }
     
     if (incomingData == 'F') {
       digitalWrite(12, HIGH);
@@ -167,12 +185,6 @@ void loop() {
     }
 
     if (incomingData == 'D') {
-      Serial.write('X');
-      Serial.write('\n');
-      Serial.write('X');
-      Serial.write('\n');
-      Serial.write('X');
-      Serial.write('\n');
       starttime = millis();
       duration = pulseIn(10, LOW);
       lowpulseoccupancy = lowpulseoccupancy+duration;
@@ -183,9 +195,12 @@ void loop() {
           dust_serial_array[0] = char(lowpulseoccupancy);
           dust_serial_array[1] = char(ratio);
           dust_serial_array[2] = char(concentration);
-          Serial.println(dust_serial_array[0]);
-          Serial.println(dust_serial_array[1]);
-          Serial.println(dust_serial_array[2]);
+          Serial.write(dust_serial_array[0]);
+          Serial.write('\n')
+          Serial.write(dust_serial_array[1]);
+          Serial.write('\n')
+          Serial.write(dust_serial_array[2]);
+          Serial.write('\n')
           lowpulseoccupancy = 0;
           starttime = millis();
       }

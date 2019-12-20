@@ -91,5 +91,6 @@ class server:
         """Updates apt packages and host operating system."""
         call("sudo apt-get update && sudo apt-get upgrade -y", shell = True)
         return True
+
     pass
 pass

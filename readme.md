@@ -48,6 +48,7 @@
         </style>
     </head>
     <body> 
+    <hr>
         <p>Raspbot Documentation</p>
         <a href="https://dreamerslegacy.xyz/projects/raspbot/docs.html" target="_blank">Open Page</a>
     </body>

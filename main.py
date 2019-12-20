@@ -9,8 +9,9 @@ try:
     import os
     from subprocess import call
     from time import sleep
-    from crypto import RSA
-    from crypto import Random
+    from Cryptodome.PublicKey import RSA
+    from Cryptodome import Random
+    from Cryptodome.Cypher import AES
     import socket
     import configparser
     import hashlib
@@ -21,6 +22,7 @@ except ImportError as e:
     call = None
     Popen = None
     RSA = None
+    AES = None
     Random = None
     hashlib = None
     print("[FAIL]: Imports failed! See below.")
