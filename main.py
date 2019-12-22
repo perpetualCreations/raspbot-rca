@@ -44,16 +44,16 @@ class Raspbot:
         self.host = ""
         self.port = 67777
         self.connect_retries = 0
-        self.components = [None, None, None, None, None] # [Camera, SenseHAT, Distance, Dust, Charger]
+        self.components = [[None], [None, None, None], [None]] # [Base Set [CAM], RFP Enceladus [SenseHAT, DISTANCE, DUST], Upgrade #1 [CHARGER]]
         print("[INFO]: Loading configurations...")
         config_parse = configparser.ConfigParser()
         try:
             config_parse.read("main.cfg")
-            self.components[0] = config_parse["HARDWARE"]["CAM"]
-            self.components[1] = config_parse["HARDWARE"]["SenseHAT"]
-            self.components[2] = config_parse["HARDWARE"]["DISTANCE"]
-            self.components[3] = config_parse["HARDWARE"]["DUST"]
-            self.components[4] = config_parse["HARDWARE"]["CHARGER"]
+            self.components[0][0] = config_parse["HARDWARE"]["CAM"]
+            self.components[1][0] = config_parse["HARDWARE"]["SenseHAT"]
+            self.components[1][1] = config_parse["HARDWARE"]["DISTANCE"]
+            self.components[1][2] = config_parse["HARDWARE"]["DUST"]
+            self.components[2][0] = config_parse["HARDWARE"]["CHARGER"]
             self.host = config_parse["NET"]["IP"]
             self.port = config_parse["NET"]["PORT"]
         except configparser.Error as ce:

@@ -26,7 +26,7 @@ except ImportWarning as e:
     print(e)
 pass
 
-class server:
+class host:
     """Main class."""
     def __init__(self):
         """Initiation function of RCA. Reads configs and starts boot processes."""
@@ -56,6 +56,7 @@ class server:
             connection.sendall(b"rca-1.2:connection_acknowledge")
             data = connection.recv(1024)
             data = data.decode(encoding = "utf-8", errors = "replace") # TODO perform auth check and rsa events
+
         pass
     pass
     def create_process(self, target, args):
