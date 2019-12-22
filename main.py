@@ -10,7 +10,7 @@ try:
     from subprocess import call
     from time import sleep
     from Cryptodome.PublicKey import RSA
-    from Cryptodome import Random
+    from Cryptodome import Random       
     from Cryptodome.Cypher import AES
     import socket
     import configparser
@@ -38,6 +38,7 @@ class Raspbot:
         """Initiation function of Raspbot RCA."""
         print("[INFO]: Starting client Raspbot RC Application...")
         print("[INFO]: Declaring variables...")
+        self.key = None
         self.private = None
         self.public = None
         self.socket = None
@@ -86,22 +87,46 @@ class Raspbot:
         if confirm is False:
             return None
         pass
-        print("[INFO]: Encrypting...")
-        random_generator = Random.new().read
-        self.private = RSA.generate(1024, random_generator)
-        self.public = self.private.publickey().exportKey()
-        hash_object = hashlib.sha1(self.public)
-        hex_digest = hash_object.hexdigest()
+        print("[INFO]: Generating encryption keys...")
+        random = Random.new().read
+        self.key = RSA.generate(1024, random)
+        self.private = self.key.exportKey()
+        self.public = self.key.publickey().exportKey()
+        hash_public_object = hashlib.sha1(self.public)
+        hash_public = hash_public_object.hexdigest()
+        print("[INFO]: Forwarding keys to host...")
         self.socket.sendall(self.public)
         confirm = Raspbot.receive_acknowledgement(self)
         if confirm is False:
             return None
         pass
-        self.socket.sendall(hex_digest)
+        self.socket.sendall(hash_public)
         confirm = Raspbot.receive_acknowledgement(self)
         if confirm is False:
             return None
         pass
+        msg = self.socket.recv(1024)
+        self.socket.sendall(b"rca-1.2:connection_acknowledge")
+        en = eval(msg)
+        decrypt = self.key.decrypt(en)
+        # hashing sha1
+        en_object = hashlib.sha1(decrypt)
+        en_digest = en_object.hexdigest()
+    pass
+    def send(self, contents):
+        """Sends encrypted string to connected host."""
+        mess = raw_input(name + " : ")
+        key = key[:16]
+        # merging the message and the name
+        whole = name + " : " + mess
+        ideaEncrypt = IDEA.new(key, IDEA.MODE_CTR, counter=lambda: key)
+        eMsg = ideaEncrypt.encrypt(whole)
+        # converting the encrypted message to HEXADECIMAL to readable
+        eMsg = eMsg.encode("hex").upper()
+        if eMsg != "":
+            print("ENCRYPTED MESSAGE TO c qSERVER-> " + eMsg)
+        server.send(eMsg)
+
     pass
     def receive_acknowledgement(self):
         """Listens for an acknowledgement byte string, returns booleans whether string was received or failed."""

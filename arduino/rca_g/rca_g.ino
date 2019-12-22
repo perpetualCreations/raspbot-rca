@@ -62,7 +62,6 @@ void setup() {
 void loop() {
   // key
   // & = Compatability Check
-  // * = Voltage Check
   // F, B, Arrest = Forwards, Backwards, Arrest
   // W, X = Right Forwards, Backwards
   // Y, Z = Left Forwards, Backwards
@@ -75,13 +74,6 @@ void loop() {
 
     if (incomingData == '&') {
       // TODO hardware check here
-    }
-
-    if (incomingData == '*') {
-      int value = analogRead(A0);
-      float voltage = value * (5.0 / 1023.0);
-      Serial.write(voltage);
-      Serial.write('\n')
     }
     
     if (incomingData == 'F') {

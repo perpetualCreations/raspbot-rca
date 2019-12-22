@@ -59,6 +59,30 @@ class host:
 
         pass
     pass
+    def receive_acknowledgement(self): # TODO adapt for host
+        """Listens for an acknowledgement byte string, returns booleans whether string was received or failed."""
+        acknowledgement = b""
+        try:
+            acknowledgement = self.socket.recv(30)
+        except socket.error:
+            print("[FAIL]: Failed to receive acknowledgement string.")
+        if acknowledgement == b"rca-1.2:connection_acknowledge":
+            print("[INFO]: Received acknowledgement.")
+            return True
+        else:
+            self.connect_retries += 1
+            if self.connect_retries < 5:
+                print("[FAIL]: Acknowledgement failed, retrying...")
+                self.socket.close()
+                host.connect(self)
+            else:
+                print("[FAIL]: Acknowledgement failed more than 5 times. Stopping connection...")
+                self.socket.close()
+                return False
+                pass
+            pass
+        pass
+    pass
     def create_process(self, target, args):
         """Creates a new process from multiprocessing."""
         if __name__ == '__main__':
