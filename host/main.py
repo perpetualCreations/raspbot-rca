@@ -4,21 +4,42 @@
 """
 
 try:
-    import configparser
-    import socket
+    print("[INFO]: Starting imports...")
+    import os
     from subprocess import call
-    import multiprocessing
+    from time import sleep
+    # AES + RSA-based encryption was not finished, and sections using it were commented out.
+    # from Cryptodome.PublicKey import RSA
+    # from Cryptodome import Random
+    # from Cryptodome.Cipher import AES
+    from Cryptodome.Cipher import Salsa20
+    from Cryptodome.Hash import HMAC
+    from Cryptodome.Hash import SHA256
+    from Cryptodome.Hash import MD5
+    from Cryptodome import Exception as EncryptionError
+    import socket
+    import configparser
     from sys import exit as app_end
-    import hashlib
-    from crypto.PublicKey import RSA
+    import multiprocessing
+    # import hashlib
 except ImportError as e:
-    configparser = None
-    socket = None
+    os = None
+    tkinter = None
     call = None
-    multiprocessing = None
+    Popen = None
+    Salsa20 = None
+    HMAC = None
+    SHA256 = None
+    socket = None
+    configparser = None
+    EncryptionError = Exception
+    MD5 = None
     app_end = None
-    hashlib = None
-    RSA = None
+    multiprocessing = None
+    # RSA = None
+    # AES = None
+    # Random = None
+    # hashlib = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
 except ImportWarning as e:
@@ -32,12 +53,26 @@ class host:
         """Initiation function of RCA. Reads configs and starts boot processes."""
         print("[INFO]: Starting host Raspbot RC Application...")
         print("[INFO]: Declaring variables...")
+        self.socket = None
+        self.host = ""
         self.port = 67777
+        self.connect_retries = 0
+        self.components = [[None], [None, None, None], [None]] # [Base Set [CAM], RFP Enceladus [SenseHAT, DISTANCE, DUST], Upgrade #1 [CHARGER]]
         print("[INFO]: Loading configurations...")
         config_parse = configparser.ConfigParser()
         try:
             config_parse.read("main.cfg")
+            self.components[0][0] = config_parse["HARDWARE"]["CAM"]
+            self.components[1][0] = config_parse["HARDWARE"]["SenseHAT"]
+            self.components[1][1] = config_parse["HARDWARE"]["DISTANCE"]
+            self.components[1][2] = config_parse["HARDWARE"]["DUST"]
+            self.components[2][0] = config_parse["HARDWARE"]["CHARGER"]
+            self.host = config_parse["NET"]["IP"]
             self.port = config_parse["NET"]["PORT"]
+            self.key = config_parse["ENCRYPT"]["KEY"]
+            self.key = MD5.new(self.key).hexdigest()
+            self.key = self.key.encode(encoding = "ascii", errors = "replace")
+            self.hmac_key = config_parse["ENCRYPT"]["HMAC_KEY"]
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
@@ -58,6 +93,24 @@ class host:
             data = data.decode(encoding = "utf-8", errors = "replace") # TODO perform auth check and rsa events
 
         pass
+    pass
+    def encrypt(self, byte_input):
+        """Takes byte input and returns encrypted input using a key and encryption nonce."""
+        ciphering = Salsa20.new(self.key)
+        validation = HMAC.new(self.hmac_key, msg = ciphering.encrypt(byte_input), digestmod = SHA256)
+        return [ciphering.encrypt(byte_input), ciphering.nonce, validation.hexdigest()]
+    pass
+    def decrypt(self, encrypted_input, validate, nonce):
+        """Decrypts given encrypted message and validates message with HMAC and nonce from encryption."""
+        validation = HMAC.new(self.hmac_key, msg = encrypted_input, digestmod = SHA256)
+        try:
+            validation.hexverify(validate)
+        except ValueError:
+            self.socket.close()
+            raise EncryptionError("[FAIL]: Message is not authentic, failed HMAC validation!")
+        pass
+        ciphering = Salsa20.new(self.key, nonce = nonce)
+        return ciphering.decrypt(encrypted_input)
     pass
     def receive_acknowledgement(self): # TODO adapt for host
         """Listens for an acknowledgement byte string, returns booleans whether string was received or failed."""

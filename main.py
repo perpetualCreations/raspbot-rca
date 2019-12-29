@@ -19,6 +19,8 @@ try:
     from Cryptodome import Exception as EncryptionError
     import socket
     import configparser
+    from sys import exit as app_end
+    import multiprocessing
     # import hashlib
 except ImportError as e:
     os = None
@@ -32,6 +34,8 @@ except ImportError as e:
     configparser = None
     EncryptionError = Exception
     MD5 = None
+    app_end = None
+    multiprocessing = None
     # RSA = None
     # AES = None
     # Random = None
