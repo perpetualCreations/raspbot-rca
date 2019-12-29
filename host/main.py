@@ -73,6 +73,7 @@ class host:
             self.key = MD5.new(self.key).hexdigest()
             self.key = self.key.encode(encoding = "ascii", errors = "replace")
             self.hmac_key = config_parse["ENCRYPT"]["HMAC_KEY"]
+            self.auth = config_parse["ENCRYPT"]["AUTH"]
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
@@ -85,14 +86,19 @@ class host:
         self.socket.settimeout(10)
         self.socket.bind((socket.gethostname(), self.port))
         self.socket.listen(1)
-        connection, from_address = self.socket.accept()
+        connection, client_address = self.socket.accept()
         with connection:
-            print("[INFO]: Received connection from ", from_address, ".")
-            connection.sendall(b"rca-1.2:connection_acknowledge")
+            print("[INFO]: Received connection from ", client_address, ".")
+            connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
             data = connection.recv(1024)
             data = data.decode(encoding = "utf-8", errors = "replace") # TODO perform auth check and rsa events
 
         pass
+    pass
+    def send(self, message):
+        """Wrapper for host.encrypt, formats output to be readable for sending.."""
+        encrypted = host.encrypt(self, message)
+        return encrypted[0] + b" " + encrypted[1] + b" " + encrypted[2]
     pass
     def encrypt(self, byte_input):
         """Takes byte input and returns encrypted input using a key and encryption nonce."""

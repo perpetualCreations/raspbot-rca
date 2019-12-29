@@ -47,7 +47,7 @@ except ImportWarning as e:
     print(e)
 pass
 
-class Raspbot:
+class client:
     """Main class."""
     def __init__(self):
         """Initiation function of Raspbot RCA."""
@@ -62,6 +62,7 @@ class Raspbot:
         self.port = 67777
         self.connect_retries = 0
         self.components = [[None], [None, None, None], [None]] # [Base Set [CAM], RFP Enceladus [SenseHAT, DISTANCE, DUST], Upgrade #1 [CHARGER]]
+        self.auth = ""
         print("[INFO]: Loading configurations...")
         config_parse = configparser.ConfigParser()
         try:
@@ -77,6 +78,7 @@ class Raspbot:
             self.key = MD5.new(self.key).hexdigest()
             self.key = self.key.encode(encoding = "ascii", errors = "replace")
             self.hmac_key = config_parse["ENCRYPT"]["HMAC_KEY"]
+            self.auth = config_parse["ENCRYPT"]["AUTH"]
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
@@ -103,7 +105,7 @@ class Raspbot:
             print("[FAIL]: Failed to connect! See below for details.")
             print(se)
         pass
-        confirm = Raspbot.receive_acknowledgement(self)
+        confirm = client.receive_acknowledgement(self)
         if confirm is False:
             return None
         pass
@@ -117,12 +119,12 @@ class Raspbot:
         # hash_public = hash_public_object.hexdigest()
         # print("[INFO]: Forwarding keys to host...")
         # self.socket.sendall(self.public)
-        # confirm = Raspbot.receive_acknowledgement(self)
+        # confirm = client.receive_acknowledgement(self)
         # if confirm is False:
         #     return None
         # pass
         # self.socket.sendall(hash_public)
-        # confirm = Raspbot.receive_acknowledgement(self)
+        # confirm = client.receive_acknowledgement(self)
         # if confirm is False:
         #     return None
         # pass
@@ -133,6 +135,11 @@ class Raspbot:
         # hashing sha1
         # en_object = hashlib.sha1(decrypt)
         # en_digest = en_object.hexdigest()
+    pass
+    def send(self, message):
+        """Wrapper for host.encrypt, formats output to be readable for sending.."""
+        encrypted = client.encrypt(self, message)
+        return encrypted[0] + b" " + encrypted[1] + b" " + encrypted[2]
     pass
     def encrypt(self, byte_input):
         """Takes byte input and returns encrypted input using a key and encryption nonce."""
@@ -167,7 +174,7 @@ class Raspbot:
             if self.connect_retries < 5:
                 print("[FAIL]: Acknowledgement failed, retrying...")
                 self.socket.close()
-                Raspbot.connect(self)
+                client.connect(self)
             else:
                 print("[FAIL]: Acknowledgement failed more than 5 times. Stopping connection...")
                 self.socket.close()
@@ -178,5 +185,5 @@ class Raspbot:
     pass
 pass
 
-r = Raspbot()
+r = client()
 r.connect()
