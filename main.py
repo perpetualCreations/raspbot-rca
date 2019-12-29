@@ -5,26 +5,37 @@
 
 try:
     print("[INFO]: Starting imports...")
-    import time
     import os
     from subprocess import call
     from time import sleep
-    from Cryptodome.PublicKey import RSA
-    from Cryptodome import Random       
-    from Cryptodome.Cypher import AES
+    # AES + RSA-based encryption was not finished, and sections using it were commented out.
+    # from Cryptodome.PublicKey import RSA
+    # from Cryptodome import Random
+    # from Cryptodome.Cipher import AES
+    from Cryptodome.Cipher import Salsa20
+    from Cryptodome.Hash import HMAC
+    from Cryptodome.Hash import SHA256
+    from Cryptodome.Hash import MD5
+    from Cryptodome import Exception as EncryptionError
     import socket
     import configparser
-    import hashlib
+    # import hashlib
 except ImportError as e:
-    time = None
     os = None
     tkinter = None
     call = None
     Popen = None
-    RSA = None
-    AES = None
-    Random = None
-    hashlib = None
+    Salsa20 = None
+    HMAC = None
+    SHA256 = None
+    socket = None
+    configparser = None
+    EncryptionError = Exception
+    MD5 = None
+    # RSA = None
+    # AES = None
+    # Random = None
+    # hashlib = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
 except ImportWarning as e:
@@ -38,9 +49,10 @@ class Raspbot:
         """Initiation function of Raspbot RCA."""
         print("[INFO]: Starting client Raspbot RC Application...")
         print("[INFO]: Declaring variables...")
-        self.key = None
-        self.private = None
-        self.public = None
+        # AES + RSA-based encryption was not finished, and sections using it were commented out.
+        # self.key = None
+        # self.private = None
+        # self.public = None
         self.socket = None
         self.host = ""
         self.port = 67777
@@ -57,6 +69,10 @@ class Raspbot:
             self.components[2][0] = config_parse["HARDWARE"]["CHARGER"]
             self.host = config_parse["NET"]["IP"]
             self.port = config_parse["NET"]["PORT"]
+            self.key = config_parse["ENCRYPT"]["KEY"]
+            self.key = MD5.new(self.key).hexdigest()
+            self.key = self.key.encode(encoding = "ascii", errors = "replace")
+            self.hmac_key = config_parse["ENCRYPT"]["HMAC_KEY"]
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
@@ -87,46 +103,50 @@ class Raspbot:
         if confirm is False:
             return None
         pass
-        print("[INFO]: Generating encryption keys...")
-        random = Random.new().read
-        self.key = RSA.generate(1024, random)
-        self.private = self.key.exportKey()
-        self.public = self.key.publickey().exportKey()
-        hash_public_object = hashlib.sha1(self.public)
-        hash_public = hash_public_object.hexdigest()
-        print("[INFO]: Forwarding keys to host...")
-        self.socket.sendall(self.public)
-        confirm = Raspbot.receive_acknowledgement(self)
-        if confirm is False:
-            return None
-        pass
-        self.socket.sendall(hash_public)
-        confirm = Raspbot.receive_acknowledgement(self)
-        if confirm is False:
-            return None
-        pass
-        msg = self.socket.recv(1024)
-        self.socket.sendall(b"rca-1.2:connection_acknowledge")
-        en = eval(msg)
-        decrypt = self.key.decrypt(en)
+        # AES + RSA-based encryption was not finished, and sections using it were commented out.
+        # print("[INFO]: Generating encryption keys...")
+        # random = Random.new().read
+        # self.key = RSA.generate(1024, random)
+        # self.private = self.key.exportKey()
+        # self.public = self.key.publickey().exportKey()
+        # hash_public_object = hashlib.sha1(self.public)
+        # hash_public = hash_public_object.hexdigest()
+        # print("[INFO]: Forwarding keys to host...")
+        # self.socket.sendall(self.public)
+        # confirm = Raspbot.receive_acknowledgement(self)
+        # if confirm is False:
+        #     return None
+        # pass
+        # self.socket.sendall(hash_public)
+        # confirm = Raspbot.receive_acknowledgement(self)
+        # if confirm is False:
+        #     return None
+        # pass
+        # msg = self.socket.recv(1024)
+        # self.socket.sendall(b"rca-1.2:connection_acknowledge")
+        # en = eval(msg)
+        # decrypt = self.key.decrypt(en)
         # hashing sha1
-        en_object = hashlib.sha1(decrypt)
-        en_digest = en_object.hexdigest()
+        # en_object = hashlib.sha1(decrypt)
+        # en_digest = en_object.hexdigest()
     pass
-    def send(self, contents):
-        """Sends encrypted string to connected host."""
-        mess = raw_input(name + " : ")
-        key = key[:16]
-        # merging the message and the name
-        whole = name + " : " + mess
-        ideaEncrypt = IDEA.new(key, IDEA.MODE_CTR, counter=lambda: key)
-        eMsg = ideaEncrypt.encrypt(whole)
-        # converting the encrypted message to HEXADECIMAL to readable
-        eMsg = eMsg.encode("hex").upper()
-        if eMsg != "":
-            print("ENCRYPTED MESSAGE TO c qSERVER-> " + eMsg)
-        server.send(eMsg)
-
+    def encrypt(self, byte_input):
+        """Takes byte input and returns encrypted input using a key and encryption nonce."""
+        ciphering = Salsa20.new(self.key)
+        validation = HMAC.new(self.hmac_key, msg = ciphering.encrypt(byte_input), digestmod = SHA256)
+        return [ciphering.encrypt(byte_input), ciphering.nonce, validation.hexdigest()]
+    pass
+    def decrypt(self, encrypted_input, validate, nonce):
+        """Decrypts given encrypted message and validates message with HMAC and nonce from encryption."""
+        validation = HMAC.new(self.hmac_key, msg = encrypted_input, digestmod = SHA256)
+        try:
+            validation.hexverify(validate)
+        except ValueError:
+            self.socket.close()
+            raise EncryptionError("[FAIL]: Message is not authentic, failed HMAC validation!")
+        pass
+        ciphering = Salsa20.new(self.key, nonce = nonce)
+        return ciphering.decrypt(encrypted_input)
     pass
     def receive_acknowledgement(self):
         """Listens for an acknowledgement byte string, returns booleans whether string was received or failed."""
