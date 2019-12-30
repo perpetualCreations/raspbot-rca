@@ -2,6 +2,7 @@
 # Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1
 # Made by Taian Chen
 """
+# TODO modify docstrings
 
 try:
     print("[INFO]: Starting imports...")
@@ -111,9 +112,11 @@ class client:
         self.socket.sendall(client.send(self, self.auth))
         confirm = client.receive_acknowledgement(self)
         if confirm is False:
+            print("[INFO]: Closing connection due to invalid authentication...")
+            self.socket.close()
             return None
         pass
-
+        print("[INFO]: Successfully connected to host!")
         # AES + RSA-based encryption was not finished, and sections using it were commented out.
         # print("[INFO]: Generating encryption keys...")
         # random = Random.new().read
@@ -177,29 +180,25 @@ class client:
     pass
     def receive_acknowledgement(self):
         """Listens for an acknowledgement byte string, returns booleans whether string was received or failed."""
-        acknowledgement = b""
         try:
-            acknowledgement = client.decrypt(self.socket.recv(30))
-        except socket.error:
-            print("[FAIL]: Failed to receive acknowledgement string.")
+            acknowledgement = client.receive(self, self.socket.recv(4096))
+        except socket.error as sae:
+            print("[FAIL]: Failed to receive acknowledgement string. See below for details.")
+            print(sae)
+            return False
+        pass
         if acknowledgement == b"rca-1.2:connection_acknowledge":
             print("[INFO]: Received acknowledgement.")
             return True
+        elif acknowledgement == b"rca-1.2:authentication_invalid":
+            print("[FAIL]: Did not receive an acknowledgement. Authentication was invalid.")
+            return False
         else:
-            self.connect_retries += 1
-            if self.connect_retries < 5:
-                print("[FAIL]: Acknowledgement failed, retrying...")
-                self.socket.close()
-                client.connect(self)
-            else:
-                print("[FAIL]: Acknowledgement failed more than 5 times. Stopping connection...")
-                self.socket.close()
-                return False
-                pass
-            pass
+            print("[FAIL]: Did not receive an acknowledgement. Instead received: ")
+            print(acknowledgement.decode(encoding = "uft-8", errors = "replace"))
         pass
     pass
 pass
 
-r = client()
-r.connect()
+c = client()
+c.connect()

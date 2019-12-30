@@ -3,6 +3,8 @@
 # Made by Taian Chen
 """
 
+# TODO modify docstrings
+
 try:
     print("[INFO]: Starting imports...")
     import os
@@ -88,9 +90,30 @@ class host:
         with connection:
             print("[INFO]: Received connection from ", client_address, ".")
             connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-            data = connection.recv(1024)
-            data = data.decode(encoding = "utf-8", errors = "replace") # TODO perform auth check and rsa events
-
+            data = host.receive(self, connection.recv(4096))
+            if data == self.auth:
+                print("[INFO]: Client authenticated!")
+                connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+            else:
+                print("[FAIL]: Client authentication invalid! Given code does not match authentication code.")
+                connection.sendall(host.send(self, b"rca-1.2:authentication_invalid"))
+                self.socket.close()
+                print("[INFO]: Restarting session...")
+                host()
+            pass
+            while True:
+                command = host.receive(self, connection.recv(4096))
+                if command == b"rca-1.2:command_shutdown":
+                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                    host.shutdown()
+                elif command == b"rca-1.2:command_reboot":
+                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                    host.reboot()
+                elif command == b"rca-1.2:command_update":
+                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                    host.os_update()
+                pass # add more keys here
+            pass
         pass
     pass
     def send(self, message):
@@ -116,7 +139,9 @@ class host:
         return [ciphering.encrypt(byte_input), ciphering.nonce, validation.hexdigest()]
     pass
     def decrypt(self, encrypted_input, validate, nonce):
-        """Decrypts given encrypted message and validates message with HMAC and nonce from encryption."""
+        """
+        Decrypts given encrypted message and validates message with HMAC and nonce from encryption.
+        """
         validation = HMAC.new(self.hmac_key, msg = encrypted_input, digestmod = SHA256)
         try:
             validation.hexverify(validate)
@@ -127,32 +152,30 @@ class host:
         ciphering = Salsa20.new(self.key, nonce = nonce)
         return ciphering.decrypt(encrypted_input)
     pass
-    def receive_acknowledgement(self): # TODO adapt for host
+    def receive_acknowledgement(self):
         """Listens for an acknowledgement byte string, returns booleans whether string was received or failed."""
-        acknowledgement = b""
         try:
-            acknowledgement = self.socket.recv(30)
-        except socket.error:
-            print("[FAIL]: Failed to receive acknowledgement string.")
+            acknowledgement = host.receive(self, self.socket.recv(4096))
+        except socket.error as sae:
+            print("[FAIL]: Failed to receive acknowledgement string. See below for details.")
+            print(sae)
+            return False
+        pass
         if acknowledgement == b"rca-1.2:connection_acknowledge":
             print("[INFO]: Received acknowledgement.")
             return True
         else:
-            self.connect_retries += 1
-            if self.connect_retries < 5:
-                print("[FAIL]: Acknowledgement failed, retrying...")
-                self.socket.close()
-                host.connect(self)
-            else:
-                print("[FAIL]: Acknowledgement failed more than 5 times. Stopping connection...")
-                self.socket.close()
-                return False
-                pass
-            pass
+            print("[FAIL]: Did not receive an acknowledgement. Instead received: ")
+            print(acknowledgement.decode(encoding = "uft-8", errors = "replace"))
         pass
     pass
-    def create_process(self, target, args):
-        """Creates a new process from multiprocessing."""
+    @staticmethod
+    def create_process(target, args):
+        """Creates a new process from multiprocessing.
+        :param target: the function being processed.
+        :param args: the arguments for said function being processed.
+        :return: if failed, returns nothing. otherwise returns dummy variable.
+        """
         if __name__ == '__main__':
             try:
                 dummy = multiprocessing.Process(target = target, args = args)
@@ -168,22 +191,27 @@ class host:
             return None
         pass
     pass
-    def shutdown(self):
+    @staticmethod
+    def shutdown():
         """Shuts down bot."""
         call("sudo shutdown now", shell = True)
     pass
-    def reboot(self):
+    @staticmethod
+    def reboot():
         """Reboots bot."""
         call("sudo reboot now", shell = True)
     pass
-    def exit(self):
+    @staticmethod
+    def exit():
         """Stops host application."""
         app_end(0)
     pass
-    def os_update(self):
+    @staticmethod
+    def os_update():
         """Updates apt packages and host operating system."""
         call("sudo apt-get update && sudo apt-get upgrade -y", shell = True)
         return True
-
     pass
 pass
+
+h = host()
