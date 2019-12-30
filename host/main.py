@@ -16,7 +16,6 @@ try:
     from Cryptodome.Hash import HMAC
     from Cryptodome.Hash import SHA256
     from Cryptodome.Hash import MD5
-    from Cryptodome import Exception as EncryptionError
     import socket
     import configparser
     from sys import exit as app_end
@@ -32,7 +31,6 @@ except ImportError as e:
     SHA256 = None
     socket = None
     configparser = None
-    EncryptionError = Exception
     MD5 = None
     app_end = None
     multiprocessing = None
@@ -98,7 +96,18 @@ class host:
     def send(self, message):
         """Wrapper for host.encrypt, formats output to be readable for sending.."""
         encrypted = host.encrypt(self, message)
-        return encrypted[0] + b" " + encrypted[1] + b" " + encrypted[2]
+        return encrypted[1] + b" " + encrypted[2] + b" " + encrypted[0]
+    pass
+    def receive(self, socket_input):
+        """
+        Wrapper for host.decrypt, formats received input and returns decrypted message.
+        Use as host.receive(self, socket.receive(integer)).
+        """
+        socket_input_spliced = socket_input.split()
+        nonce = socket_input_spliced[0]
+        hmac = socket_input_spliced[1]
+        encrypted_message = socket_input_spliced[2]
+        return host.decrypt(self, encrypted_message, hmac, nonce)
     pass
     def encrypt(self, byte_input):
         """Takes byte input and returns encrypted input using a key and encryption nonce."""
@@ -113,7 +122,7 @@ class host:
             validation.hexverify(validate)
         except ValueError:
             self.socket.close()
-            raise EncryptionError("[FAIL]: Message is not authentic, failed HMAC validation!")
+            raise Exception("[FAIL]: Message is not authentic, failed HMAC validation!")
         pass
         ciphering = Salsa20.new(self.key, nonce = nonce)
         return ciphering.decrypt(encrypted_input)

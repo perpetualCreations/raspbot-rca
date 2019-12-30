@@ -16,7 +16,6 @@ try:
     from Cryptodome.Hash import HMAC
     from Cryptodome.Hash import SHA256
     from Cryptodome.Hash import MD5
-    from Cryptodome import Exception as EncryptionError
     import socket
     import configparser
     from sys import exit as app_end
@@ -32,7 +31,6 @@ except ImportError as e:
     SHA256 = None
     socket = None
     configparser = None
-    EncryptionError = Exception
     MD5 = None
     app_end = None
     multiprocessing = None
@@ -79,6 +77,7 @@ class client:
             self.key = self.key.encode(encoding = "ascii", errors = "replace")
             self.hmac_key = config_parse["ENCRYPT"]["HMAC_KEY"]
             self.auth = config_parse["ENCRYPT"]["AUTH"]
+            self.auth = self.auth.encode(encoding = "ascii", errors = "replace")
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
@@ -109,6 +108,12 @@ class client:
         if confirm is False:
             return None
         pass
+        self.socket.sendall(client.send(self, self.auth))
+        confirm = client.receive_acknowledgement(self)
+        if confirm is False:
+            return None
+        pass
+
         # AES + RSA-based encryption was not finished, and sections using it were commented out.
         # print("[INFO]: Generating encryption keys...")
         # random = Random.new().read
@@ -139,7 +144,18 @@ class client:
     def send(self, message):
         """Wrapper for host.encrypt, formats output to be readable for sending.."""
         encrypted = client.encrypt(self, message)
-        return encrypted[0] + b" " + encrypted[1] + b" " + encrypted[2]
+        return encrypted[1] + b" " + encrypted[2] + b" " + encrypted[0]
+    pass
+    def receive(self, socket_input):
+        """
+        Wrapper for host.decrypt, formats received input and returns decrypted message.
+        Use as host.receive(self, socket.receive(integer)).
+        """
+        socket_input_spliced = socket_input.split()
+        nonce = socket_input_spliced[0]
+        hmac = socket_input_spliced[1]
+        encrypted_message = socket_input_spliced[2]
+        return client.decrypt(self, encrypted_message, hmac, nonce)
     pass
     def encrypt(self, byte_input):
         """Takes byte input and returns encrypted input using a key and encryption nonce."""
@@ -154,7 +170,7 @@ class client:
             validation.hexverify(validate)
         except ValueError:
             self.socket.close()
-            raise EncryptionError("[FAIL]: Message is not authentic, failed HMAC validation!")
+            raise Exception("[FAIL]: Message is not authentic, failed HMAC validation!")
         pass
         ciphering = Salsa20.new(self.key, nonce = nonce)
         return ciphering.decrypt(encrypted_input)
@@ -163,7 +179,7 @@ class client:
         """Listens for an acknowledgement byte string, returns booleans whether string was received or failed."""
         acknowledgement = b""
         try:
-            acknowledgement = self.socket.recv(30)
+            acknowledgement = client.decrypt(self.socket.recv(30))
         except socket.error:
             print("[FAIL]: Failed to receive acknowledgement string.")
         if acknowledgement == b"rca-1.2:connection_acknowledge":
