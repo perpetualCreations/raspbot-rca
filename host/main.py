@@ -59,21 +59,22 @@ class host:
         self.connect_retries = 0
         self.components = [[None], [None, None, None], [None]] # [Base Set [CAM], RFP Enceladus [SenseHAT, DISTANCE, DUST], Upgrade #1 [CHARGER]]
         print("[INFO]: Loading configurations...")
-        config_parse = configparser.ConfigParser()
+        config_parse_load = configparser.ConfigParser()
         try:
-            config_parse.read("main.cfg")
-            self.components[0][0] = config_parse["HARDWARE"]["CAM"]
-            self.components[1][0] = config_parse["HARDWARE"]["SenseHAT"]
-            self.components[1][1] = config_parse["HARDWARE"]["DISTANCE"]
-            self.components[1][2] = config_parse["HARDWARE"]["DUST"]
-            self.components[2][0] = config_parse["HARDWARE"]["CHARGER"]
-            self.host = config_parse["NET"]["IP"]
-            self.port = config_parse["NET"]["PORT"]
-            self.key = config_parse["ENCRYPT"]["KEY"]
+            config_parse_load.read("main.cfg")
+            self.components[0][0] = config_parse_load["hardware"]["cam"]
+            self.components[1][0] = config_parse_load["hardware"]["sensehat"]
+            self.components[1][1] = config_parse_load["hardware"]["distance"]
+            self.components[1][2] = config_parse_load["hardware"]["dust"]
+            self.components[2][0] = config_parse_load["hardware"]["charger"]
+            self.host = config_parse_load["NET"]["IP"]
+            self.port = config_parse_load["NET"]["PORT"]
+            self.key = config_parse_load["ENCRYPT"]["KEY"]
             self.key = MD5.new(self.key).hexdigest()
-            self.key = self.key.encode(encoding = "ascii", errors = "replace")
-            self.hmac_key = config_parse["ENCRYPT"]["HMAC_KEY"]
-            self.auth = config_parse["ENCRYPT"]["AUTH"]
+            self.key = self.key.encode(encoding="ascii", errors="replace")
+            self.hmac_key = config_parse_load["ENCRYPT"]["HMAC_KEY"]
+            self.auth = config_parse_load["ENCRYPT"]["AUTH"]
+            self.auth = self.auth.encode(encoding = "ascii", errors = "replace")
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
@@ -114,6 +115,43 @@ class host:
                     host.os_update()
                 pass # add more keys here
             pass
+        pass
+    pass
+    @staticmethod
+    def set_configuration(var, value, section, key, multi):
+        """
+        Edits entry in configuration file and applies new edit to variables.
+        :param var: variable being updated.
+        :param value: value to be assigned to variable and entered into configuration file.
+        :param section: section in the configuration file to be edited.
+        :param key: key to variable in section in the configuration file to be edited.
+        :param multi: boolean for whether to run a for range when reading params, useful when making multiple configuration settings.
+        :return: None
+        """
+        print("[INFO]: Editing configurations...")
+        if multi is True:
+            cycles = len(var)
+            while cycles != 0:
+                parameter_key = cycles - 1
+                var[parameter_key] = value[parameter_key]
+                config_parse_edit = configparser.ConfigParser()
+                config_parse_edit[section[parameter_key]][key[parameter_key]] = var[parameter_key]
+                with open("main.cfg", "w") as config_write:
+                    config_parse_edit.write(config_write)
+                pass
+                cycles -= 1
+            pass
+            config_write.close()
+        else:
+            var = value
+            config_parse_edit = configparser.ConfigParser()
+            print(section)
+            print(key)
+            config_parse_edit[section][key] = var
+            with open("main.cfg", "w") as config_write:
+                config_parse_edit.write(config_write)
+            pass
+            config_write.close()
         pass
     pass
     def send(self, message):
@@ -171,7 +209,8 @@ class host:
     pass
     @staticmethod
     def create_process(target, args):
-        """Creates a new process from multiprocessing.
+        """
+        Creates a new process from multiprocessing.
         :param target: the function being processed.
         :param args: the arguments for said function being processed.
         :return: if failed, returns nothing. otherwise returns dummy variable.
@@ -202,9 +241,10 @@ class host:
         call("sudo reboot now", shell = True)
     pass
     @staticmethod
-    def exit():
-        """Stops host application."""
-        app_end(0)
+    def exit(status):
+        """Stops application."""
+        print("[INFO]: Stopping application...")
+        app_end(status)
     pass
     @staticmethod
     def os_update():
