@@ -4,6 +4,7 @@
 
 // A0 -> Battery Voltage Sensor
 
+
 int incomingData;
 
 void setup() {
@@ -26,8 +27,9 @@ void loop() {
     if (incomingData == '*') {
       int value = analogRead(A0);
       float voltage = value * (5.0 / 1023.0);
-      Serial.write(voltage);
-      Serial.write('\n')
+      Serial.println(voltage);
+      // Serial.write(voltage);
+      // Serial.write('\n')
     }
   }
 }

@@ -7,7 +7,6 @@
 
 try:
     print("[INFO]: Starting imports...")
-    import os
     from subprocess import call
     from time import sleep
     # AES + RSA-based encryption was not finished, and sections using it were commented out.
@@ -22,9 +21,11 @@ try:
     import configparser
     from sys import exit as app_end
     import multiprocessing
+    import serial
+    from ast import literal_eval
     # import hashlib
 except ImportError as e:
-    os = None
+    sleep = None
     tkinter = None
     call = None
     Popen = None
@@ -35,7 +36,9 @@ except ImportError as e:
     configparser = None
     MD5 = None
     app_end = None
+    serial = None
     multiprocessing = None
+    literal_eval = None
     # RSA = None
     # AES = None
     # Random = None
@@ -55,25 +58,26 @@ class host:
         print("[INFO]: Declaring variables...")
         self.socket = None
         self.host = ""
-        self.port = 67777
+        self.port = 64220
         self.connect_retries = 0
         self.components = [[None], [None, None, None], [None]] # [Base Set [CAM], RFP Enceladus [SenseHAT, DISTANCE, DUST], Upgrade #1 [CHARGER]]
         print("[INFO]: Loading configurations...")
         config_parse_load = configparser.ConfigParser()
         try:
             config_parse_load.read("main.cfg")
-            self.components[0][0] = config_parse_load["hardware"]["cam"]
-            self.components[1][0] = config_parse_load["hardware"]["sensehat"]
-            self.components[1][1] = config_parse_load["hardware"]["distance"]
-            self.components[1][2] = config_parse_load["hardware"]["dust"]
-            self.components[2][0] = config_parse_load["hardware"]["charger"]
-            self.host = config_parse_load["NET"]["IP"]
-            self.port = config_parse_load["NET"]["PORT"]
-            self.key = config_parse_load["ENCRYPT"]["KEY"]
-            self.key = MD5.new(self.key).hexdigest()
+            self.components[0][0] = literal_eval(config_parse_load["HARDWARE"]["cam"])
+            self.components[1][0] = literal_eval(config_parse_load["HARDWARE"]["sensehat"])
+            self.components[1][1] = literal_eval(config_parse_load["HARDWARE"]["distance"])
+            self.components[1][2] = literal_eval(config_parse_load["HARDWARE"]["dust"])
+            self.components[2][0] = literal_eval(config_parse_load["HARDWARE"]["charger"])
+            self.host = config_parse_load["NET"]["ip"]
+            self.port = config_parse_load["NET"]["port"]
+            self.port = int(self.port)
+            self.key = config_parse_load["ENCRYPT"]["key"]
             self.key = self.key.encode(encoding="ascii", errors="replace")
-            self.hmac_key = config_parse_load["ENCRYPT"]["HMAC_KEY"]
-            self.auth = config_parse_load["ENCRYPT"]["AUTH"]
+            self.key = MD5.new(self.key).hexdigest()
+            self.hmac_key = config_parse_load["ENCRYPT"]["hmac_key"]
+            self.auth = config_parse_load["ENCRYPT"]["auth"]
             self.auth = self.auth.encode(encoding = "ascii", errors = "replace")
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
@@ -84,10 +88,12 @@ class host:
         print("[INFO]: Creating open server socket...")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setblocking(False)
-        self.socket.settimeout(10)
+        self.socket.settimeout(5)
         self.socket.bind((socket.gethostname(), self.port))
+        self.socket.setblocking(True)
         self.socket.listen(1)
         connection, client_address = self.socket.accept()
+        self.socket.setblocking(False)
         with connection:
             print("[INFO]: Received connection from ", client_address, ".")
             connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
@@ -113,10 +119,23 @@ class host:
                 elif command == b"rca-1.2:command_update":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                     host.os_update()
+                elif command == b"rac-1.2:command_battery_check":
+                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+
+
                 pass # add more keys here
             pass
         pass
     pass
+    def serial(self, port, direction, message):
+        """
+        Sends or receives serial communications to the Arduino integration.
+        :param port: the port that the Arduino is connected to.
+        :param direction: whether to expect to receive or send.
+        :param message: what contents to send, or if receiving leave as None.
+        :return:
+        """
+        arduino_connect = serial.Serial('/dev/ttyACM0', timeout = 5)
     @staticmethod
     def set_configuration(var, value, section, key, multi):
         """
@@ -129,6 +148,10 @@ class host:
         :return: None
         """
         print("[INFO]: Editing configurations...")
+        str(var)
+        str(value)
+        str(section)
+        str(key)
         if multi is True:
             cycles = len(var)
             while cycles != 0:
@@ -155,7 +178,12 @@ class host:
         pass
     pass
     def send(self, message):
-        """Wrapper for host.encrypt, formats output to be readable for sending.."""
+        """
+        Wrapper for host.encrypt, formats output to be readable for sending.
+        Use as socket.sendall(host.send(self, b"message")).
+        :param message: message to be encrypted.
+        :return: formatted byte string with encrypted message, HMAC validation, and nonce.
+        """
         encrypted = host.encrypt(self, message)
         return encrypted[1] + b" " + encrypted[2] + b" " + encrypted[0]
     pass
@@ -163,6 +191,8 @@ class host:
         """
         Wrapper for host.decrypt, formats received input and returns decrypted message.
         Use as host.receive(self, socket.receive(integer)).
+        :param socket_input: byte string being decrypted.
+        :return: decrypted message.
         """
         socket_input_spliced = socket_input.split()
         nonce = socket_input_spliced[0]
@@ -171,7 +201,11 @@ class host:
         return host.decrypt(self, encrypted_message, hmac, nonce)
     pass
     def encrypt(self, byte_input):
-        """Takes byte input and returns encrypted input using a key and encryption nonce."""
+        """
+        Takes byte input and returns encrypted input using a key and encryption nonce.
+        :param byte_input: byte string to be encrypted.
+        :return: encrypted string, nonce, and HMAC validation.
+        """
         ciphering = Salsa20.new(self.key)
         validation = HMAC.new(self.hmac_key, msg = ciphering.encrypt(byte_input), digestmod = SHA256)
         return [ciphering.encrypt(byte_input), ciphering.nonce, validation.hexdigest()]
@@ -179,6 +213,9 @@ class host:
     def decrypt(self, encrypted_input, validate, nonce):
         """
         Decrypts given encrypted message and validates message with HMAC and nonce from encryption.
+        :param encrypted_input: encrypted string to be decrypted.
+        :param validate: HMAC validation byte string.
+        :param nonce: nonce, additional security feature to prevent replay attacks.
         """
         validation = HMAC.new(self.hmac_key, msg = encrypted_input, digestmod = SHA256)
         try:
