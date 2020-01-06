@@ -21,11 +21,14 @@ try:
     from sys import exit as app_end
     import multiprocessing
     import tkinter
+    from tkinter import messagebox
     from ast import literal_eval
+    from ping3 import ping
     # import hashlib
 except ImportError as e:
     sleep = None
     tkinter = None
+    messagebox = None
     call = None
     Popen = None
     Salsa20 = None
@@ -37,6 +40,7 @@ except ImportError as e:
     app_end = None
     multiprocessing = None
     literal_eval = None
+    ping = None
     # RSA = None
     # AES = None
     # Random = None
@@ -91,7 +95,7 @@ class client:
         self.root = tkinter.Tk()
         self.root.title("Raspbot RCA: Client")
         self.root.configure(bg = "#344561")
-        self.root.geometry('{}x{}'.format(400, 370))
+        self.root.geometry('{}x{}'.format(800, 450))
         self.root.resizable(width=False, height=False)
         menu = tkinter.Menu(self.root)
         self.root.config(menu = menu)
@@ -113,23 +117,41 @@ class client:
         app_menu.add_cascade(label = "Edit Hardware Set", menu = hardware_menu)
         app_menu.add_command(label = "Exit", command = lambda: client.exit(0))
         menu.add_cascade(label = "App", menu = app_menu)
+        net_menu = tkinter.Menu(menu)
+        net_tools_menu = tkinter.Menu(net_menu)
+        net_tools_menu.add_command(label = "Ping", command = lambda: client.ping_gui())
+        net_menu.add_cascade(label = "Tools", menu = net_tools_menu)
         vitals_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0)
+        vitals_frame.grid(row = 0, column = 0, padx = (10, 0), pady = (15, 0))
         vitals_label = tkinter.Label(vitals_frame, bg = "#506a96", fg = "white", text = "Bot Vitals", font = ("Calibri", 12))
         vitals_label.grid(row = 0, column = 0, padx = (5, 0))
-        vitals_frame.grid(row = 0, column = 0, padx = (10, 0), pady = (15, 0))
         self.vitals_text_data = tkinter.StringVar()
-        self.vitals_text = tkinter.Text(vitals_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 5, width = 20)
+        self.vitals_text = tkinter.Text(vitals_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 5, width = 20, font = ("Calibri", 10))
         self.vitals_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 0))
         self.vitals_refresh_process = None
         vitals_refresh_type_frame = tkinter.Frame(vitals_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        vitals_refresh_button_enable_bool = tkinter.NORMAL
+        vitals_refresh_button_enable_bool = tkinter.NORMAL # TODO finish debugging AUTO
         vitals_refresh_type_manual_button = tkinter.Radiobutton(vitals_refresh_type_frame, text = "Manual", bg = "white", fg = "black", var = vitals_refresh_button_enable_bool, value = tkinter.NORMAL, command = lambda: client.stop_process(self.vitals_refresh_process, True))
         vitals_refresh_type_manual_button.grid(row = 0, column = 0)
         vitals_refresh_type_auto_button = tkinter.Radiobutton(vitals_refresh_type_frame, text = "Auto", bg = "white", fg = "black", var = vitals_refresh_button_enable_bool, value = tkinter.DISABLED, command = lambda: client.start_vitals_refresh_process(self))
         vitals_refresh_type_auto_button.grid(row = 0, column = 1)
         vitals_refresh_type_frame.grid(row = 2, column = 0, padx = (5, 5), pady = (5, 5))
-        vitals_refresh_button = tkinter.Button(vitals_frame, text = "Refresh", bg = "white", fg = "black", state = vitals_refresh_button_enable_bool)
+        vitals_refresh_button = tkinter.Button(vitals_frame, text = "Refresh", bg = "white", fg = "black", state = vitals_refresh_button_enable_bool, command = lambda: client.vitals_refresh(self, False))
         vitals_refresh_button.grid(row = 3, column = 0, padx = (5, 5), pady = (10, 5))
+        net_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0)
+        net_frame.grid(row = 1, column = 0, padx = (10, 0), pady = (10, 0))
+        net_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", text = "Network", font = ("Calibri", 12))
+        net_label.grid(row = 0, column = 0, padx = (5, 0))
+        self.net_status_data = tkinter.StringVar()
+        self.net_status_data.set("Status: " + "Disconnected")
+        net_status_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", textvariable = self.net_status_data, font = ("Calibri", 12))
+        net_status_label.grid(row = 1, column = 0, padx = (5, 0), pady = (10, 0))
+        net_disconnect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Disconnect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: self.socket.close())
+        net_disconnect_button.grid(row = 2, column = 0, padx = (5, 0), pady = (10, 0))
+        net_connect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Connect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: client.connect(self))
+        net_connect_button.grid(row = 3, column = 0, padx = (5, 0))
+        net_help_button = tkinter.Button(net_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Net Help", "This panel controls your network connection with the bot. See the NET options in menu bar for additional tools and actions."))
+        net_help_button.grid(row = 4, column = 0, padx = (5, 150), pady = (20, 5))
         self.root.mainloop()
     pass
     @staticmethod
@@ -257,6 +279,37 @@ class client:
         """
         raise NotImplementedError
         # TODO write configuration gui
+    pass
+    def ping(self):
+        """
+        Pings host address and records latency and losses.
+        :return: average latency, nested list with individual latency values, total losses, nested list with individual losses, if host resolution failed
+        """
+        scans = [ping(self.host, timeout = 10, size = 64, unit = "ms"), ping(self.host, timeout = 10, size = 64, unit = "ms"), ping(self.host, timeout = 10, size = 64, unit = "ms"), ping(self.host, timeout = 10, size = 64, unit = "ms")]
+        if False in scans:
+            return [None, [None, None, None, None], 4, [True, True, True, True], True]
+        else:
+            result = [0, [scans[0], scans[1], scans[2], scans[3]], 0, [False, False, False, False], None]
+            if scans[0] is None:
+                result[1][0] = 0
+                result[2] += 1
+                result[3][0] = True
+            elif scans[1] is None:
+                result[1][1] = 0
+                result[2] += 1
+                result[3][1] = True
+            elif scans[2] is None:
+                result[1][2] = 0
+                result[2] += 1
+                result[3][2] = True
+            elif scans[3] is None:
+                result[1][3] = 0
+                result[2] += 1
+                result[3][3] = True
+            pass
+            result[0] = (result[1][0] + result[1][1] + result[1][2] + result[1][3])/4
+            return result
+        pass
     pass
     @staticmethod
     def exit(status):
