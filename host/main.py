@@ -23,6 +23,7 @@ try:
     import multiprocessing
     import serial
     from ast import literal_eval
+    from .science import science
     # import hashlib
 except ImportError as e:
     sleep = None
@@ -39,6 +40,7 @@ except ImportError as e:
     serial = None
     multiprocessing = None
     literal_eval = None
+    science = None
     # RSA = None
     # AES = None
     # Random = None
@@ -119,10 +121,20 @@ class host:
                 elif command == b"rca-1.2:command_update":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                     host.os_update()
-                elif command == b"rac-1.2:command_battery_check":
+                elif command == b"rca-1.2:command_battery_check":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-
-
+                elif command == b"rca-1.2:command_science_collect":
+                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                    if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2]:
+                        connection.sendall(host.send(self, b"rca-1.2:data_start"))
+                        connection.sendall(host.send(science.science_get()))
+                        connection.sendall(host.send(self, b"rca-1.2:data_end"))
+                    else:
+                        connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
+                    pass
+                else:
+                    raise NotImplementedError
+                    # TODO add else case here
                 pass # add more keys here
             pass
         pass

@@ -1,12 +1,11 @@
 """
 # Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1
-# science module (for collecting sensor data and saving it)
-# creates GUI
+# science module (for collecting sensor data), intended for RFP Enceladus Project with Raspbot
 # Made by Taian Chen (perpetualCreations)
 """
 
 try:
-    print("[INFO]: Starting imports...") # TODO test on actual raspberry pi
+    print("[S_RFP-ENCELADUS][INFO]: Starting imports...")
     import tkinter
     from sense_hat import SenseHat
     from time import gmtime
@@ -20,45 +19,27 @@ except ImportError as e:
     SenseHat = None
     serial = None
     sleep = None
-    print("[FAIL]: Imports failed! See below.")
+    print("[S_RFP-ENCELADUS][FAIL]: Imports failed! See below.")
     print(e)
     exit(1)
 except ImportWarning as e:
-    print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
+    print("[S_RFP-ENCELADUS][FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
     print(e)
 pass
 
 class science:
-    """Creates a GUI interface for user to access scientific data collection."""
+    """Module for data collection from sensor components."""
     def __init__(self):
-        print("[INFO]: Science loaded!")
-        print("[INFO]: Creating SenseHAT access interface...")
+        print("[S_RFP-ENCELADUS][INFO]: Science loaded!")
+        print("[[S_RFP-ENCELADUS][INFO]: Creating SenseHAT access interface...")
         self.sense = SenseHat()
-        print("[INFO]: Loading graphics...")
         self.content = ""
-        root = tkinter.Tk()
-        root.title("Raspbot RCA-G: Science")
-        root.configure(bg = "#344561")
-        root.geometry('{}x{}'.format(400, 370))
-        root.resizable(width=False, height=False)
-        graphics_title = tkinter.Label(root, text = "Science", fg = "white", bg = "#344561", font = ("Calibri", 16))
-        graphics_title.grid(row = 0, column = 0, padx = (0, 500))
-        self.graphics_science = tkinter.Text(root, height = 15)
-        self.graphics_science.configure(state = tkinter.DISABLED)
-        self.graphics_science.grid(row = 1, column = 0, pady = (5, 14))
-        graphics_science_frame_buttons = tkinter.Frame(root, bg = "#344561")
-        graphics_science_button_reload = tkinter.Button(graphics_science_frame_buttons, text = "Refresh", fg = "white", bg = "#344561", width = 40, font = ("Calibri", 12), command = lambda: science.science_get(self))
-        graphics_science_button_reload.pack(side = tkinter.TOP)
-        graphics_science_button_save = tkinter.Button(graphics_science_frame_buttons, text = "Save", fg = "white", bg = "#344561", width = 40, font = ("Calibri", 12), command = lambda: science.science_save(self))
-        graphics_science_button_save.pack(side = tkinter.BOTTOM)
-        graphics_science_frame_buttons.grid(row = 2, column = 0, padx = (0, 250))
-        root.mainloop()
     pass
     def science_get(self):
         """Calls SenseHAT Python integration package and Arduino PySerial for data inputs and collects output into self.content for displaying."""
-        print("[INFO]: Refreshing science information...")
-        print("[INFO]: Starting data collection...")
-        print("[INFO]: Collecting data from sensors on SenseHAT...")
+        print("[S_RFP-ENCELADUS][INFO]: Refreshing science information...")
+        print("[S_RFP-ENCELADUS][INFO]: Starting data collection...")
+        print("[S_RFP-ENCELADUS][INFO]: Collecting data from sensors on SenseHAT...")
         temperature_data_raw = self.sense.get_temperature_from_humidity()
         temperature_data = round(temperature_data_raw, 2)
         pressure_data_raw = self.sense.get_pressure()
@@ -70,7 +51,7 @@ class science:
         compass_raw = self.sense.compass
         compass = round(compass_raw, 2)
         accelerometer_data = self.sense.get_accelerometer_raw()
-        print("[INFO]: Collection completed.")
+        print("[S_RFP-ENCELADUS][INFO]: Collection completed.")
         temperature_str = str(temperature_data) + "C"
         pressure_str = str(pressure_data) + " Millibars"
         humidity_str = str(humidity_data) + "% Humidity"
@@ -83,15 +64,15 @@ class science:
         accelerometer_y = str(round(accelerometer_data["y"], 2))
         accelerometer_z = str(round(accelerometer_data["z"], 2))
         accelerometer = "X: " + accelerometer_x + ", Y: " + accelerometer_y + ", Z: " + accelerometer_z
-        print("[INFO]: Starting serial connection with Grove Arduino integration...")
+        print("[S_RFP-ENCELADUS][INFO]: Starting serial connection with Grove Arduino integration...")
         try:
             arduino = serial.Serial('/dev/ttyACM0', timeout = 5)
         except serial.serialutil.SerialException as se:
-            print("[FAIL]: Failed to create connection with Grove Arduino integration! See details below.")
+            print("[S_RFP-ENCELADUS][FAIL]: Failed to create connection with Grove Arduino integration! See details below.")
             print(se)
             return None
         pass
-        print("[INFO]: Collecting data from serial.")
+        print("[S_RFP-ENCELADUS][INFO]: Collecting data from serial.")
         arduino.write(b"D")
         sleep(0.1)
         grove_sensor_dust_lpo_data = arduino.readline()
@@ -112,7 +93,7 @@ class science:
         # grove_sensor_light_data = arduino.readline()
         # light = grove_sensor_light_data.decode(encoding = "utf-8", errors = "replace")
         # light = light.rstrip("\n")
-        print("[INFO]: Generating timestamps...")
+        print("[S_RFP-ENCELADUS][INFO]: Generating timestamps...")
         timestamp = strftime("%b%d%Y%H%M%S"), gmtime()
         timestamp_output = timestamp[0]
         timestamp_str = str(timestamp_output)
@@ -122,29 +103,7 @@ class science:
                        + accelerometer + "\n" + "Dust LPO Time: " + dust_lpo + "\n" \
                        + "Dust LPO/Observation Time Ratio: " + dust_ratio + "\n" + "Dust Concentration: " \
                        + dust_concentration + "\n" + "ToF Distance: " + distance
-        print("[INFO]: Done!")
-        self.graphics_science.configure(state = tkinter.NORMAL)
-        self.graphics_science.delete("1.0", tkinter.END)
-        self.graphics_science.insert("1.0", self.content)
-        self.graphics_science.configure(stat = tkinter.DISABLED)
-    pass
-    def science_save(self):
-        """Collects self.content for saving to a text file."""
-        if self.content == "":
-            print("[FAIL]: No science data found, early exiting the function...")
-            return None
-        pass
-        print("[INFO]: Generating timestamps...")
-        timestamp = strftime("%b%d%Y%H%M%S"), gmtime()
-        timestamp_output = timestamp[0]
-        timestamp_str = str(timestamp_output)
-        file_report_name = "science-report-" + timestamp_str + ".txt"
-        print("[INFO]: Generating text file report...")
-        file_report = open(file_report_name, "w+")
-        file_report.write(self.content)
-        file_report.close()
-        print("[INFO]: Done!")
+        print("[S_RFP-ENCELADUS][INFO]: Done!")
+        return self.content
     pass
 pass
-
-vg = science()

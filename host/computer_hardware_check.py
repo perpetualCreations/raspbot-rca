@@ -1,136 +1,136 @@
 """
 # Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1
-# vitals module (for status reports)
+# computer_hardware_check module
 # Sourced from an WIP version of RemotePotentia, an open-source remote server management software
 # Made by Taian Chen
 """
 
-class vitals:
+class ch_check:
   def __init__(self):
     "collects system vitals"
-    print("[INFO]: Vitals loaded!")
+    print("[CH-CHECK][INFO]: Vitals loaded!")
     global cpu_percentage, cpu_frequency, memory, disk_part, os_platform, os_release, os_version, disk_usage, disk_io_statistics, net_interface, sensor_temperature, sensor_fans, sensor_power, system_users, hostname
-    print("[INFO]: Attempting to import SLEEP from TIME software package for Python...")
+    print("[CH-CHECK][INFO]: Attempting to import SLEEP from TIME software package for Python...")
     try:
       from time import sleep
     except ImportError:
       sleep = None
-      print("[FAIL]: Importing of SLEEP from TIME failed!")
-      vitals.noDelay_stop(self)
+      print("[CH-CHECK][FAIL]: Importing of SLEEP from TIME failed!")
+      ch_check.noDelay_stop(self)
     pass
-    print("[INFO]: Attempting to import PSUTIL software package for Python under name STAT...")
+    print("[CH-CHECK][INFO]: Attempting to import PSUTIL software package for Python under name STAT...")
     try:
       import psutil as stat
     except ImportError:
       stat = None
-      print("[FAIL]: Importing of PSUTIL as STAT failed!")
+      print("[CH-CHECK][FAIL]: Importing of PSUTIL as STAT failed!")
       sleep(30)
-      print("[INFO]: 30 second grace period ended, calling application stopper.")
-      vitals.stop(self, 1)
+      print("[CH-CHECK][INFO]: 30 second grace period ended, calling application stopper.")
+      ch_check.stop(self, 1)
     pass
-    print("[INFO]: Import complete.")
+    print("[CH-CHECK][INFO]: Import complete.")
     try:
-      print("[INFO]: Attempting to retrieve CPU percentage statistics with STAT...")
+      print("[CH-CHECK][INFO]: Attempting to retrieve CPU percentage statistics with STAT...")
       cpu_percentage = stat.cpu_percent(interval=0.1)
-      print("[INFO]: Retrieval successful.")
+      print("[CH-CHECK][INFO]: Retrieval successful.")
     except stat.Error:
-      print("[FAIL]: CPU percentage statistics unattainable. Setting as None...")
+      print("[CH-CHECK][FAIL]: CPU percentage statistics unattainable. Setting as None...")
       cpu_percentage = None
       pass
     pass
     try:
-      print("[INFO]: Attempting to retrieve CPU frequency information with STAT...")
+      print("[CH-CHECK][INFO]: Attempting to retrieve CPU frequency information with STAT...")
       cpu_frequency = stat.cpu_freq()
-      print("[INFO]: Retrieval sucessful.")
+      print("[CH-CHECK][INFO]: Retrieval sucessful.")
     except stat.Error:
-      print("[FAIL]: CPU frequency information unattainable. Setting as none...")
+      print("[CH-CHECK][FAIL]: CPU frequency information unattainable. Setting as none...")
       cpu_frequency = None
       pass
     pass
     try:
-      print("[INFO]: Attempting to retrieve memory statistics with STAT...")
+      print("[CH-CHECK][INFO]: Attempting to retrieve memory statistics with STAT...")
       memory = stat.virtual_memory()
-      print("[INFO]: Retrieval successful.")
+      print("[CH-CHECK][INFO]: Retrieval successful.")
     except stat.Error:
-      print("[FAIL]: Memory statistics unattainable. Setting as none...")
+      print("[CH-CHECK][FAIL]: Memory statistics unattainable. Setting as none...")
       memory = None
       pass
     pass
     try:
-      print("[INFO]: Attempting to retrieve disk information with STAT...")
+      print("[CH-CHECK][INFO]: Attempting to retrieve disk information with STAT...")
       disk_part = stat.disk_partitions(all=False)
-      print("[INFO]: Retrieval successful.")
+      print("[CH-CHECK][INFO]: Retrieval successful.")
     except stat.Error:
-      print("[FAIL]: Disk information unattainable. Setting as none...")
+      print("[CH-CHECK][FAIL]: Disk information unattainable. Setting as none...")
       disk_part = None
       pass
     pass
-    print("[INFO]: Attempting to import SYSTEM, RELEASE, and VERSION from PLATFORM software package for Python...")
+    print("[CH-CHECK][INFO]: Attempting to import SYSTEM, RELEASE, and VERSION from PLATFORM software package for Python...")
     try:
       from platform import system, release, version
     except ImportError:
       system = None
       release = None
       version = None
-      print("[FAIL]: Importing of SYSTEM, RELEASE, AND VERSION from PLATFORM failed!")
+      print("[CH-CHECK][FAIL]: Importing of SYSTEM, RELEASE, AND VERSION from PLATFORM failed!")
       sleep(30)
-      print("[INFO]: 30 second grace period ended, calling application stopper.")
-      vitals.stop(self, 1)
+      print("[CH-CHECK][INFO]: 30 second grace period ended, calling application stopper.")
+      ch_check.stop(self, 1)
     pass
     try:
-      print("[INFO]: Attempting to retrieve OS version and name...")
+      print("[CH-CHECK][INFO]: Attempting to retrieve OS version and name...")
       os_platform = system()
       os_release = release()
       os_version = version()
-      print("[INFO]: Retrieval successful.")
+      print("[CH-CHECK][INFO]: Retrieval successful.")
     except stat.Error:
-      print("[FAIL]: OS version and name data unattainable. Setting as none...")
+      print("[CH-CHECK][FAIL]: OS version and name data unattainable. Setting as none...")
       os_platform = "No Data"
       os_release = "No Data"
       os_version = "No Data"
       pass
     pass
-    print("[INFO]: Attempting to retrieve disk usage...")
+    print("[CH-CHECK][INFO]: Attempting to retrieve disk usage...")
     disk_usage = stat.disk_usage("/")
-    print("[INFO]: Retrieval successful.")
+    print("[CH-CHECK][INFO]: Retrieval successful.")
     try:
-      print("[INFO]: Attempting to retrieve disk statistics...")
+      print("[CH-CHECK][INFO]: Attempting to retrieve disk statistics...")
       disk_io_statistics = stat.disk_io_counters()
-      print("[INFO]: Retrieval successful.")
+      print("[CH-CHECK][INFO]: Retrieval successful.")
     except stat.Error:
-      print("[FAIL]: Disk statistics unattainable. Setting as none...")
+      print("[CH-CHECK][FAIL]: Disk statistics unattainable. Setting as none...")
       disk_io_statistics = None
       pass
     pass
     try:
-      print("[INFO]: Attempting to retrieve network interfaces...")
+      print("[CH-CHECK][INFO]: Attempting to retrieve network interfaces...")
       net_interface = stat.net_if_addrs()
-      print("[INFO]: Retrieval successful.")
+      print("[CH-CHECK][INFO]: Retrieval successful.")
     except stat.Error:
-      print("[FAIL]: Network interface information unattainable. Setting as No Data string...")
+      print("[CH-CHECK][FAIL]: Network interface information unattainable. Setting as No Data string...")
       net_interface = "No Data"
       pass
     pass
-    print("[INFO]: Attempting to import GETHOSTNAME and ERROR as SOCKET_ERROR from SOCKET...")
+    print("[CH-CHECK][INFO]: Attempting to import GETHOSTNAME and ERROR as SOCKET_ERROR from SOCKET...")
     try:
       from socket import gethostname
       from socket import error as socket_error
     except ImportError:
       gethostname = None
       socket_error = None
-      print("[FAIL]: Importing of GET and EXCEPTIONS from REQUESTS failed!")
+      print("[CH-CHECK][FAIL]: Importing of GET and EXCEPTIONS from REQUESTS failed!")
       sleep(30)
-      print("[INFO]: 30 second grace period ended, calling application stopper.")
-      vitals.stop(self, 1)
+      print("[CH-CHECK][INFO]: 30 second grace period ended, calling application stopper.")
+      ch_check.stop(self, 1)
     try:
-      print("[INFO]: Attempting to retrieve system hostname...")
+      print("[CH-CHECK][INFO]: Attempting to retrieve system hostname...")
       hostname = gethostname()
-      print("[INFO]: Retrieval complete.")
+      print("[CH-CHECK][INFO]: Retrieval complete.")
     except socket_error:
-      print("[INFO]: Hostname unattainable. Setting as None.")
+      print("[CH-CHECK][INFO]: Hostname unattainable. Setting as None.")
       hostname = None
     pass
-    print("[INFO]: Attempting to retrieve system sensor data... (automatic fallback)")
+    print("[CH-CHECK][INFO]: Attempting to retrieve system sensor data... (automatic fallback)")
     sensor_temperature = stat.sensors_temperatures()
     if sensor_temperature == {}:
       sensor_temperature = "No Data"
@@ -147,24 +147,24 @@ class vitals:
     if not system_users:
       system_users = "No Data"
     pass
-    print("[INFO]: Retrieval complete.")
-    print("[INFO]: All vitals retrieved. Cycle complete.")
+    print("[CH-CHECK][INFO]: Retrieval complete.")
+    print("[CH-CHECK][INFO]: All vitals retrieved. Cycle complete.")
   pass
   def stop(self, exitcode):
-    print("[INFO]: Stopping application...")
+    print("[CH-CHECK][INFO]: Stopping application...")
     from sys import exit
     exit(exitcode)
   pass
   def noDelay_stop(self):
-    print("[INFO]: Stopping application with no delay...")
+    print("[CH-CHECK][INFO]: Stopping application with no delay...")
     from sys import exit
     exit(1)
   pass
   def str_conversion(self):
     "converts all values into strings with their proper units of measurement, with fallback entries in case of failure"
     global cpu_percentage_str, cpu_frequency_str, memory_total_str, memory_available_str, memory_used_str, memory_percentage_str, disk_usage_total_str, disk_usage_used_str, disk_usage_free_str, disk_usage_percent_str, disk_io_statistics_readCount_str, disk_io_statistics_writeCount_str, disk_io_statistics_byteReadCount_str, disk_io_statistics_byteWriteCount_str
-    print("[INFO]: Vital data conversion started.")
-    print("[INFO]: This may take awhile, please standby.")
+    print("[CH-CHECK][INFO]: Vital data conversion started.")
+    print("[CH-CHECK][INFO]: This may take awhile, please standby.")
     if cpu_percentage is not None:
       cpu_percentage_str = str(cpu_percentage) + "%"
     else:
@@ -239,11 +239,11 @@ class vitals:
       disk_io_statistics_byteReadCount_str = "No Data"
       disk_io_statistics_byteWriteCount_str = "No Data"
     pass
-    print("[INFO]: Conversion completed.")
-    print("[INFO]: Returning strings...")
+    print("[CH-CHECK][INFO]: Conversion completed.")
+    print("[CH-CHECK][INFO]: Returning strings...")
   pass
   def report(self):
-    print("[INFO]: Attempting to import GMTIME, SLEEP, and STRFTIME from TIME...")
+    print("[CH-CHECK][INFO]: Attempting to import GMTIME, SLEEP, and STRFTIME from TIME...")
     try:
       from time import gmtime
       from time import strftime
@@ -252,14 +252,14 @@ class vitals:
       gmtime = None
       strftime = None
       sleep = None
-      print("[FAIL]: Importing of GMTIME, SLEEP, and STRFTIME from TIME failed!")
-      print("[INFO]: 30 second grace period ended, calling application stopper.")
-      vitals.stop(self, 1)
+      print("[CH-CHECK][FAIL]: Importing of GMTIME, SLEEP, and STRFTIME from TIME failed!")
+      print("[CH-CHECK][INFO]: 30 second grace period ended, calling application stopper.")
+      ch_check.stop(self, 1)
     pass
-    print("[INFO]: Generating timestamps...")
+    print("[CH-CHECK][INFO]: Generating timestamps...")
     timestamp = strftime("%b %d %Y %H:%M:%S"), gmtime()
     timestamp_output = timestamp[0]
-    print("[INFO]: Generation complete.")
+    print("[CH-CHECK][INFO]: Generation complete.")
     local_ips = []
     for x in net_interface:
       local_ips.append(net_interface[x][0][1])
@@ -269,7 +269,7 @@ class vitals:
     sensor_fans_str = str(sensor_fans)
     sensor_power_str = str(sensor_power)
     system_users_str = str(system_users)
-    print("[INFO]: Assembling text report...")
+    print("[CH-CHECK][INFO]: Assembling text report...")
     output = "[Vitals Report]" + "\n" + "Report Timestamp: " + timestamp_output + "\n" + "Bot: " + hostname + "\n" + "\n" + "Local IP(s): " + local_ips_str + "\n" + "OS Platform: " + os_platform + "\n" + "OS Release: " + os_release + "\n" + "OS Version: " + os_version + "\n" + "CPU Frequency: " + cpu_frequency_str + "\n" + "CPU Usage: " + cpu_percentage_str + "\n" + "Memory Percentage: " + memory_percentage_str + "\n" + "Memory Available: " + memory_available_str + "\n" + "Memory Used: " + memory_used_str + "\n" + "Memory Total: " + memory_total_str + "\n" + "Disk Percentage: " + disk_usage_percent_str + "\n" + "Disk Usage: " + disk_usage_used_str + "\n" + "Disk Available: " + disk_usage_free_str + "\n" + "Disk Total: " + disk_usage_total_str + "\n" + "Disk Reads: " + disk_io_statistics_readCount_str + "\n" + "Disk Read: " + disk_io_statistics_byteReadCount_str + "\n" + "Disk Writes: " + disk_io_statistics_writeCount_str + "\n" + "Disk Written: " + disk_io_statistics_byteWriteCount_str + "\n" + "Temperature Telemetry: " + sensor_temperature_str + "\n" + "Fan Telemetry: " + sensor_fans_str + "\n" + "Power Telemetry: " + sensor_power_str + "\n" + "System Users: " + system_users_str
     return output
   pass
