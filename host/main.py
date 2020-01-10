@@ -131,6 +131,15 @@ class host:
                     else:
                         connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
                     pass
+                  elif command == b"rca-1.2:nav_start":
+                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                    nav_command = host.receive(self, connection.recv(4096)).encode(encoding = "utf-8", errors = "replace")
+                    nav_command_list = nav_command.split()
+                    nav_command_list[0] = nav_direction 
+                    nav_command_list[1] = nav_run_time
+                    nav_command_list[2] = nav_distance_accept 
+                    host.serial("/dev/ttyACM0", "send", nav_direction.encode(encoding = "ascii", errors = "replace"))
+					host.create_process(host.nav_timer, (self, int(nav_run_time), literal_eval(nav_distance_accept)))
                 else:
                     raise NotImplementedError
                     # TODO add else case here
@@ -288,6 +297,21 @@ class host:
             return None
         pass
     pass
+	def nav_timer(self, nav_run_time, nav_distance_accept)
+		nav_run_time_countdown = nav_run_time
+		while nav_run_time_countdown != 0:
+			nav_run_time_countdown -= 1
+			if nav_distance_accept is True:
+				host.serial("/dev/ttyACM0", "send", b"T")
+				self.socket.sendall(host.send(self, host.serial("/dev/ttyACM0", "recieve", None)))
+			pass
+			if nav_run_time_countdown == 0:
+				self.socket.sendall(host.send(self, b"rca-1.2:nav_end"))
+				host.serial("/dev/ttyACM0", "send", b"A")
+			pass
+			sleep(1)
+		pass
+	pass
     @staticmethod
     def shutdown():
         """Shuts down bot."""
