@@ -176,16 +176,16 @@ class client:
         report_save_button.grid(row = 4, column = 0, padx = (5, 0), pady = (5, 0))
         report_help_button = tkinter.Button(report_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 12), command = lambda: messagebox.showinfo("Raspbot RCA: Report Help", "This panel allows you to request, view, and save reports of a vareity of types. These include computer hardware checks (CH Check) and science reports (Science, RFP Enceladus)."))
         report_help_button.grid(row = 5, column = 0, padx = (5, 150), pady = (20, 5))
-		control_frame = tkinter.Frame(self.root, bg = "#506a96")
-		control_frame.grid(row = 1 , column = 1) # TODO please adjust
-		os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-		os_control_frame.grid(row = 0, column = 0) # TODO please adjust
-		os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_update"))) # TODO please adjust button size
-		os_control_update_button.grid(row = 0, column = 0) # TODO please adjust
-		os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper(self)) # TODO please adjust button size
-		os_control_shutdown_button.grid(row = 0, column = 0) # TODO please adjust
-		os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_reboot"))) # TODO please adjust button size
-		os_control_reboot_button.grid(row = 0, column = 0) # TODO please adjust
+        control_frame = tkinter.Frame(self.root, bg = "#506a96")
+        control_frame.grid(row = 1 , column = 1) # TODO please adjust
+        os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
+        os_control_frame.grid(row = 0, column = 0) # TODO please adjust
+        os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_update"))) # TODO please adjust button size
+        os_control_update_button.grid(row = 0, column = 0) # TODO please adjust
+        os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper(self)) # TODO please adjust button size
+        os_control_shutdown_button.grid(row = 0, column = 0) # TODO please adjust
+        os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_reboot"))) # TODO please adjust button size
+        os_control_reboot_button.grid(row = 0, column = 0) # TODO please adjust
         self.root.mainloop()
     pass
     @staticmethod
@@ -469,72 +469,72 @@ class client:
         print("[INFO]: Report saved.")
     pass
     def nav_execute(self, direction, run_time):
-		"""
-		Wrapper for client.send(), formats instructions and does hardware check for distance sensor.
-		:param direction: direction of navigation.
-		:param run_time: amount of time to run motors in that direction.
-		:return: none.
-		"""
-		if components[1][1] is True:
-			get_distance = True
-		else:
-			get_distance = False
-		pass
-		instructions = direction + "" + run_time + "" + str(get_distance)
-		self.socket.sendall(client.send(self, instructions.encode(encoding = "ascii", errors = "replace"))
-		if client.receive_acknowledgement() is False:
-			return None
-		pass
-		if get_distance is True:
-			client.create_process(client.nav_telemtry, (self))
-		pass
-    pass
-    def nav_telemtry_get(self):
-      """
-      Listens for telemtry data, made to be ran through multiprocessing.
-      :return: none
-      """
-      stop = False
-      while stop is False:
-        nav_telemtry = self.socket.recv(4096).decode(encoding = "utf-8", errors = "replace")
-        if nav_telemtry == "rca-1.2:nav_end":
-          	stop = True
-          	content = "[END]"
+        """
+        Wrapper for client.send(), formats instructions and does hardware check for distance sensor.
+        :param direction: direction of navigation.
+        :param run_time: amount of time to run motors in that direction.
+        :return: none.
+        """
+        if self.components[1][1] is True:
+            get_distance = True
         else:
-          	content = nav_telemtry
+            get_distance = False
         pass
-        self.nav_telemtry_text.configure(state = tkinter.NORMAL)
-        self.nav_telemtry_text.insert("1.0", content)
-        self.nav_telemtry_text.update_idletasks()
-        self.nav_telemtry_text.configure(state = tkinter.DISABLED)
-      pass
+        instructions = direction + "" + run_time + "" + str(get_distance)
+        self.socket.sendall(client.send(self, instructions.encode(encoding = "ascii", errors = "replace")))
+        if client.receive_acknowledgement(self) is False:
+            return None
+        pass
+        if get_distance is True:
+            client.create_process(client.nav_telemetry_get, self)
+        pass
     pass
-	def os_control_shutdown_wrapper(self):
-		"""
-		Creates dialogue asking for user to confirm to shutdown bot.
-		:return: none.
-		"""
-		confirm_dialogue = messagebox.askyesno("Raspbot RCA: Confirm Shutdown?", "Are you sure you want to shutdown the bot? There is no way to boot it besides physically restarting its power source, and if the Arduino fails, you may overdischarge your battery.")
-		if True:
-			self.socket.sendall(client.send(self, b"command_shutdown"))
-			self.socket.close()
-		else:
-			return None
-		pass
-	pass
+    def nav_telemetry_get(self):
+        """
+        Listens for telemetry data, made to be ran through multiprocessing.
+        :return: none
+        """
+        stop = False
+        while stop is False:
+            nav_telemetry = self.socket.recv(4096).decode(encoding = "utf-8", errors = "replace")
+            if nav_telemetry == "rca-1.2:nav_end":
+                stop = True
+                content = "[END]"
+            else:
+                content = nav_telemetry
+            pass
+            self.nav_telemetry_text.configure(state = tkinter.NORMAL)
+            self.nav_telemetry_text.insert("1.0", content)
+            self.nav_telemetry_text.update_idletasks()
+            self.nav_telemetry_text.configure(state = tkinter.DISABLED)
+        pass
+    pass
+    def os_control_shutdown_wrapper(self):
+        """
+        Creates dialogue asking for user to confirm to shutdown bot.
+        :return: none.
+        """
+        confirm_dialogue = messagebox.askyesno("Raspbot RCA: Confirm Shutdown?", "Are you sure you want to shutdown the bot? There is no way to boot it besides physically restarting its power source, and if the Arduino fails, you may overdischarge your battery.")
+        if confirm_dialogue is True:
+            self.socket.sendall(client.send(self, b"command_shutdown"))
+            self.socket.close()
+        else:
+            return None
+        pass
+    pass
     @staticmethod
     def exit(status):
         """
         Stops application.
         :return: none.
-		"""
+        """
         print("[INFO]: Stopping application...")
         app_end(status)
     pass
     def connect(self):
         """
         Connects to an IP with port number, and starts an encrypted connection.
-		:return: none.
+        :return: none.
         """
         print("[INFO]: Creating socket connection...")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
