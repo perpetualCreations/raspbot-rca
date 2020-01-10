@@ -8,6 +8,7 @@
 try:
     print("[INFO]: Starting imports...")
     from subprocess import call
+    from subprocess import Popen
     from time import sleep
     # AES + RSA-based encryption was not finished, and sections using it were commented out.
     # from Cryptodome.PublicKey import RSA
@@ -30,6 +31,7 @@ except ImportError as e:
     sleep = None
     tkinter = None
     call = None
+    Popen = None
     Popen = None
     Salsa20 = None
     HMAC = None
@@ -77,8 +79,10 @@ class host:
             self.host = config_parse_load["NET"]["ip"]
             self.port = config_parse_load["NET"]["port"]
             self.port = int(self.port)
-            self.key = config_parse_load["ENCRYPT"]["key"]
-            self.key = MD5.new(self.key).hexdigest().encode(encoding="ascii", errors="replace")
+            raw_key = config_parse_load["ENCRYPT"]["key"]
+            raw_key_hash = MD5.new(raw_key.encode(encoding = "ascii", errors = "replace"))
+            self.key = raw_key_hash.hexdigest()
+            self.key = self.key.encode(encoding = "ascii", errors = "replace")
             self.hmac_key = config_parse_load["ENCRYPT"]["hmac_key"]
             self.auth = config_parse_load["ENCRYPT"]["auth"]
             self.auth = self.auth.encode(encoding = "ascii", errors = "replace")
@@ -108,8 +112,7 @@ class host:
                 print("[FAIL]: Client authentication invalid! Given code does not match authentication code.")
                 connection.sendall(host.send(self, b"rca-1.2:authentication_invalid"))
                 self.socket.close()
-                print("[INFO]: Restarting session...")
-                host()
+                host.restart()
             pass
             while True:
                 command = host.receive(self, connection.recv(4096))
@@ -140,6 +143,10 @@ class host:
                     nav_distance_accept = nav_command_list[2]
                     host.serial("/dev/ttyACM0", "send", nav_direction.encode(encoding = "ascii", errors = "replace"))
                     host.create_process(host.nav_timer, (self, int(nav_run_time), literal_eval(nav_distance_accept)))
+                elif command == b"rca-1.2:disconnected":
+                    self.socket.close()
+                    print("[INFO]: Client has disconnected.")
+                    host.restart()
                 else:
                     raise NotImplementedError
                     # TODO add else case here
@@ -252,6 +259,7 @@ class host:
             validation.hexverify(validate)
         except ValueError:
             self.socket.close()
+            host.restart()
             raise Exception("[FAIL]: Message is not authentic, failed HMAC validation!")
         pass
         ciphering = Salsa20.new(self.key, nonce = nonce)
@@ -297,7 +305,7 @@ class host:
             return None
         pass
     pass
-    def nav_timer(self, nav_run_time, nav_distance_accept):
+    def nav_timer(self, nav_run_time, nav_distance_accept): # TODO create distance check
         """
         Navigation timer for multiprocessing, counts down until run time is over, also reads distance telemetry and forwards to client.
         :param nav_run_time:
@@ -317,6 +325,13 @@ class host:
             pass
             sleep(1)
         pass
+    pass
+    @staticmethod
+    def restart():
+        """Restarts application."""
+        print("[INFO]: Restarting application...")
+        Popen("main.py")
+        host.exit(0)
     pass
     @staticmethod
     def shutdown():

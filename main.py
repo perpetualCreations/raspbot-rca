@@ -2,7 +2,6 @@
 # Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1
 # Made by Taian Chen
 """
-# TODO modify docstrings
 
 try:
     print("[INFO]: Starting imports...")
@@ -88,8 +87,10 @@ class client:
             self.host = config_parse_load["NET"]["ip"]
             self.port = config_parse_load["NET"]["port"]
             self.port = int(self.port)
-            self.key = config_parse_load["ENCRYPT"]["key"]
-            self.key = MD5.new(self.key).hexdigest().encode(encoding="ascii", errors="replace")
+            raw_key = config_parse_load["ENCRYPT"]["key"]
+            raw_key_hash = MD5.new(raw_key.encode(encoding = "ascii", errors = "replace"))
+            self.key = raw_key_hash.hexdigest()
+            self.key = self.key.encode(encoding = "ascii", errors = "replace")
             self.hmac_key = config_parse_load["ENCRYPT"]["hmac_key"]
             self.auth = config_parse_load["ENCRYPT"]["auth"]
             self.auth = self.auth.encode(encoding = "ascii", errors = "replace")
@@ -148,7 +149,7 @@ class client:
         self.net_status_data.set("Status: " + "Disconnected")
         net_status_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", textvariable = self.net_status_data, font = ("Calibri", 12))
         net_status_label.grid(row = 1, column = 0, padx = (5, 0), pady = (10, 0))
-        net_disconnect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Disconnect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: self.socket.close())
+        net_disconnect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Disconnect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: client.disconnect(self))
         net_disconnect_button.grid(row = 2, column = 0, padx = (5, 0), pady = (10, 0))
         net_connect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Connect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: client.connect(self))
         net_connect_button.grid(row = 3, column = 0, padx = (5, 0))
@@ -517,7 +518,7 @@ class client:
         confirm_dialogue = messagebox.askyesno("Raspbot RCA: Confirm Shutdown?", "Are you sure you want to shutdown the bot? There is no way to boot it besides physically restarting its power source, and if the Arduino fails, you may overdischarge your battery.")
         if confirm_dialogue is True:
             self.socket.sendall(client.send(self, b"command_shutdown"))
-            self.socket.close()
+            client.disconnect(self)
         else:
             return None
         pass
@@ -552,7 +553,7 @@ class client:
         self.socket.sendall(client.send(self, self.auth))
         if client.receive_acknowledgement(self) is False:
             print("[INFO]: Closing connection due to invalid authentication...")
-            self.socket.close()
+            client.disconnect(self)
             return None
         pass
         print("[INFO]: Successfully connected to host!")
@@ -582,6 +583,16 @@ class client:
         # hashing sha1
         # en_object = hashlib.sha1(decrypt)
         # en_digest = en_object.hexdigest()
+    pass
+    def disconnect(self):
+        """
+        Sends a message to host notifying that client has disconnected and then closes socket.
+        :return: none.
+        """
+        self.socket.sendall(client.send(self, b"rca-1.2:disconnected"))
+        self.net_status_data.set("Status: " + "Disconnected")
+        self.socket.close()
+        print("[INFO]: Disconnected from bot.")
     pass
     def send(self, message):
         """
@@ -627,7 +638,7 @@ class client:
         try:
             validation.hexverify(validate)
         except ValueError:
-            self.socket.close()
+            client.disconnect(self)
             raise Exception("[FAIL]: Message is not authentic, failed HMAC validation!")
         pass
         ciphering = Salsa20.new(self.key, nonce = nonce)
