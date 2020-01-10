@@ -176,6 +176,16 @@ class client:
         report_save_button.grid(row = 4, column = 0, padx = (5, 0), pady = (5, 0))
         report_help_button = tkinter.Button(report_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 12), command = lambda: messagebox.showinfo("Raspbot RCA: Report Help", "This panel allows you to request, view, and save reports of a vareity of types. These include computer hardware checks (CH Check) and science reports (Science, RFP Enceladus)."))
         report_help_button.grid(row = 5, column = 0, padx = (5, 150), pady = (20, 5))
+		control_frame = tkinter.Frame(self.root, bg = "#506a96")
+		control_frame.grid(row = 1 , column = 1) # TODO please adjust
+		os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
+		os_control_frame.grid(row = 0, column = 0) # TODO please adjust
+		os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_update"))) # TODO please adjust button size
+		os_control_update_button.grid(row = 0, column = 0) # TODO please adjust
+		os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper(self)) # TODO please adjust button size
+		os_control_shutdown_button.grid(row = 0, column = 0) # TODO please adjust
+		os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_reboot"))) # TODO please adjust button size
+		os_control_reboot_button.grid(row = 0, column = 0) # TODO please adjust
         self.root.mainloop()
     pass
     @staticmethod
@@ -458,17 +468,32 @@ class client:
         self.nav_telemtry_text.configure(state = tkinter.DISABLED)
       pass
     pass
+	def os_control_shutdown_wrapper(self):
+		"""
+		Creates dialogue asking for user to confirm to shutdown bot.
+		:return: none.
+		"""
+		confirm_dialogue = messagebox.askyesno("Raspbot RCA: Confirm Shutdown?", "Are you sure you want to shutdown the bot? There is no way to boot it besides physically restarting its power source, and if the Arduino fails, you may overdischarge your battery.")
+		if True:
+			self.socket.sendall(client.send(self, b"command_shutdown"))
+			self.socket.close()
+		else:
+			return None
+		pass
+	pass
     @staticmethod
     def exit(status):
         """
         Stops application.
-        """
+        :return: none.
+		"""
         print("[INFO]: Stopping application...")
         app_end(status)
     pass
     def connect(self):
         """
         Connects to an IP with port number, and starts an encrypted connection.
+		:return: none.
         """
         print("[INFO]: Creating socket connection...")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
