@@ -387,7 +387,7 @@ class client:
         root.geometry('{}x{}'.format(400, 370))
         root.resizable(width = False, height = False)
         graphics_report = tkinter.Text(root, height = 15, bg = "white", fg = "black", font = ("Calibri", 12))
-        graphics_report.configure(state = tkinter.DISABLED)
+        graphics_report.configure(state = tkinter.NORMAL)
         graphics_report.insert("1.0", content)
         graphics_report.update_idletasks()
         graphics_report.configure(state = tkinter.DISABLED)
@@ -417,6 +417,47 @@ class client:
         file_report.close()
         print("[INFO]: Report saved.")
     pass
+    def nav_execute(self, direction, run_time):
+		"""
+		Wrapper for client.send(), formats instructions and does hardware check for distance sensor.
+		:param direction: direction of navigation.
+		:param run_time: amount of time to run motors in that direction.
+		:return: none.
+		"""
+		if components[1][1] is True:
+			get_distance = True
+		else:
+			get_distance = False
+		pass
+		instructions = direction + "" + run_time + "" + str(get_distance)
+		self.socket.sendall(client.send(self, instructions.encode(encoding = "ascii", errors = "replace"))
+		if client.receive_acknowledgement() is False:
+			return None
+		pass
+		if get_distance is True:
+			client.create_process(client.nav_telemtry, (self))
+		pass
+    pass
+    def nav_telemtry_get(self):
+      """
+      Listens for telemtry data, made to be ran through multiprocessing.
+      :return: none
+      """
+      stop = False
+      while stop is False:
+        nav_telemtry = self.socket.recv(4096).decode(encoding = "utf-8", errors = "replace")
+        if nav_telemtry == "rca-1.2:nav_end":
+          	stop = True
+          	content = "[END]"
+        else:
+          	content = nav_telemtry
+        pass
+        self.nav_telemtry_text.configure(state = tkinter.NORMAL)
+        self.nav_telemtry_text.insert("1.0", content)
+        self.nav_telemtry_text.update_idletasks()
+        self.nav_telemtry_text.configure(state = tkinter.DISABLED)
+      pass
+    pass
     @staticmethod
     def exit(status):
         """
@@ -439,13 +480,11 @@ class client:
             print("[FAIL]: Failed to connect! See below for details.")
             print(se)
         pass
-        confirm = client.receive_acknowledgement(self)
-        if confirm is False:
+        if client.receive_acknowledgement(self) is False:
             return None
         pass
         self.socket.sendall(client.send(self, self.auth))
-        confirm = client.receive_acknowledgement(self)
-        if confirm is False:
+        if client.receive_acknowledgement(self) is False:
             print("[INFO]: Closing connection due to invalid authentication...")
             self.socket.close()
             return None
