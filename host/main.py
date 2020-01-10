@@ -17,6 +17,7 @@ try:
     from Cryptodome.Hash import HMAC
     from Cryptodome.Hash import SHA256
     from Cryptodome.Hash import MD5
+    from Cryptodome.Hash import SHA3_512
     import socket
     import configparser
     from sys import exit as app_end
@@ -41,6 +42,7 @@ except ImportError as e:
     multiprocessing = None
     literal_eval = None
     science = None
+    SHA3_512 = None
     # RSA = None
     # AES = None
     # Random = None
@@ -76,8 +78,7 @@ class host:
             self.port = config_parse_load["NET"]["port"]
             self.port = int(self.port)
             self.key = config_parse_load["ENCRYPT"]["key"]
-            self.key = self.key.encode(encoding="ascii", errors="replace")
-            self.key = MD5.new(self.key).hexdigest()
+            self.key = MD5.new(self.key).hexdigest().encode(encoding="ascii", errors="replace")
             self.hmac_key = config_parse_load["ENCRYPT"]["hmac_key"]
             self.auth = config_parse_load["ENCRYPT"]["auth"]
             self.auth = self.auth.encode(encoding = "ascii", errors = "replace")
@@ -99,7 +100,7 @@ class host:
         with connection:
             print("[INFO]: Received connection from ", client_address, ".")
             connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-            data = host.receive(self, connection.recv(4096))
+            data = SHA3_512.new(host.receive(self, connection.recv(4096))).hexdigest().encode(encoding = "ascii", errors = "replace")
             if data == self.auth:
                 print("[INFO]: Client authenticated!")
                 connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
@@ -126,9 +127,7 @@ class host:
                 elif command == b"rca-1.2:command_science_collect":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                     if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2]:
-                        connection.sendall(host.send(self, b"rca-1.2:data_start"))
-                        connection.sendall(host.send(science.science_get()))
-                        connection.sendall(host.send(self, b"rca-1.2:data_end"))
+                        connection.sendall(host.send(self, science.science_get()))
                     else:
                         connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
                     pass
@@ -139,15 +138,25 @@ class host:
             pass
         pass
     pass
-    def serial(self, port, direction, message):
+    @staticmethod
+    def serial(port, direction, message):
         """
         Sends or receives serial communications to the Arduino integration.
         :param port: the port that the Arduino is connected to.
         :param direction: whether to expect to receive or send.
         :param message: what contents to send, or if receiving leave as None.
-        :return:
+        :return: if receiving, decoded string, if sending or invalid direction, none.
         """
-        arduino_connect = serial.Serial('/dev/ttyACM0', timeout = 5)
+        arduino_connect = serial.Serial(port = port, timeout = 5)
+        if direction == "receive":
+            return arduino_connect.readline().decode(encoding = "utf-8", errors = "replace")
+        elif direction == "send":
+            arduino_connect.write(message.encode(encoding = "ascii", errors = "replace"))
+            return None
+        else:
+            return None
+        pass
+    pass
     @staticmethod
     def set_configuration(var, value, section, key, multi):
         """

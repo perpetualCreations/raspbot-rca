@@ -25,7 +25,7 @@ try:
     import tkinter
     from tkinter import messagebox
     from ast import literal_eval
-    from ping3 import ping
+    import ping3
     # import hashlib
 except ImportError as e:
     sleep = None
@@ -44,7 +44,7 @@ except ImportError as e:
     app_end = None
     multiprocessing = None
     literal_eval = None
-    ping = None
+    ping3 = None
     # RSA = None
     # AES = None
     # Random = None
@@ -74,6 +74,7 @@ class client:
         self.auth = ""
         self.ping_text = None
         self.ping_button = None
+        self.ping_results = ""
         self.report_content = ""
         print("[INFO]: Loading configurations...")
         config_parse_load = configparser.ConfigParser()
@@ -88,8 +89,7 @@ class client:
             self.port = config_parse_load["NET"]["port"]
             self.port = int(self.port)
             self.key = config_parse_load["ENCRYPT"]["key"]
-            self.key = self.key.encode(encoding="ascii", errors="replace")
-            self.key = MD5.new(self.key).hexdigest()
+            self.key = MD5.new(self.key).hexdigest().encode(encoding="ascii", errors="replace")
             self.hmac_key = config_parse_load["ENCRYPT"]["hmac_key"]
             self.auth = config_parse_load["ENCRYPT"]["auth"]
             self.auth = self.auth.encode(encoding = "ascii", errors = "replace")
@@ -168,7 +168,7 @@ class client:
         report_dropdown = tkinter.OptionMenu(report_frame, report_type_data, report_type_list[0], report_type_list[1], report_type_list[2])
         report_dropdown.configure(width = 7)
         report_dropdown.grid(row = 1, column = 0, padx = (5, 0), pady = (10, 0))
-        report_collect_button = tkinter.Button(report_frame, bg = "white", fg = "black", text = "Collect", font = ("Calibri", 12), width = 10, command = lambda: client.report_collect(self))
+        report_collect_button = tkinter.Button(report_frame, bg = "white", fg = "black", text = "Collect", font = ("Calibri", 12), width = 10, command = lambda: client.report_collect(self, report_type_data.get()))
         report_collect_button.grid(row = 2, column = 0, padx = (5, 0), pady = (5, 0))
         report_view_button = tkinter.Button(report_frame, bg = "white", fg = "black", text = "View", font = ("Calibri", 12), width = 10, command = lambda: client.report_gui(self, report_type_data.get(), self.report_content))
         report_view_button.grid(row = 3, column = 0, padx = (5, 0), pady = (5, 0))
@@ -305,7 +305,8 @@ class client:
         Pings host address and records latency and losses.
         :return: average latency, nested list with individual latency values, total losses, nested list with individual losses, if host resolution failed
         """
-        scans = [ping(self.host, timeout = 10, size = 64, unit = "ms"), ping(self.host, timeout = 10, size = 64, unit = "ms"), ping(self.host, timeout = 10, size = 64, unit = "ms"), ping(self.host, timeout = 10, size = 64, unit = "ms")]
+        print("[INFO]: Starting PING test...")
+        scans = [ping3.ping(self.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(self.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(self.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(self.host, timeout = 10, size = 64, unit = "ms")]
         if False in scans:
             return [None, [None, None, None, None], 4, [True, True, True, True], True]
         else:
@@ -328,6 +329,7 @@ class client:
                 result[3][3] = True
             pass
             result[0] = (result[1][0] + result[1][1] + result[1][2] + result[1][3])/4
+            print("[INFO]: PING test complete.")
             return result
         pass
     pass
@@ -336,24 +338,51 @@ class client:
         Wrapper for client.ping() for ping_gui.
         :return: none
         """
-        raise NotImplementedError
-        # TODO Complete
+        ping_results_raw = client.ping(self)
+        if ping_results_raw[4] is True:
+            self.ping_results = "Unable to resolve hostname," + "\n" + "is the NET configuration correct?" + "\n" + "Host IP was:" + "\n" + self.host
+        else:
+            ping_results_raw[0] = round(ping_results_raw[0], 2)
+            ping_results_raw[1][0] = round(ping_results_raw[1][0], 2)
+            ping_results_raw[1][1] = round(ping_results_raw[1][1], 2)
+            ping_results_raw[1][2] = round(ping_results_raw[1][2], 2)
+            ping_results_raw[1][3] = round(ping_results_raw[1][3], 2)
+            if ping_results_raw[3][0] is True:
+                ping_results_raw[1][0] = "Timed out!"
+            elif ping_results_raw[3][1] is True:
+                ping_results_raw[1][1] = "Timed out!"
+            elif ping_results_raw[3][2] is True:
+                ping_results_raw[1][2] = "Timed out!"
+            elif ping_results_raw[3][3] is True:
+                ping_results_raw[1][3] = "Timed out!"
+            pass
+            self.ping_results = "Average Latency (ms): " + str(ping_results_raw[0]) + "\n" + "Test 1 Latency: " + str(ping_results_raw[1][0]) + "\n" + "Test 2 Latency: " + str(ping_results_raw[1][1]) + "\n" + "Test 3 Latency: " + str(ping_results_raw[1][2]) + "\n" + "Test 4 Latency: " + str(ping_results_raw[1][3]) + "\n" + str(ping_results_raw[2]) + "/4" + " Loss"
+        pass
+        self.ping_text.configure(state = tkinter.NORMAL)
+        self.ping_text.insert("1.0", self.ping_results)
+        self.ping_text.update_idletasks()
+        self.ping_text.configure(state = tkinter.DISABLED)
     pass
     def ping_gui(self):
         """
         Does exactly what client.set_configuration does, but with a GUI window.
         :return: none.
-        """ # TODO complete
-        raise NotImplementedError
+        """
         root = tkinter.Toplevel()
-        root.title("Raspbot RCA: Ping")
+        root.title("Raspbot RCA-G: Ping Tool")
         root.configure(bg = "#344561")
-        root.geometry('{}x{}'.format(200, 150))
+        root.geometry('{}x{}'.format(255, 290))
         root.resizable(width = False, height = False)
-        self.ping_text = tkinter.Text(root, bg = "white", fg = "black", state = tkinter.DISABLED, height = 20, width = 15, font = ("Calibri", 10))
-        ping_text.grid(row = 0, column = 0, padx = (5, 5), pady = (10, 0))
-        self.ping_button = tkinter.Button(root, bg = "white", fg = "black", text = "Ping", font = ("Calibri", 12), command = ping_wrapper)
-        ping_button.grid(row = 1, column = 0, padx = (5, 5), pady = (5, 5))
+        self.ping_text = tkinter.Text(root, height = 8, width = 30, bg = "white", fg = "black", font = ("Calibri", 12))
+        self.ping_text.grid(row = 0, column = 0, pady = (8, 14), padx = (5, 5))
+        self.ping_text.configure(state = tkinter.DISABLED)
+        self.ping_button = tkinter.Button(root, bg = "white", fg = "black", text = "Ping", width = 20, font = ("Calibri", 12), command = lambda: client.ping_wrapper(self))
+        self.ping_button.grid(row = 1, column = 0, pady = (0, 2))
+        save_button = tkinter.Button(root, bg = "white", fg = "black", text = "Save", width = 20, font = ("Calibri", 12), command = lambda: client.report_save(self, "PING", self.ping_results))
+        save_button.grid(row = 2, column = 0, pady = (0, 2))
+        close_button = tkinter.Button(root, bg = "white", fg = "black", text = "Close", width = 20, font = ("Calibri", 12), command = lambda: root.destroy())
+        close_button.grid(row = 3, column = 0, pady = (0, 10))
+        root.mainloop()
     pass
     def report_collect(self, report_type):
         """
@@ -364,11 +393,23 @@ class client:
         if report_type == "Science":
             if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
                 self.socket.sendall(client.send(self, b"rca-1.2:command_science_collect"))
+                data = client.receive(self, self.socket.recv(4096))
+                data = data.decode(encoding = "utf-8", errors = "replace")
+                if data == "rca-1.2:hardware_unavailable":
+                    print("[FAIL]: Host replies that RFP Enceladus hardware is unavailable. This conflicts with current configuration, please correct configurations.")
+                    return None
+                pass
+                self.report_content = data
             else:
-                return None # TODO finish
+                return None
             pass
         elif report_type == "CH Check":
             self.socket.sendall(client.send(self, b"rca-1.2:command_ch_check"))
+            data = client.receive(self, self.socket.recv(4096))
+            data = data.decode(encoding="utf-8", errors="replace")
+            self.report_content = data
+        else:
+            return None
         pass
     pass
     def report_gui(self, report_type, content):
@@ -403,7 +444,7 @@ class client:
         :param content: report contents to be saved.
         :return: none.
         """
-        if self.report_content == "":
+        if self.report_content == "" and report_type != "PING":
             return None
         pass
         print("[INFO]: Generating timestamps for report...")
