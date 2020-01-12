@@ -131,11 +131,11 @@ class client:
         net_tools_menu.add_command(label = "Ping", command = lambda: client.ping_gui(self))
         net_menu.add_cascade(label = "Tools", menu = net_tools_menu)
         menu.add_cascade(label = "Net", menu = net_menu)
-        vitals_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0)
+        vitals_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0, height = 50, width = 60)
         vitals_frame.grid(row = 0, column = 0, padx = (10, 0), pady = (15, 0))
         vitals_label = tkinter.Label(vitals_frame, bg = "#506a96", fg = "white", text = "Bot Vitals", font = ("Calibri", 12))
         vitals_label.grid(row = 0, column = 0, padx = (5, 0))
-        self.vitals_text = tkinter.Text(vitals_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 40, font = ("Calibri", 10))
+        self.vitals_text = tkinter.Text(vitals_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 50, font = ("Calibri", 10))
         self.vitals_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 0))
         vitals_refresh_button = tkinter.Button(vitals_frame, text = "Refresh", bg = "white", fg = "black", command = lambda: client.vitals_refresh(self, False))
         vitals_refresh_button.grid(row = 2, column = 0, padx = (5, 5), pady = (10, 5))
@@ -154,7 +154,7 @@ class client:
         net_connect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Connect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: client.connect(self))
         net_connect_button.grid(row = 3, column = 0, padx = (5, 0))
         net_help_button = tkinter.Button(net_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Net Help", "This panel controls your network connection with the bot. See the NET options in menu bar for additional tools and actions."))
-        net_help_button.grid(row = 4, column = 0, padx = (5, 150), pady = (20, 5))
+        net_help_button.grid(row = 4, column = 0, padx = (5, 150), pady = (71, 5))
         report_frame = tkinter.Frame(multi_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
         report_frame.grid(row = 0, column = 1, padx = (5, 0))
         report_label = tkinter.Label(report_frame, bg = "#506a96", fg = "white", text = "Reports", font = ("Calibri", 12))
@@ -177,16 +177,20 @@ class client:
         report_save_button.grid(row = 4, column = 0, padx = (5, 0), pady = (5, 0))
         report_help_button = tkinter.Button(report_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 12), command = lambda: messagebox.showinfo("Raspbot RCA: Report Help", "This panel allows you to request, view, and save reports of a vareity of types. These include computer hardware checks (CH Check) and science reports (Science, RFP Enceladus)."))
         report_help_button.grid(row = 5, column = 0, padx = (5, 150), pady = (20, 5))
-        control_frame = tkinter.Frame(self.root, bg = "#506a96")
-        control_frame.grid(row = 1 , column = 1) # TODO please adjust
+        control_frame = tkinter.Frame(self.root, bg = "#344561")
+        control_frame.grid(row = 1 , column = 1, padx = (5, 0))
         os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        os_control_frame.grid(row = 0, column = 0) # TODO please adjust
-        os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_update"))) # TODO please adjust button size
-        os_control_update_button.grid(row = 0, column = 0) # TODO please adjust
-        os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper(self)) # TODO please adjust button size
-        os_control_shutdown_button.grid(row = 0, column = 0) # TODO please adjust
-        os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_reboot"))) # TODO please adjust button size
-        os_control_reboot_button.grid(row = 0, column = 0) # TODO please adjust
+        os_control_frame.grid(row = 0, column = 0, pady = (10, 0)) # TODO please adjust
+        os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", height = 1, width = 10, font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_update"))) # TODO please adjust button size
+        os_control_update_button.grid(row = 0, column = 0, padx = (5, 5), pady = (40, 5)) # TODO please adjust
+        os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Shutdown", height = 1, width = 10, font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper(self)) # TODO please adjust button size
+        os_control_shutdown_button.grid(row = 1, column = 0, padx = (5, 5), pady = (0, 5)) # TODO please adjust
+        os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Reboot", height = 1, width = 10, font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_reboot"))) # TODO please adjust button size
+        os_control_reboot_button.grid(row = 2, column = 0, padx = (5, 5), pady = (0, 10)) # TODO please adjust
+        os_control_notice_button = tkinter.Button(os_control_frame, bg = "#506a96", fg = "white", text = "!", height = 1, width = 1, command = lambda: messagebox.showinfo("Raspbot RCA: OS Commmand Notice", "When using this panel's functions, please note that:" + "\n" + "1. OS Update assumes that your host OS is Debian or Debian-based, and updates through APT." + "\n" + "2. Shutdown and reboot uses Linux's built-in functions to do so through shell." + "\n" + "3. After shutting down, there is no way to turn the bot back on besides cutting and restoring power. Please use cautiously."))
+        os_control_notice_button.grid(row = 3, column = 0, padx = (1, 80), pady = (50, 2))
+        nav_control_frame = tkinter.Frame(control_frame, bg = "#506a96", hightlightthickness = 2, bd = 0)
+        nav_control_frame.grid(row = 0, column = 0)
         self.root.mainloop()
     pass
     @staticmethod
