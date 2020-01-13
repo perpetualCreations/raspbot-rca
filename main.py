@@ -180,7 +180,7 @@ class client:
         control_frame = tkinter.Frame(self.root, bg = "#344561")
         control_frame.grid(row = 1 , column = 1, padx = (5, 0))
         os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        os_control_frame.grid(row = 0, column = 0, pady = (10, 0)) # TODO please adjust
+        os_control_frame.grid(row = 0, column = 0, pady = (10, 0))
         os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", height = 1, width = 10, font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_update"))) # TODO please adjust button size
         os_control_update_button.grid(row = 0, column = 0, padx = (5, 5), pady = (40, 5)) # TODO please adjust
         os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Shutdown", height = 1, width = 10, font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper(self)) # TODO please adjust button size
@@ -191,6 +191,9 @@ class client:
         os_control_notice_button.grid(row = 3, column = 0, padx = (1, 80), pady = (50, 2))
         nav_control_frame = tkinter.Frame(control_frame, bg = "#506a96", hightlightthickness = 2, bd = 0)
         nav_control_frame.grid(row = 0, column = 0)
+        nav_control_label = tkinter.Label(nav_control_frame, bg = "#506a96", fg = "white", text = "Navigation", font = ("Calibri", 12))
+        nav_control_label.grid(row = 0, column = 0)
+        nav_control_task_dropdown = tkinter.OptionMenu(report_frame, report_type_data, report_type_list[0], report_type_list[1], report_type_list[2])
         self.root.mainloop()
     pass
     @staticmethod
