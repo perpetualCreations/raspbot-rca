@@ -182,18 +182,30 @@ class client:
         os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
         os_control_frame.grid(row = 0, column = 0, pady = (10, 0))
         os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", height = 1, width = 10, font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_update"))) # TODO please adjust button size
-        os_control_update_button.grid(row = 0, column = 0, padx = (5, 5), pady = (40, 5)) # TODO please adjust
+        os_control_update_button.grid(row = 0, column = 0, padx = (5, 5), pady = (40, 5))
         os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Shutdown", height = 1, width = 10, font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper(self)) # TODO please adjust button size
-        os_control_shutdown_button.grid(row = 1, column = 0, padx = (5, 5), pady = (0, 5)) # TODO please adjust
+        os_control_shutdown_button.grid(row = 1, column = 0, padx = (5, 5), pady = (0, 5))
         os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Reboot", height = 1, width = 10, font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_reboot"))) # TODO please adjust button size
-        os_control_reboot_button.grid(row = 2, column = 0, padx = (5, 5), pady = (0, 10)) # TODO please adjust
+        os_control_reboot_button.grid(row = 2, column = 0, padx = (5, 5), pady = (0, 10))
         os_control_notice_button = tkinter.Button(os_control_frame, bg = "#506a96", fg = "white", text = "!", height = 1, width = 1, command = lambda: messagebox.showinfo("Raspbot RCA: OS Commmand Notice", "When using this panel's functions, please note that:" + "\n" + "1. OS Update assumes that your host OS is Debian or Debian-based, and updates through APT." + "\n" + "2. Shutdown and reboot uses Linux's built-in functions to do so through shell." + "\n" + "3. After shutting down, there is no way to turn the bot back on besides cutting and restoring power. Please use cautiously."))
         os_control_notice_button.grid(row = 3, column = 0, padx = (1, 80), pady = (50, 2))
         nav_control_frame = tkinter.Frame(control_frame, bg = "#506a96", hightlightthickness = 2, bd = 0)
         nav_control_frame.grid(row = 0, column = 0)
         nav_control_label = tkinter.Label(nav_control_frame, bg = "#506a96", fg = "white", text = "Navigation", font = ("Calibri", 12))
         nav_control_label.grid(row = 0, column = 0)
-        nav_control_task_dropdown = tkinter.OptionMenu(report_frame, report_type_data, report_type_list[0], report_type_list[1], report_type_list[2])
+        nav_task_list = [
+            "Forwards",
+            "Backwards",
+            "Left Forwards",
+            "Left Backwards",
+            "Right Forwards",
+            "Right Backwards",
+            "Spin Clockwise",
+            "Spin Counterclockwise"
+        ]
+        nav_type_data = tkinter.StringVar(report_frame)
+        nav_type_data.set(nav_task_list[0])
+        nav_control_task_dropdown = tkinter.OptionMenu(nav_control_frame, nav_type_data, nav_task_list[0], nav_type_list[1], nav_type_list[2])
         self.root.mainloop()
     pass
     @staticmethod
