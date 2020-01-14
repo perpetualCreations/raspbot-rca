@@ -25,7 +25,6 @@ try:
     import multiprocessing
     import serial
     from ast import literal_eval
-    from .science import science
     # import hashlib
 except ImportError as e:
     sleep = None
@@ -54,6 +53,19 @@ except ImportError as e:
 except ImportWarning as e:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
     print(e)
+pass
+
+def import_rfp_enceladus():
+	print("[INFO]: Importing RFP Enceladus packages...")
+	try:
+		from .science import science
+	except ImportError as e:
+	    print("[FAIL]: Imports failed! See below.")
+    	print(e)
+	except ImportWarning as e:
+		print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
+    	print(e)
+	pass
 pass
 
 class host:
@@ -92,6 +104,9 @@ class host:
         except FileNotFoundError:
             print("[FAIL]: Failed to load configurations! Configuration file is missing.")
         pass
+		if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
+			import_rfp_enceladus()
+		pass
         print("[INFO]: Creating open server socket...")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setblocking(False)
