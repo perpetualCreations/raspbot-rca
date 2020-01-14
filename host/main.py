@@ -167,6 +167,9 @@ class host:
         if direction == "receive":
             return arduino_connect.readline().decode(encoding = "utf-8", errors = "replace")
         elif direction == "send":
+			if message not in [""]: # TODO list all possible comamnds
+				return None
+			pass
             arduino_connect.write(message.encode(encoding = "ascii", errors = "replace"))
             return None
         else:
