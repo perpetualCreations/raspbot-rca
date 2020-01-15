@@ -204,19 +204,21 @@ class client:
             "Spin Clockwise",
             "Spin Counterclockwise"
         ]
-        nav_type_data = tkinter.StringVar(report_frame)
+        nav_type_data = tkinter.StringVar(nav_control_frame)
         nav_type_data.set(nav_task_list[0])
-        nav_control_task_dropdown = tkinter.OptionMenu(nav_control_frame, nav_type_data, nav_task_list[0], nav_type_list[1], nav_type_list[2], nav_type_list[3], nav_type_list[4], nav_type_list[5], nav_type_list[6], nav_type_list[6], nav_type_list[7], nav_type_list[8])
-		nav_control_task_dropdown.grid(row = 0, column = 0)
-		nav_control_time_entry_data = tkinter.StringVar(nav_control_frame)
-		nav_control_time_entry_entry = tkinter.Entry(nav_control_frame, bg = "white", fg = "black", textvariable = nav_control_time_entry_data, font = ("Calibri", 12))
-		nav_control_time_entry_entry.grid(row = 1, column = 0)
-		nav_control_execute_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Execute Nav", font = ("Calibri", 12), command = lambda: client.nav_execute(self, nav_type_data.get(), float(nav_control_time_entry_data.get())))
-		nav_control_execute_button.grid(row = 0, column = 1)
-		nav_control_load_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Load Navigation", font = ("Calibri", 12), command = lambda: raise NotImplementedError)
-		nav_control_load_button.grid(row = 0, column = 2)
-		nav_control_edit_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Edit Navigation", font = ("Calibri", 12), command = lambda: raise NotImplementedError)
-		nav_control_edit_button.grid(row = 1, column = 2)
+        nav_control_task_dropdown = tkinter.OptionMenu(nav_control_frame, nav_type_data, nav_task_list[0], nav_task_list[1], nav_task_list[2], nav_task_list[3], nav_task_list[4], nav_task_list[5], nav_task_list[6], nav_task_list[6], nav_task_list[7], nav_task_list[8])
+        nav_control_task_dropdown.grid(row = 0, column = 0)
+        nav_control_time_entry_data = tkinter.StringVar(nav_control_frame)
+        nav_control_time_entry_entry = tkinter.Entry(nav_control_frame, bg = "white", fg = "black", textvariable = nav_control_time_entry_data, font = ("Calibri", 12))
+        nav_control_time_entry_entry.grid(row = 1, column = 0)
+        nav_control_execute_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Execute Nav", font = ("Calibri", 12), command = lambda: client.nav_execute(self, nav_type_data.get(), float(nav_control_time_entry_data.get())))
+        nav_control_execute_button.grid(row = 0, column = 1)
+        nav_control_load_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Load Navigation", font = ("Calibri", 12), command = lambda: print("not implemented"))
+        nav_control_load_button.grid(row = 0, column = 2)
+        nav_control_edit_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Edit Navigation", font = ("Calibri", 12), command = lambda: print("not implemented"))
+        nav_control_edit_button.grid(row = 1, column = 2)
+        self.nav_telemetry_text = tkinter.Text(nav_control_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 50, font = ("Calibri", 10))
+        self.nav_telemetry_text.grid(row = 0, column = 3)
         self.root.mainloop()
     pass
     @staticmethod
