@@ -1,0 +1,1 @@
+This script is made for those using the base set and only that set.

@@ -1,16 +1,13 @@
 // Raspbot Remote Control Application (Raspbot RCA-G), Arduino Instructions for Serial Commandment
 // Performs tasks as per requested through serial, also will return sensor when requested.
 // Based off of Seeed Studio sensor examples (Dust and ToF). 
-// Supports RFP Enceladus and Upgrade #1 sets atop the base set.
+// Supports RFP Enceladus set atop of base set.
 
 // 12 and 9 -> MotorDirection and Brake for A
 // 13 and 8 -> MotorDirection and Brake for B
 // 3 -> Analog motor speed input for A
 // 11 -> Analog motor speed input for B
 // 10 -> Grove Dust Sensor, input
-// 2 -> Relay Signal for Buck Converter Toggle
-// 4 -> Relay Signal for Raspberry Pi Draw Toggle (Buck Converter/Charger Station)
-// 5 -> Relay Signal for Arduino Motor Shield Toggle 
 
 int incomingData;
 unsigned long duration;
@@ -40,16 +37,12 @@ void setup() {
   
   pinMode(13, OUTPUT);
   pinMode(8, OUTPUT);
-
+  
   pinMode(3, OUTPUT);
   pinMode(11, OUTPUT);
   
   pinMode(10, INPUT);
 
-  pinMode(2, OUTPUT);
-  pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
-  
   VL53L0X_Error Status = VL53L0X_ERROR_NONE;
   Status=VL53L0X.VL53L0X_common_init();
   if(VL53L0X_ERROR_NONE!=Status)
@@ -71,33 +64,17 @@ void setup() {
 
 void loop() {
   // key
-  // * = Battery Level
-  
   // F, B, Arrest = Forwards, Backwards, Arrest
   // W, X = Right Forwards, Backwards
   // Y, Z = Left Forwards, Backwards
+  // S = Spin Clockwise
+  // C = Spin Counterclockwise
   // D = Dust Sensor (Enceladus RFP)
   // T = Distance (Enceladus RFP)
 
   if (Serial.available() > 0) {
 
     incomingData = Serial.read();
-
-    if (incomingData == '*') {
-      int value = analogRead(A0);
-      float voltage = value * (5.0 / 1023.0);
-      Serial.println(voltage);
-      // Serial.write(voltage);
-      // Serial.write('\n')
-    }
-
-    if (incomingData == '>') {
-      int value = analogRead(A1);
-      float voltage = value * (5.0 / 1023.0);
-      Serial.println(voltage);
-      // Serial.write(voltage);
-      // Serial.write('\n')
-    }    
     
     if (incomingData == 'F') {
       digitalWrite(12, HIGH);
