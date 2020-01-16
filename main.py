@@ -1,5 +1,5 @@
 """
-# Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1
+# Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 # Made by Taian Chen
 """
 
@@ -213,9 +213,9 @@ class client:
         nav_control_time_entry_entry.grid(row = 1, column = 0)
         nav_control_execute_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Execute Nav", font = ("Calibri", 12), command = lambda: client.nav_execute(self, nav_type_data.get(), float(nav_control_time_entry_data.get())))
         nav_control_execute_button.grid(row = 0, column = 1)
-        nav_control_load_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Load Navigation", font = ("Calibri", 12), command = lambda: print("not implemented"))
+        nav_control_load_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Load Navigation", font = ("Calibri", 12), command = lambda: client.nav_load(self))
         nav_control_load_button.grid(row = 0, column = 2)
-        nav_control_edit_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Edit Navigation", font = ("Calibri", 12), command = lambda: print("not implemented"))
+        nav_control_edit_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Edit Navigation", font = ("Calibri", 12), command = lambda: client.nav_edit(self))
         nav_control_edit_button.grid(row = 1, column = 2)
         self.nav_telemetry_text = tkinter.Text(nav_control_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 50, font = ("Calibri", 10))
         self.nav_telemetry_text.grid(row = 0, column = 3)
@@ -522,26 +522,40 @@ class client:
             client.create_process(client.nav_telemetry_get, self)
         pass
     pass
-    def nav_telemetry_get(self):
-        """
-        Listens for telemetry data, made to be ran through multiprocessing.
-        :return: none
-        """
-        stop = False
-        while stop is False:
-            nav_telemetry = self.socket.recv(4096).decode(encoding = "utf-8", errors = "replace")
-            if nav_telemetry == "rca-1.2:nav_end":
-                stop = True
-                content = "[END]"
-            else:
-                content = nav_telemetry
-            pass
-            self.nav_telemetry_text.configure(state = tkinter.NORMAL)
-            self.nav_telemetry_text.insert("1.0", content)
-            self.nav_telemetry_text.update_idletasks()
-            self.nav_telemetry_text.configure(state = tkinter.DISABLED)
-        pass
-    pass
+	def nav_telemetry_get(self):
+		"""
+		Listens for telemetry data, made to be ran through multiprocessing.
+		:return: none
+		"""
+		stop = False
+		while stop is False:
+			nav_telemetry = self.socket.recv(4096).decode(encoding = "utf-8", errors = "replace")
+			if nav_telemetry == "rca-1.2:nav_end":
+				stop = True
+				content = "[END]"
+			else:
+				content = nav_telemetry
+			pass
+			self.nav_telemetry_text.configure(state = tkinter.NORMAL)
+			self.nav_telemetry_text.insert("1.0", content)
+			self.nav_telemetry_text.update_idletasks()
+			self.nav_telemetry_text.configure(state = tkinter.DISABLED)
+		pass
+	pass
+	def nav_load(self):
+		"""
+		Creates GUI for loading navigation script.
+		:return: none.
+		"""
+		raise NotImplementedError
+	pass
+	def nav_edit(self):
+		"""
+		Creates GUI for editing navigation script.
+		:return: none.
+		"""
+		raise NotImplementedError
+	pass
     def os_control_shutdown_wrapper(self):
         """
         Creates dialogue asking for user to confirm to shutdown bot.
