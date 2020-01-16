@@ -6,6 +6,7 @@
 try:
 	print("[INFO]: Starting imports...")
 	from subprocess import call
+	import webbrowser
 	from time import sleep
 	from time import strftime
 	from time import gmtime
@@ -25,9 +26,11 @@ try:
 	from tkinter import messagebox
 	from ast import literal_eval
 	import ping3
+	from sys import platform
 	# import hashlib
 except ImportError as e:
 	sleep = None
+	Popen = None
 	strftime = None
 	gmtime = None
 	tkinter = None
@@ -338,10 +341,17 @@ class client:
 	@staticmethod
 	def set_configuration_gui():
 		"""
+		Planned:
 		Does exactly what client.set_configuration does, but with a GUI window.
+		Current:
+		Either opens nano text editor for Linux systems or will open OS' built-in text editor if not Linux.
 		"""
-		raise NotImplementedError
-		# TODO write configuration gui
+		platform = platform()
+		if platform in ["linux", "linux2"]:
+			call("sudo nano main.cfg", shell = True)
+		else:
+			webbrowser.open("main.cfg")
+		pass
 	pass
 	def ping(self):
 		"""

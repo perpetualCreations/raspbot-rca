@@ -371,6 +371,7 @@ class host:
     def os_update():
         """Updates apt packages and host operating system."""
         call("sudo apt-get update && sudo apt-get upgrade -y", shell = True)
+		call("sudo apt update && sudo apt upgrade -y", shell = True)
         return True
     pass
 pass

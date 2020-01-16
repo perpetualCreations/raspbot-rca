@@ -1,6 +1,6 @@
 This directory contains the software for running the host server-side remote control application on a bot.
 To install, copy contents into the user "pi"'s home directory.
-Next, to add a start-up script to automatically start the host RCA upon booting the bot, run "sudo ./boot_run.sh", not "rca-startup.sh".
+Next, to add a start-up script to automatically start the host RCA upon booting the bot, run "sudo ./boot_run.sh", not "rca-startup.sh". Please remember to CHMOD boot_run.sh before running.
 Afterwards please ensure you have Python 3 installed, and all necessary Python and Linux packages. See requirements.txt for more details.
 Before rebooting, please edit the configuration files. For security purposes there are three independent keys, the encryption key, HMAC key, and auth key.
 The encryption key is hashed by MD5 and used in the Salsa20 encryption, please pick a random string of characters you would like to use, and copy them onto both host and client configurations.
