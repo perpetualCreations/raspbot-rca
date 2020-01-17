@@ -36,23 +36,7 @@ class led_graphics:
         self.poweroff = ["power-off.png"]
         start = ["start1.png", "start2.png", "start3.png", "start4.png"]
         print("[INFO]: Loading graphics...")
-        self.display_current = ""
-        root = tkinter.Tk()
-        root.title("Raspbot RCA-G: LED Graphics Control")
-        root.configure(bg = "#344561")
-        root.geometry('{}x{}'.format(260, 131))
-        root.resizable(width=False, height=False)
-        graphics_title = tkinter.Label(root, text = "LED Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
-        graphics_title.grid(row = 0, column = 0, padx = (0, 290))
-        graphics_led_frame_buttons = tkinter.Frame(root, bg = "#344561")
-        graphics_led_button_off = tkinter.Button(graphics_led_frame_buttons, text = "Off", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: led_graphics.display(self, "stop", None))
-        graphics_led_button_off.pack(side = tkinter.TOP)
-        graphics_led_button_hello_world = tkinter.Button(graphics_led_frame_buttons, text = "Hello World", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: led_graphics.display(self, "image", self.helloworld))
-        graphics_led_button_hello_world.pack(side = tkinter.BOTTOM)
-        graphics_led_button_idle = tkinter.Button(graphics_led_frame_buttons, text = "Idle", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: led_graphics.display(self, "image", self.idle))
-        graphics_led_button_idle.pack(side=tkinter.BOTTOM)
-        graphics_led_frame_buttons.grid(row = 2, column = 0, padx = (0, 250))
-        root.mainloop()
+
     pass
     def InvalidCommand(self):
         """Exception when entered command parameter for led_graphics is invalid."""
