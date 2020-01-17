@@ -1,7 +1,6 @@
 """
-# Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1
+# Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1, revised for v1.2
 # led_graphics module (for controlling onboard LED matrix)
-# creates GUI
 # Made by Taian Chen
 """
 
@@ -10,11 +9,9 @@ try:
     from sense_hat import SenseHat
     from time import sleep
     sense = SenseHat()
-    import tkinter
 except ImportError as e:
     SenseHat = None
     sleep = None
-    tkinter = None
     print("[FAIL]: Imports failed! See below for details.")
     print(e)
     exit(1)
@@ -35,8 +32,7 @@ class led_graphics:
         self.poweron = ["power-on.png"]
         self.poweroff = ["power-off.png"]
         start = ["start1.png", "start2.png", "start3.png", "start4.png"]
-        print("[INFO]: Loading graphics...")
-
+		print("[INFO]: Done!")
     pass
     def InvalidCommand(self):
         """Exception when entered command parameter for led_graphics is invalid."""
