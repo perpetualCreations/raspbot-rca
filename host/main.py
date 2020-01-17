@@ -59,6 +59,7 @@ def import_rfp_enceladus():
 	print("[INFO]: Importing RFP Enceladus packages...")
 	try:
 		from .science import science
+		from .led_graphics import led_graphics
 	except ImportError as e:
 	    print("[FAIL]: Imports failed! See below.")
     	print(e)
@@ -106,6 +107,7 @@ class host:
         pass
 		if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
 			import_rfp_enceladus()
+			self.pattern_led = [["error1.png", "error2.png"], ["helloworld.png"], ["idle1.png", "idle2.png"], ["power-on.png"], ["power-off.png"], ["start1.png", "start2.png", "start3.png", "start4.png"]]
 		pass
         print("[INFO]: Creating open server socket...")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -162,6 +164,11 @@ class host:
                     self.socket.close()
                     print("[INFO]: Client has disconnected.")
                     host.restart()
+				elif command == b"rca-1.2:led_graphics":
+					connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+					led_command = host.receive(self, connection.recv(4096)).deocde(encoding = "utf-8", errors = "replace") 
+					if led_command == ""
+					frame = host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace")
                 else:
                     raise NotImplementedError
                     # TODO add else case here

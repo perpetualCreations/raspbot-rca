@@ -22,17 +22,7 @@ pass
 
 class led_graphics:
     def __init__(self):
-        global led_graphics_beLoaded
-        led_graphics_beLoaded = None
         print("[INFO]: led_graphics loaded!")
-        print("[INFO]: Loading LED patterns from memory...")
-        self.error = ["error1.png", "error2.png"]
-        self.helloworld = ["helloworld.png"]
-        self.idle = ["idle1.png", "idle2.png"]
-        self.poweron = ["power-on.png"]
-        self.poweroff = ["power-off.png"]
-        start = ["start1.png", "start2.png", "start3.png", "start4.png"]
-		print("[INFO]: Done!")
     pass
     def InvalidCommand(self):
         """Exception when entered command parameter for led_graphics is invalid."""
@@ -41,7 +31,6 @@ class led_graphics:
     pass
     def display(self, command, frames):
         """Multi-purpose function for controlling SenseHAT's LED matrix. Accepts a command and frame parameter."""
-        global led_graphics_beLoaded
         if command == "play" and frames is not None:
             print("[INFO]: led_graphics is now displaying frames (from list format).")
             while True:
