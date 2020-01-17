@@ -6,7 +6,6 @@
 try:
 	print("[INFO]: Starting imports...")
 	from subprocess import call
-	import webbrowser
 	from time import sleep
 	from time import strftime
 	from time import gmtime
@@ -26,10 +25,9 @@ try:
 	from tkinter import messagebox
 	from ast import literal_eval
 	import ping3
-	from sys import platform as os_name
+	from platform import system 
 	# import hashlib
 except ImportError as e:
-	webbrowser = None
 	sleep = None
 	Popen = None
 	strftime = None
@@ -47,7 +45,7 @@ except ImportError as e:
 	multiprocessing = None
 	literal_eval = None
 	ping3 = None
-	os_name = None
+	system = None
 	# RSA = None
 	# AES = None
 	# Random = None
@@ -347,11 +345,13 @@ class client:
 		Current:
 		Either opens nano text editor for Linux systems or will open OS' built-in text editor if not Linux.
 		"""
-		platform = os_name()
-		if platform in ["linux", "linux2"]:
+		platform = system()
+		if platform in ["Linux", "Ubuntu", "Debian", "Raspbian", "Kubuntu", "Arch", "Arch Linux", "Fedora", "Linux Mint"]:
 			call("sudo nano main.cfg", shell = True)
+		elif platform == "Windows":
+			Popen(["notepad.exe", "main.cfg"])
 		else:
-			webbrowser.open("main.cfg")
+			messagebox.showerror("Raspbot RCA: OS Unsupported", "Client OS is unsupported, please manually edit configuration! The accepted operating systems are Linux and Linux distributions, and Windows. If you believe this is a mistake please open an issue on the repository page.")
 		pass
 	pass
 	def ping(self):
