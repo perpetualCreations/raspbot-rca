@@ -26,9 +26,10 @@ try:
 	from tkinter import messagebox
 	from ast import literal_eval
 	import ping3
-	from sys import platform
+	from sys import platform as os_name
 	# import hashlib
 except ImportError as e:
+	webbrowser = None
 	sleep = None
 	Popen = None
 	strftime = None
@@ -36,7 +37,6 @@ except ImportError as e:
 	tkinter = None
 	messagebox = None
 	call = None
-	Popen = None
 	Salsa20 = None
 	HMAC = None
 	SHA256 = None
@@ -47,6 +47,7 @@ except ImportError as e:
 	multiprocessing = None
 	literal_eval = None
 	ping3 = None
+	os_name = None
 	# RSA = None
 	# AES = None
 	# Random = None
@@ -346,7 +347,7 @@ class client:
 		Current:
 		Either opens nano text editor for Linux systems or will open OS' built-in text editor if not Linux.
 		"""
-		platform = platform()
+		platform = os_name()
 		if platform in ["linux", "linux2"]:
 			call("sudo nano main.cfg", shell = True)
 		else:
