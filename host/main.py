@@ -31,7 +31,6 @@ except ImportError as e:
     tkinter = None
     call = None
     Popen = None
-    Popen = None
     Salsa20 = None
     HMAC = None
     SHA256 = None
@@ -42,7 +41,6 @@ except ImportError as e:
     serial = None
     multiprocessing = None
     literal_eval = None
-    science = None
     SHA3_512 = None
     # RSA = None
     # AES = None
@@ -53,20 +51,6 @@ except ImportError as e:
 except ImportWarning as e:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
     print(e)
-pass
-
-def import_rfp_enceladus():
-	print("[INFO]: Importing RFP Enceladus packages...")
-	try:
-		from .science import science
-		from .led_graphics import led_graphics
-	except ImportError as e:
-	    print("[FAIL]: Imports failed! See below.")
-    	print(e)
-	except ImportWarning as e:
-		print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
-    	print(e)
-	pass
 pass
 
 class host:
@@ -80,6 +64,8 @@ class host:
         self.port = 64220
         self.connect_retries = 0
         self.components = [[None], [None, None, None], [None]] # [Base Set [CAM], RFP Enceladus [SenseHAT, DISTANCE, DUST], Upgrade #1 [CHARGER]]
+        led_graphics = None
+        science = None
         print("[INFO]: Loading configurations...")
         config_parse_load = configparser.ConfigParser()
         try:
@@ -105,10 +91,22 @@ class host:
         except FileNotFoundError:
             print("[FAIL]: Failed to load configurations! Configuration file is missing.")
         pass
-		if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
-			import_rfp_enceladus()
-			self.pattern_led = [["error1.png", "error2.png"], ["helloworld.png"], ["idle1.png", "idle2.png"], ["power-on.png"], ["power-off.png"], ["start1.png", "start2.png", "start3.png", "start4.png"]]
-		pass
+        if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
+            print("[INFO]: Importing RFP Enceladus packages...")
+            try:
+                from .science import science
+                from .led_graphics import led_graphics
+            except ImportError as ree:
+                science = None
+                led_graphics = None
+                print("[FAIL]: Imports failed! See below.")
+                print(ree)
+            except ImportWarning as ree:
+                print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
+                print(ree)
+            pass
+            self.pattern_led = [["error1.png", "error2.png"], ["helloworld.png"], ["idle1.png", "idle2.png"], ["power-on.png"], ["power-off.png"], ["start1.png", "start2.png", "start3.png", "start4.png"]]
+        pass
         print("[INFO]: Creating open server socket...")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setblocking(False)
@@ -147,7 +145,8 @@ class host:
                 elif command == b"rca-1.2:command_science_collect":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                     if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2]:
-                        connection.sendall(host.send(self, science.science_get()))
+                        science_module = science()
+                        connection.sendall(host.send(self, science_module.science_get()))
                     else:
                         connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
                     pass
@@ -164,14 +163,22 @@ class host:
                     self.socket.close()
                     print("[INFO]: Client has disconnected.")
                     host.restart()
-				elif command == b"rca-1.2:led_graphics":
-					connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-					led_command = host.receive(self, connection.recv(4096)).deocde(encoding = "utf-8", errors = "replace") 
-					if led_command == ""
-					frame = host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace")
+                elif command == b"rca-1.2:led_graphics":
+                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                    if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
+                        led_command = host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace")
+                        if led_command == b"play":
+                            raise NotImplementedError
+                        elif led_command == b"image":
+                            led_graphics.display("image", self.pattern_led[int(host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace"))])
+                        elif led_command == b"stop":
+                            led_graphics.display("stop", None)
+                        pass
+                    else:
+                        connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
+                    pass
                 else:
-                    raise NotImplementedError
-                    # TODO add else case here
+                    connection.sendall(host.send(self, b"rca-1.2:unknown_command"))
                 pass # add more keys here
             pass
         pass
@@ -189,9 +196,9 @@ class host:
         if direction == "receive":
             return arduino_connect.readline().decode(encoding = "utf-8", errors = "replace")
         elif direction == "send":
-			if message not in [""]: # TODO list all possible comamnds
-				return None
-			pass
+            if message not in [""]: # TODO list all possible comamnds
+                return None
+            pass
             arduino_connect.write(message.encode(encoding = "ascii", errors = "replace"))
             return None
         else:
@@ -378,7 +385,7 @@ class host:
     def os_update():
         """Updates apt packages and host operating system."""
         call("sudo apt-get update && sudo apt-get upgrade -y", shell = True)
-		call("sudo apt update && sudo apt upgrade -y", shell = True)
+        call("sudo apt update && sudo apt upgrade -y", shell = True)
         return True
     pass
 pass

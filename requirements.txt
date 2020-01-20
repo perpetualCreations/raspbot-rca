@@ -1,3 +1,4 @@
+ping3
 pyserial >= 3
 pycryptodome >= 3.9.4
 opencv-contrib-python >= 4.1.2.30

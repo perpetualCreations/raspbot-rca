@@ -6,6 +6,7 @@
 try:
 	print("[INFO]: Starting imports...")
 	from subprocess import call
+	from subprocess import Popen
 	from time import sleep
 	from time import strftime
 	from time import gmtime
@@ -106,7 +107,7 @@ class client:
 		self.root = tkinter.Tk()
 		self.root.title("Raspbot RCA: Client")
 		self.root.configure(bg = "#344561")
-		self.root.geometry('{}x{}'.format(1200, 600))
+		self.root.geometry('{}x{}'.format(1200, 530))
 		self.root.resizable(width=False, height=False)
 		menu = tkinter.Menu(self.root)
 		self.root.config(menu = menu)
@@ -180,8 +181,8 @@ class client:
 		report_view_button.grid(row = 3, column = 0, padx = (5, 0), pady = (5, 0))
 		report_save_button = tkinter.Button(report_frame, bg = "white", fg = "black", text = "Save", font = ("Calibri", 12), width = 10, command = lambda: client.report_save(self, report_type_data.get(), self.report_content))
 		report_save_button.grid(row = 4, column = 0, padx = (5, 0), pady = (5, 0))
-		report_help_button = tkinter.Button(report_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 12), command = lambda: messagebox.showinfo("Raspbot RCA: Report Help", "This panel allows you to request, view, and save reports of a vareity of types. These include computer hardware checks (CH Check) and science reports (Science, RFP Enceladus)."))
-		report_help_button.grid(row = 5, column = 0, padx = (5, 150), pady = (20, 5))
+		report_help_button = tkinter.Button(report_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Report Help", "This panel allows you to request, view, and save reports of a vareity of types. These include computer hardware checks (CH Check) and science reports (Science, RFP Enceladus)."))
+		report_help_button.grid(row = 5, column = 0, padx = (5, 150), pady = (22, 7))
 		control_frame = tkinter.Frame(self.root, bg = "#344561")
 		control_frame.grid(row = 1 , column = 1, padx = (5, 0))
 		os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
@@ -195,9 +196,11 @@ class client:
 		os_control_notice_button = tkinter.Button(os_control_frame, bg = "#506a96", fg = "white", text = "!", height = 1, width = 1, command = lambda: messagebox.showinfo("Raspbot RCA: OS Commmand Notice", "When using this panel's functions, please note that:" + "\n" + "1. OS Update assumes that your host OS is Debian or Debian-based, and updates through APT." + "\n" + "2. Shutdown and reboot uses Linux's built-in functions to do so through shell." + "\n" + "3. After shutting down, there is no way to turn the bot back on besides cutting and restoring power. Please use cautiously."))
 		os_control_notice_button.grid(row = 3, column = 0, padx = (1, 80), pady = (50, 2))
 		nav_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-		nav_control_frame.grid(row = 0, column = 0)
+		nav_control_frame.grid(row = 0, column = 1, padx = (10, 0))
 		nav_control_label = tkinter.Label(nav_control_frame, bg = "#506a96", fg = "white", text = "Navigation", font = ("Calibri", 12))
-		nav_control_label.grid(row = 0, column = 0)
+		nav_control_label.grid(row = 0, column = 0, padx = (10, 20), pady = (5, 0))
+		nav_control_help = tkinter.Button(nav_control_frame, bg = "#506a96", fg = "white", text = "?", font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Nav Help", "This panel allows you to control the bot's movement through selections." + "\n" + "To chose a direction or action, select an option from the dropdown menu, and then enter the number of seconds the motors should be run." + "\n" + "Alternatively, you can create and load navigations through the buttons below Execute Nav. These create another interface for you to write scripts and load them." + "\n" + "It should be noted in some cases navigation will be unavailable (i.e when charging)."))
+		nav_control_help.grid(row = 1, column = 0, padx = (0, 60))
 		nav_task_list = [
 			"None",
 			"Forwards",
@@ -212,18 +215,22 @@ class client:
 		nav_type_data = tkinter.StringVar(nav_control_frame)
 		nav_type_data.set(nav_task_list[0])
 		nav_control_task_dropdown = tkinter.OptionMenu(nav_control_frame, nav_type_data, nav_task_list[0], nav_task_list[1], nav_task_list[2], nav_task_list[3], nav_task_list[4], nav_task_list[5], nav_task_list[6], nav_task_list[6], nav_task_list[7], nav_task_list[8])
-		nav_control_task_dropdown.grid(row = 0, column = 0)
+		nav_control_task_dropdown.configure(width = 15)
+		nav_control_task_dropdown.grid(row = 1, column = 1, padx = (10, 10), pady = (0, 10))
 		nav_control_time_entry_data = tkinter.StringVar(nav_control_frame)
-		nav_control_time_entry_entry = tkinter.Entry(nav_control_frame, bg = "white", fg = "black", textvariable = nav_control_time_entry_data, font = ("Calibri", 12))
-		nav_control_time_entry_entry.grid(row = 1, column = 0)
-		nav_control_execute_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Execute Nav", font = ("Calibri", 12), command = lambda: client.nav_execute(self, nav_type_data.get(), float(nav_control_time_entry_data.get())))
-		nav_control_execute_button.grid(row = 0, column = 1)
-		nav_control_load_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Load Navigation", font = ("Calibri", 12), command = lambda: client.nav_load(self))
-		nav_control_load_button.grid(row = 0, column = 2)
-		nav_control_edit_button = tkinter.Button(nav_control_frame, bg = "white", fg = "black", text = "Edit Navigation", font = ("Calibri", 12), command = lambda: client.nav_edit(self))
-		nav_control_edit_button.grid(row = 1, column = 2)
-		self.nav_telemetry_text = tkinter.Text(nav_control_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 50, font = ("Calibri", 10))
-		self.nav_telemetry_text.grid(row = 0, column = 3)
+		nav_control_time_entry_entry = tkinter.Entry(nav_control_frame, bg = "white", fg = "black", textvariable = nav_control_time_entry_data, width = 15, font = ("Calibri", 12))
+		nav_control_time_entry_entry.grid(row = 2, column = 1, padx = (10, 10))
+		nav_control_script_frame = tkinter.Frame(nav_control_frame, bg = "#506a96")
+		nav_control_script_frame.grid(row = 3, column = 1, padx = (10, 10), pady = (18, 18))
+		nav_control_execute_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Execute Nav", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_execute(self, nav_type_data.get(), float(nav_control_time_entry_data.get())))
+		nav_control_execute_button.grid(row = 0, column = 0)
+		nav_control_load_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Load Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_load(self))
+		nav_control_load_button.grid(row = 1, column = 0, pady = (5, 0))
+		nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_edit(self))
+		nav_control_edit_button.grid(row = 2, column = 0, pady = (5, 0))
+		cam_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
+		cam_control_frame.grid(row = 0, column = 2, padx = (10, 0))
+
 		self.root.mainloop()
 	pass
 	@staticmethod
@@ -583,28 +590,36 @@ class client:
 			return None
 		pass
 	pass
+	def led_command(self, command, frame):
+		"""
+		Issues commands to host for controlling LED matrix on SenseHAT by controlling transmissions.
+		:param command: command to be executed by host.
+		:param frame: index number for target frame set to be played, if command is not image or play, is ignored.
+		:return: none.
+		"""
+		self.socket.sendall(client.send(self, b"rca-1.2:"))
+	pass
 	def led_gui(self):
 		"""
 		If SenseHAT is included in hardware configuration, creates GUI for controlling LED matrix on SenseHAT.
 		:return: none.
 		"""
-		self.display_current = ""
-        root = tkinter.Toplevel()
-        root.title("Raspbot RCA-G: LED Control")
-        root.configure(bg = "#344561")
-        root.geometry('{}x{}'.format(260, 131))
-        root.resizable(width=False, height=False)
-        graphics_title = tkinter.Label(root, text = "LED Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
-        graphics_title.grid(row = 0, column = 0, padx = (0, 290))
-        graphics_led_frame_buttons = tkinter.Frame(root, bg = "#344561")
-        graphics_led_button_off = tkinter.Button(graphics_led_frame_buttons, text = "Off", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: ) # TODO LED COMMAND
-        graphics_led_button_off.pack(side = tkinter.TOP)
-        graphics_led_button_hello_world = tkinter.Button(graphics_led_frame_buttons, text = "Hello World", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: ) # TODO LED COMMAND
-        graphics_led_button_hello_world.pack(side = tkinter.BOTTOM)
-        graphics_led_button_idle = tkinter.Button(graphics_led_frame_buttons, text = "Idle", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: ) # TODO LED COMMAND
-        graphics_led_button_idle.pack(side=tkinter.BOTTOM)
-        graphics_led_frame_buttons.grid(row = 2, column = 0, padx = (0, 250))
-        root.mainloop()
+		root = tkinter.Toplevel()
+		root.title("Raspbot RCA-G: LED Controls")
+		root.configure(bg = "#344561")
+		root.geometry('{}x{}'.format(260, 131))
+		root.resizable(width=False, height=False)
+		graphics_title = tkinter.Label(root, text = "LED Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
+		graphics_title.grid(row = 0, column = 0, padx = (0, 290))
+		graphics_led_frame_buttons = tkinter.Frame(root, bg = "#344561")
+		graphics_led_button_off = tkinter.Button(graphics_led_frame_buttons, text = "Off", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command(self, "stop", None))
+		graphics_led_button_off.pack(side = tkinter.TOP)
+		graphics_led_button_hello_world = tkinter.Button(graphics_led_frame_buttons, text = "Hello World", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command(self, "image", "1"))
+		graphics_led_button_hello_world.pack(side = tkinter.BOTTOM)
+		graphics_led_button_idle = tkinter.Button(graphics_led_frame_buttons, text = "Idle", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command(self, "image", "2"))
+		graphics_led_button_idle.pack(side=tkinter.BOTTOM)
+		graphics_led_frame_buttons.grid(row = 2, column = 0, padx = (0, 250))
+		root.mainloop()
 	pass
 	@staticmethod
 	def exit(status):
@@ -741,6 +756,9 @@ class client:
 			return True
 		elif acknowledgement == b"rca-1.2:authentication_invalid":
 			print("[FAIL]: Did not receive an acknowledgement. Authentication was invalid.")
+			return False
+		elif acknowledgement == b"rca-1.2:unknown_command":
+			print("[FAIL]: Command unrecognized by host.")
 			return False
 		else:
 			print("[FAIL]: Did not receive an acknowledgement. Instead received: ")
