@@ -8,6 +8,6 @@ The HMAC key is for verification purposes, create your own and replace the defau
 The authentication key is a final layer of security, and may be edited. In host configurations however, you must hash the password yourself (the hash type is SHA3-512). There is a tool included to do this.
 Please also remember to edit what hardware your bot supports and network configurations (i.e ports and host IP).
 For additional convenience, you may want to set the bot's network interface to be static. Please see online resources on how to this and why.
-To access outside of your local network, set up port forwarding on your router to pass TCP connections on your selected port (default is 67777 as mentioned) to your bot IP.
+To access outside of your local network, set up port forwarding on your router to pass TCP connections on your selected ports (defaults are 64220 and 64221 if cameras are installed) to your bot IP.
 See your router manual if this feature exists and how to use it.
 This is the end of the install instructions. If you have questions send an email to an attached contact from the main portfolio.

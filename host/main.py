@@ -25,6 +25,7 @@ try:
     import multiprocessing
     import serial
     from ast import literal_eval
+    import cv2
     # import hashlib
 except ImportError as e:
     sleep = None
@@ -63,7 +64,7 @@ class host:
         self.host = ""
         self.port = 64220
         self.connect_retries = 0
-        self.components = [[None], [None, None, None], [None]] # [Base Set [CAM], RFP Enceladus [SenseHAT, DISTANCE, DUST], Upgrade #1 [CHARGER]]
+        self.components = [[None], [None, None, None], [None], [None, None]]  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
         led_graphics = None
         science = None
         print("[INFO]: Loading configurations...")
@@ -75,8 +76,12 @@ class host:
             self.components[1][1] = literal_eval(config_parse_load["HARDWARE"]["distance"])
             self.components[1][2] = literal_eval(config_parse_load["HARDWARE"]["dust"])
             self.components[2][0] = literal_eval(config_parse_load["HARDWARE"]["charger"])
+            self.components[3][0] = literal_eval(config_parse_load["HARDWARE"]["arm"])
+            self.components[3][1] = literal_eval(config_parse_load["HARDWARE"]["arm_cam"])
             self.host = config_parse_load["NET"]["ip"]
             self.port = config_parse_load["NET"]["port"]
+            self.cam_port = config_parse_load["NET"]["cam_port"]
+            self.cam_port = int(self.cam_port)
             self.port = int(self.port)
             raw_key = config_parse_load["ENCRYPT"]["key"]
             raw_key_hash = MD5.new(raw_key.encode(encoding = "ascii", errors = "replace"))

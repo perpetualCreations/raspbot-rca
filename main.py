@@ -72,7 +72,7 @@ class client:
 		self.host = ""
 		self.port = 64220
 		self.connect_retries = 0
-		self.components = [[None], [None, None, None], [None]] # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger]]
+		self.components = [[None], [None, None, None], [None], [None, None]] # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
 		self.auth = ""
 		self.ping_text = None
 		self.ping_button = None
@@ -87,6 +87,8 @@ class client:
 			self.components[1][1] = literal_eval(config_parse_load["HARDWARE"]["distance"])
 			self.components[1][2] = literal_eval(config_parse_load["HARDWARE"]["dust"])
 			self.components[2][0] = literal_eval(config_parse_load["HARDWARE"]["charger"])
+			self.components[3][0] = literal_eval(config_parse_load["HARDWARE"]["arm"])
+			self.components[3][1] = literal_eval(config_parse_load["HARDWARE"]["arm_cam"])
 			self.host = config_parse_load["NET"]["ip"]
 			self.port = config_parse_load["NET"]["port"]
 			self.port = int(self.port)
@@ -145,6 +147,15 @@ class client:
 		self.vitals_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 0))
 		vitals_refresh_button = tkinter.Button(vitals_frame, text = "Refresh", bg = "white", fg = "black", command = lambda: client.vitals_refresh(self, False))
 		vitals_refresh_button.grid(row = 2, column = 0, padx = (5, 5), pady = (10, 5))
+		nav_telemetry_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0, height = 50, width = 20)
+		nav_telemetry_frame.grid(row = 0, column = 0, padx = (10, 0), pady = (15, 0))
+		nav_telemetry_label = tkinter.Label(nav_telemetry_frame, bg = "#506a96", fg = "white", text = "Nav Telemetry", font = ("Calibri", 12))
+		nav_telemetry_label.grid(row = 0, column = 0, padx = (5, 0))
+		self.nav_telemetry_text = tkinter.Text(nav_telemetry_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 50, font = ("Calibri", 10))
+		self.nav_telemetry_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 5))
+		nav_telemetry_frame.grid(row = 0, column = 1, padx = (10, 0), pady = (15, 0))
+		cam_view_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0)
+		cam_view_frame.grid(row = 0, column = 2, padx = (10, 0), pady = (15, 0))
 		multi_frame = tkinter.Frame(self.root, bg = "#344561")
 		multi_frame.grid(row = 1, column = 0, padx = (10, 0), pady = (10, 0))
 		net_frame = tkinter.Frame(multi_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
@@ -161,8 +172,22 @@ class client:
 		net_connect_button.grid(row = 3, column = 0, padx = (5, 0))
 		net_help_button = tkinter.Button(net_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Net Help", "This panel controls your network connection with the bot. See the NET options in menu bar for additional tools and actions."))
 		net_help_button.grid(row = 4, column = 0, padx = (5, 150), pady = (71, 5))
+		net_frame = tkinter.Frame(multi_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
+		net_frame.grid(row = 0, column = 1, padx = (0, 5))
+		net_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", text = "Camera Network", font = ("Calibri", 12))
+		net_label.grid(row = 0, column = 0, padx = (5, 0))
+		self.net_status_data = tkinter.StringVar()
+		self.net_status_data.set("Status: " + "Disconnected")
+		net_status_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", textvariable = self.net_status_data, font = ("Calibri", 12))
+		net_status_label.grid(row = 1, column = 0, padx = (5, 0), pady = (10, 0))
+		net_disconnect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Disconnect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: client.disconnect(self))
+		net_disconnect_button.grid(row = 2, column = 0, padx = (5, 0), pady = (10, 0))
+		net_connect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Connect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: client.connect(self))
+		net_connect_button.grid(row = 3, column = 0, padx = (5, 0))
+		net_help_button = tkinter.Button(net_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Camera Net Help", "This panel controls your network connection with the bot that streams the video view."))
+		net_help_button.grid(row = 4, column = 0, padx = (5, 150), pady = (71, 5))
 		report_frame = tkinter.Frame(multi_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-		report_frame.grid(row = 0, column = 1, padx = (5, 0))
+		report_frame.grid(row = 0, column = 2, padx = (5, 0))
 		report_label = tkinter.Label(report_frame, bg = "#506a96", fg = "white", text = "Reports", font = ("Calibri", 12))
 		report_label.grid(row = 0, column = 0, padx = (5, 0))
 		report_type_list = [
@@ -184,7 +209,7 @@ class client:
 		report_help_button = tkinter.Button(report_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Report Help", "This panel allows you to request, view, and save reports of a vareity of types. These include computer hardware checks (CH Check) and science reports (Science, RFP Enceladus)."))
 		report_help_button.grid(row = 5, column = 0, padx = (5, 150), pady = (22, 7))
 		control_frame = tkinter.Frame(self.root, bg = "#344561")
-		control_frame.grid(row = 1 , column = 1, padx = (5, 0))
+		control_frame.grid(row = 1 , column = 3, padx = (5, 0))
 		os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
 		os_control_frame.grid(row = 0, column = 0, pady = (10, 0))
 		os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", height = 1, width = 10, font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_update"))) # TODO please adjust button size
@@ -228,9 +253,29 @@ class client:
 		nav_control_load_button.grid(row = 1, column = 0, pady = (5, 0))
 		nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_edit(self))
 		nav_control_edit_button.grid(row = 2, column = 0, pady = (5, 0))
-		cam_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-		cam_control_frame.grid(row = 0, column = 2, padx = (10, 0))
-
+		sub_frame = tkinter.Frame(control_frame, bg = "#344561")
+		sub_frame.grid(row = 0, column = 2, padx = (10, 0))
+		cam_control_frame = tkinter.Frame(sub_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
+		cam_control_frame.grid(row = 0, column = 2)
+		cam_control_label = tkinter.Label(cam_control_frame, bg = "#506a96", fg = "white", text = "Camera View", font = ("Calibri", 12))
+		cam_control_label.grid(row = 0, column = 0, padx = (10, 10), pady = (10, 10))
+		cam_control_cam_button = tkinter.Button(cam_control_frame, bg = "white", fg = "black", text = "Main Cam", width = 10, height = 1, font = ("Calibri", 12), state = tkinter.DISABLED, command = lambda: client.cam_switch_view(self, "main"))
+		cam_control_cam_button.grid(row = 1, column = 0, padx = (10, 10))
+		cam_control_arm_cam_button = tkinter.Button(cam_control_frame, bg = "white", fg = "black", text = "Arm Cam", width = 10, height = 1, font = ("Calibri", 12), state = tkinter.DISABLED, command = lambda: client.cam_switch_view(self, "arm"))
+		cam_control_arm_cam_button.grid(row = 2, column = 0, padx = (10, 10), pady = (10, 10))
+		arm_control_frame = tkinter.Frame(sub_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
+		arm_control_frame.grid(row = 1, column = 2, pady = (10, 0))
+		arm_control_button = tkinter.Button(arm_control_frame, bg = "white", fg = "black", text = "Arm Control", width = 10, font = ("Calibri", 12), state = tkinter.DISABLED, command = lambda: client.arm_control_gui(self))
+		arm_control_button.grid(row = 0, column = 0, padx = (10, 10), pady = (10, 10))
+		if self.components[0][0] is True:
+			cam_control_cam_button.configure(state = tkinter.NORMAL)
+		pass
+		if self.components[3][1] is True:
+			cam_control_arm_cam_button.configure(state = tkinter.NORMAL)
+		pass
+		if self.components[3][0] is True:
+			arm_control_button.configure(state = tkinter.NORMAL)
+		pass
 		self.root.mainloop()
 	pass
 	@staticmethod
