@@ -249,7 +249,7 @@ class client:
 		nav_control_script_frame.grid(row = 3, column = 1, padx = (10, 10), pady = (18, 18))
 		nav_control_execute_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Execute Nav", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_execute(self, nav_type_data.get(), float(nav_control_time_entry_data.get())))
 		nav_control_execute_button.grid(row = 0, column = 0)
-		nav_control_load_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Load Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_load(self))
+		nav_control_load_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Load Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_load_gui(self))
 		nav_control_load_button.grid(row = 1, column = 0, pady = (5, 0))
 		nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_edit(self))
 		nav_control_edit_button.grid(row = 2, column = 0, pady = (5, 0))
@@ -608,12 +608,32 @@ class client:
 			self.nav_telemetry_text.configure(state = tkinter.DISABLED)
 		pass
 	pass
-	def nav_load(self):
+	def nav_load_gui(self):
 		"""
 		Creates GUI for loading navigation script.
 		:return: none.
 		"""
 		raise NotImplementedError
+	pass
+	def nav_load(self, file_name):
+		"""
+		Reads from a given file line-by-line for instructions, and executes them through client.nav_execute().
+		:param file_name: name of file to read from. 
+		:return: none.
+		"""
+		open(file_name, "r") as instructions:
+			for line in instructions:
+				instruction_line += 1
+			pass
+			while instruction_line > 0:
+				raw_instructions = instructions.readline()
+				instructions_split = raw_instructions.split()
+				client.nav_execute(self, instructions_split[0], instructions_split[1])
+				sleep(instructions_split[2])
+				instruction_line -= 1
+			pass
+		pass
+		instructions.close()
 	pass
 	def nav_edit(self):
 		"""
