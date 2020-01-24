@@ -303,7 +303,10 @@ class host:
         return ciphering.decrypt(encrypted_input)
     pass
     def receive_acknowledgement(self):
-        """Listens for an acknowledgement byte string, returns booleans whether string was received or failed."""
+        """
+        Listens for an acknowledgement byte string, returns booleans whether string was received or failed.
+        :return: if received, returns True, otherwise returns False indicating a failure in receiving acknowledgement.
+        """
         try:
             acknowledgement = host.receive(self, self.socket.recv(4096))
         except socket.error as sae:
@@ -317,6 +320,7 @@ class host:
         else:
             print("[FAIL]: Did not receive an acknowledgement. Instead received: ")
             print(acknowledgement.decode(encoding = "uft-8", errors = "replace"))
+            return False
         pass
     pass
     @staticmethod
@@ -342,7 +346,7 @@ class host:
             return None
         pass
     pass
-    def nav_timer(self, nav_run_time, nav_distance_accept): # TODO create distance check
+    def nav_timer(self, nav_run_time, nav_distance_accept):
         """
         Navigation timer for multiprocessing, counts down until run time is over, also reads distance telemetry and forwards to client.
         :param nav_run_time:
