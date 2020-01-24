@@ -890,6 +890,28 @@ class client:
         """
         pass
     pass
+
+    def cam_switch_view(self, view):
+        """
+        Switches video stream from one camera view to another.
+        Does automatic hardware check before executing its instructions.
+        :param view: name of camera to switch to, valid names are main and arm.
+        :return: none.
+        """
+        if self.components[0][0] is not True:
+            if view == "main":
+                messagebox.showerror("Raspbot RCA: Hardware Unavailable", "Main camera is unavailable to switch view to.")
+                return None
+            pass
+        pass
+        if self.components[3][1] is not True:
+            if view == "arm":
+                messagebox.showerror("Raspbot RCA: Hardware Unavailable", "Arm camera is unavailable to switch view to.")
+                return None
+            pass
+        pass
+        # TODO finish once imagezmq is implemented
+    pass
 pass
 
 c = client()
