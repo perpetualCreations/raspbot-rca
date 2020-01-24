@@ -644,7 +644,7 @@ class client:
 			graphics_title.grid(row = 0, column = 0)
 			graphics_entry = tkinter.Entry(root, bg = "white", fg = "black", font = ("Calibri", 12))
 			graphics_entry.grid(row = 1, column = 0, padx = (10, 0))
-			graphics_confirm_button = tkinter.Button(root, bg = "white", fg = "black", text = "Confirm", width = 8, height = 1, font = ("Calibri", 12), command = lambda: call(Popen(["notepad.exe", graphics_entry.get()]), shell = True))
+			graphics_confirm_button = tkinter.Button(root, bg = "white", fg = "black", text = "Confirm", width = 8, height = 1, font = ("Calibri", 12), command = lambda: Popen(["notepad.exe", graphics_entry.get()]))
 			graphics_confirm_button.grid(row = 2, column = 0, padx = (10, 0), pady = (5, 0))
 			root.mainloop()
 		else:
