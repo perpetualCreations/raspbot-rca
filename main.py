@@ -27,7 +27,9 @@ try:
     from ast import literal_eval
     import ping3
     from platform import system
-# import hashlib
+    # import hashlib
+    import imagezmq
+    import cv2
 except ImportError as e:
     sleep = None
     Popen = None
@@ -51,6 +53,8 @@ except ImportError as e:
     # AES = None
     # Random = None
     # hashlib = None
+    cv2 = None
+    imagezmq = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
 except ImportWarning as e:
@@ -132,6 +136,7 @@ class client:
         hardware_menu.add_cascade(label = "Upgrade #1", menu = upgrade_1_menu)
         app_menu.add_command(label = "Edit Configs", command = lambda: client.set_configuration_gui())
         app_menu.add_cascade(label = "Edit Hardware Set", menu = hardware_menu)
+        app_menu.add_command(label = "AquaSilva Ops", command = None)
         app_menu.add_command(label = "Exit", command = lambda: client.exit(0))
         menu.add_cascade(label = "App", menu = app_menu)
         net_menu = tkinter.Menu(menu)
