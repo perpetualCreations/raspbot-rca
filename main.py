@@ -155,13 +155,6 @@ class client:
         self.vitals_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 0))
         vitals_refresh_button = tkinter.Button(vitals_frame, text = "Refresh", bg = "white", fg = "black", command = lambda: client.vitals_refresh(self, False))
         vitals_refresh_button.grid(row = 2, column = 0, padx = (5, 5), pady = (10, 5))
-        nav_telemetry_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0, height = 50, width = 20)
-        nav_telemetry_frame.grid(row = 0, column = 0, padx = (10, 0), pady = (15, 0))
-        nav_telemetry_label = tkinter.Label(nav_telemetry_frame, bg = "#506a96", fg = "white", text = "Nav Telemetry", font = ("Calibri", 12))
-        nav_telemetry_label.grid(row = 0, column = 0, padx = (5, 0))
-        self.nav_telemetry_text = tkinter.Text(nav_telemetry_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 50, font = ("Calibri", 10))
-        self.nav_telemetry_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 5))
-        nav_telemetry_frame.grid(row = 0, column = 1, padx = (10, 0), pady = (15, 0))
         cam_view_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0)
         cam_view_frame.grid(row = 0, column = 2, padx = (10, 0), pady = (15, 0))
         multi_frame = tkinter.Frame(self.root, bg = "#344561")
@@ -247,29 +240,29 @@ class client:
         nav_control_load_button.grid(row = 1, column = 0, pady = (5, 0))
         nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_edit(self))
         nav_control_edit_button.grid(row = 2, column = 0, pady = (5, 0))
-        sub_frame = tkinter.Frame(control_frame, bg = "#344561")
-        sub_frame.grid(row = 0, column = 2, padx = (10, 0))
-        cam_control_frame = tkinter.Frame(sub_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        cam_control_frame.grid(row = 0, column = 2)
-        cam_control_label = tkinter.Label(cam_control_frame, bg = "#506a96", fg = "white", text = "Camera View", font = ("Calibri", 12))
-        cam_control_label.grid(row = 0, column = 0, padx = (10, 10), pady = (10, 10))
-        cam_control_cam_button = tkinter.Button(cam_control_frame, bg = "white", fg = "black", text = "Main Cam", width = 10, height = 1, font = ("Calibri", 12), state = tkinter.DISABLED, command = lambda: client.cam_switch_view(self, "main"))
-        cam_control_cam_button.grid(row = 1, column = 0, padx = (10, 10))
-        cam_control_arm_cam_button = tkinter.Button(cam_control_frame, bg = "white", fg = "black", text = "Arm Cam", width = 10, height = 1, font = ("Calibri", 12), state = tkinter.DISABLED, command = lambda: client.cam_switch_view(self, "arm"))
-        cam_control_arm_cam_button.grid(row = 2, column = 0, padx = (10, 10), pady = (10, 10))
-        arm_control_frame = tkinter.Frame(sub_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        arm_control_frame.grid(row = 1, column = 2, pady = (10, 0))
+        # sub_frame = tkinter.Frame(control_frame, bg = "#344561")
+        # sub_frame.grid(row = 0, column = 2, padx = (10, 0))
+        # cam_control_frame = tkinter.Frame(sub_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
+        # cam_control_frame.grid(row = 0, column = 2)
+        # cam_control_label = tkinter.Label(cam_control_frame, bg = "#506a96", fg = "white", text = "Camera View", font = ("Calibri", 12))
+        # cam_control_label.grid(row = 0, column = 0, padx = (10, 10), pady = (10, 10))
+        # cam_control_cam_button = tkinter.Button(cam_control_frame, bg = "white", fg = "black", text = "Main Cam", width = 10, height = 1, font = ("Calibri", 12), state = tkinter.DISABLED, command = lambda: client.cam_switch_view(self, "main"))
+        # cam_control_cam_button.grid(row = 1, column = 0, padx = (10, 10))
+        # cam_control_arm_cam_button = tkinter.Button(cam_control_frame, bg = "white", fg = "black", text = "Arm Cam", width = 10, height = 1, font = ("Calibri", 12), state = tkinter.DISABLED, command = lambda: client.cam_switch_view(self, "arm"))
+        # cam_control_arm_cam_button.grid(row = 2, column = 0, padx = (10, 10), pady = (10, 10))
+        arm_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
+        arm_control_frame.grid(row = 0, column = 2, padx = (10, 0))
         arm_control_button = tkinter.Button(arm_control_frame, bg = "white", fg = "black", text = "Arm Control", width = 10, font = ("Calibri", 12), state = tkinter.DISABLED, command = lambda: client.arm_control_gui(self))
         arm_control_button.grid(row = 0, column = 0, padx = (10, 10), pady = (10, 10))
-        if self.components[0][0] is True:
-            cam_control_cam_button.configure(state = tkinter.NORMAL)
-        pass
-        if self.components[3][1] is True:
-            cam_control_arm_cam_button.configure(state = tkinter.NORMAL)
-        pass
-        if self.components[3][0] is True:
-            arm_control_button.configure(state = tkinter.NORMAL)
-        pass
+        # if self.components[0][0] is True:
+        #     cam_control_cam_button.configure(state = tkinter.NORMAL)
+        # pass
+        # if self.components[3][1] is True:
+        #     cam_control_arm_cam_button.configure(state = tkinter.NORMAL)
+        # pass
+        # if self.components[3][0] is True:
+        #     arm_control_button.configure(state = tkinter.NORMAL)
+        # pass
         self.root.mainloop()
     pass
     @staticmethod
@@ -894,28 +887,6 @@ class client:
         :return: none.
         """
         pass
-    pass
-
-    def cam_switch_view(self, view):
-        """
-        Switches video stream from one camera view to another.
-        Does automatic hardware check before executing its instructions.
-        :param view: name of camera to switch to, valid names are main and arm.
-        :return: none.
-        """
-        if self.components[0][0] is not True:
-            if view == "main":
-                messagebox.showerror("Raspbot RCA: Hardware Unavailable", "Main camera is unavailable to switch view to.")
-                return None
-            pass
-        pass
-        if self.components[3][1] is not True:
-            if view == "arm":
-                messagebox.showerror("Raspbot RCA: Hardware Unavailable", "Arm camera is unavailable to switch view to.")
-                return None
-            pass
-        pass
-        # TODO finish once imagezmq is implemented
     pass
 pass
 
