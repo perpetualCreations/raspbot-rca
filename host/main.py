@@ -1,9 +1,7 @@
 """
-# Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
+# AquaSilva Remote Monitoring and Control Application (AquaSilva RMCA), v1.1
 # Made by Taian Chen
 """
-
-# TODO modify docstrings
 
 try:
     print("[INFO]: Starting imports...")
@@ -56,25 +54,19 @@ pass
 class host:
     """Main class."""
     def __init__(self):
-        """Initiation function of RCA. Reads configs and starts boot processes."""
-        print("[INFO]: Starting host Raspbot RC Application...")
+        """Initiation function of AquaSilva RMCA."""
+        print("[INFO]: Starting host AquaSilva RMC Application...")
         print("[INFO]: Declaring variables...")
         self.socket = None
         self.host = ""
         self.port = 64220
         self.connect_retries = 0
-        self.components = [[None], [None, None, None], [None]] # [Base Set [CAM], RFP Enceladus [SenseHAT, DISTANCE, DUST], Upgrade #1 [CHARGER]]
         led_graphics = None
         science = None
         print("[INFO]: Loading configurations...")
         config_parse_load = configparser.ConfigParser()
         try:
             config_parse_load.read("main.cfg")
-            self.components[0][0] = literal_eval(config_parse_load["HARDWARE"]["cam"])
-            self.components[1][0] = literal_eval(config_parse_load["HARDWARE"]["sensehat"])
-            self.components[1][1] = literal_eval(config_parse_load["HARDWARE"]["distance"])
-            self.components[1][2] = literal_eval(config_parse_load["HARDWARE"]["dust"])
-            self.components[2][0] = literal_eval(config_parse_load["HARDWARE"]["charger"])
             self.host = config_parse_load["NET"]["ip"]
             self.port = config_parse_load["NET"]["port"]
             self.port = int(self.port)
@@ -91,22 +83,6 @@ class host:
         except FileNotFoundError:
             print("[FAIL]: Failed to load configurations! Configuration file is missing.")
         pass
-        if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
-            print("[INFO]: Importing RFP Enceladus packages...")
-            try:
-                from .science import science
-                from .led_graphics import led_graphics
-            except ImportError as ree:
-                science = None
-                led_graphics = None
-                print("[FAIL]: Imports failed! See below.")
-                print(ree)
-            except ImportWarning as ree:
-                print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
-                print(ree)
-            pass
-            self.pattern_led = [["error1.png", "error2.png"], ["helloworld.png"], ["idle1.png", "idle2.png"], ["power-on.png"], ["power-off.png"], ["start1.png", "start2.png", "start3.png", "start4.png"]]
-        pass
         print("[INFO]: Creating open server socket...")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setblocking(False)
@@ -118,67 +94,34 @@ class host:
         self.socket.setblocking(False)
         with connection:
             print("[INFO]: Received connection from ", client_address, ".")
-            connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+            connection.sendall(host.send(self, b"rmca-1.2:connection_acknowledge"))
             data = SHA3_512.new(host.receive(self, connection.recv(4096))).hexdigest().encode(encoding = "ascii", errors = "replace")
             if data == self.auth:
                 print("[INFO]: Client authenticated!")
-                connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                connection.sendall(host.send(self, b"rmca-1.2:connection_acknowledge"))
             else:
                 print("[FAIL]: Client authentication invalid! Given code does not match authentication code.")
-                connection.sendall(host.send(self, b"rca-1.2:authentication_invalid"))
+                connection.sendall(host.send(self, b"rmca-1.2:authentication_invalid"))
                 self.socket.close()
                 host.restart()
             pass
             while True:
                 command = host.receive(self, connection.recv(4096))
-                if command == b"rca-1.2:command_shutdown":
-                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                if command == b"rmca-1.2:command_shutdown":
+                    connection.sendall(host.send(self, b"rmca-1.2:connection_acknowledge"))
                     host.shutdown()
-                elif command == b"rca-1.2:command_reboot":
-                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                elif command == b"rmca-1.2:command_reboot":
+                    connection.sendall(host.send(self, b"rmca-1.2:connection_acknowledge"))
                     host.reboot()
-                elif command == b"rca-1.2:command_update":
-                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                elif command == b"rmca-1.2:command_update":
+                    connection.sendall(host.send(self, b"rmca-1.2:connection_acknowledge"))
                     host.os_update()
-                elif command == b"rca-1.2:command_battery_check":
-                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-                elif command == b"rca-1.2:command_science_collect":
-                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-                    if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2]:
-                        science_module = science()
-                        connection.sendall(host.send(self, science_module.science_get()))
-                    else:
-                        connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
-                    pass
-                elif command == b"rca-1.2:nav_start":
-                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-                    nav_command = host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace")
-                    nav_command_list = nav_command.split()
-                    nav_direction = nav_command_list[0]
-                    nav_run_time = nav_command_list[1]
-                    nav_distance_accept = nav_command_list[2]
-                    host.serial("/dev/ttyACM0", "send", nav_direction.encode(encoding = "ascii", errors = "replace"))
-                    host.create_process(host.nav_timer, (self, int(nav_run_time), literal_eval(nav_distance_accept)))
-                elif command == b"rca-1.2:disconnected":
+                elif command == b"rmca-1.2:disconnected":
                     self.socket.close()
                     print("[INFO]: Client has disconnected.")
                     host.restart()
-                elif command == b"rca-1.2:led_graphics":
-                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-                    if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
-                        led_command = host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace")
-                        if led_command == b"play":
-                            raise NotImplementedError
-                        elif led_command == b"image":
-                            led_graphics.display("image", self.pattern_led[int(host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace"))])
-                        elif led_command == b"stop":
-                            led_graphics.display("stop", None)
-                        pass
-                    else:
-                        connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
-                    pass
                 else:
-                    connection.sendall(host.send(self, b"rca-1.2:unknown_command"))
+                    connection.sendall(host.send(self, b"rmca-1.2:unknown_command"))
                 pass # add more keys here
             pass
         pass
@@ -306,7 +249,7 @@ class host:
             print(sae)
             return False
         pass
-        if acknowledgement == b"rca-1.2:connection_acknowledge":
+        if acknowledgement == b"rmca-1.2:connection_acknowledge":
             print("[INFO]: Received acknowledgement.")
             return True
         else:
@@ -335,27 +278,6 @@ class host:
             return dummy
         else:
             return None
-        pass
-    pass
-    def nav_timer(self, nav_run_time, nav_distance_accept): # TODO create distance check
-        """
-        Navigation timer for multiprocessing, counts down until run time is over, also reads distance telemetry and forwards to client.
-        :param nav_run_time:
-        :param nav_distance_accept:
-        :return: none.
-        """
-        nav_run_time_countdown = nav_run_time
-        while nav_run_time_countdown != 0:
-            nav_run_time_countdown -= 1
-            if nav_distance_accept is True:
-                host.serial("/dev/ttyACM0", "send", b"T")
-                self.socket.sendall(host.send(self, host.serial("/dev/ttyACM0", "recieve", None)))
-            pass
-            if nav_run_time_countdown == 0:
-                self.socket.sendall(host.send(self, b"rca-1.2:nav_end"))
-                host.serial("/dev/ttyACM0", "send", b"A")
-            pass
-            sleep(1)
         pass
     pass
     @staticmethod
