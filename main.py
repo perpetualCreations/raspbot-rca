@@ -668,6 +668,16 @@ class client:
             messagebox.showerror("Raspbot RCA: OS Unsupported", "Client OS is unsupported, please manually edit configuration! The accepted operating systems are Linux and Linux distributions, and Windows. If you believe this is a mistake please open an issue on the repository page.")
         pass
     pass
+	def dock(self):
+		"""
+		Instructs host to dock with charger station.
+		"""
+	pass
+	def undock(self):
+		"""
+		Instructs host to undock from charger station.
+		"""
+	pass
     def os_control_shutdown_wrapper(self):
         """
         Creates dialogue asking for user to confirm to shutdown bot.
