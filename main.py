@@ -704,7 +704,18 @@ class client:
 		if client.receive_acknowledgement(self) is False:
 			return None
 		pass
-
+		if frame is None:
+			command_frame = "0"
+		else:
+			command_frame = frame
+		pass
+		self.socket.sendall(client.send(self, command.encode(encoding = "ascii", errors = "replace")))
+		if client.receive_acknowledgement(self) is False:
+			return None
+		pass
+		if command == "image":
+			self.socket.sendall(client.send(self, command_frame.encode(encoding = "ascii", errors = "replace")))
+		pass
 	pass
 	def led_gui(self):
 		"""

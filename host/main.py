@@ -175,8 +175,10 @@ class host:
                         if led_command == b"play":
                             raise NotImplementedError
                         elif led_command == b"image":
+                            connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                             led_graphics.display("image", self.pattern_led[int(host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace"))])
                         elif led_command == b"stop":
+                            connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                             led_graphics.display("stop", None)
                         pass
                     else:
