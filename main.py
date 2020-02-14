@@ -678,15 +678,20 @@ class client:
 		if client.receive_acknowledgement(self) is False:
 			return None
 		pass
+        self.dock_status = True
+        # TODO add logic for dock that triggers other changes
 	pass
 	def undock(self):
 		"""
 		Instructs host to undock from charger station.
-		"""
+        :return: none.
+        """
 		self.socket.sendall(client.send(self, b"rca-1.2:comamnd_undock"))
 		if client.receive_acknowledgement(self) is False:
 			return None
 		pass
+        self.dock_status = False
+        # TODO add logic for dock that triggers other changes
 	pass
 	def os_control_shutdown_wrapper(self):
 		"""
@@ -802,6 +807,11 @@ class client:
 			client.disconnect(self)
 		pass
 		print("[INFO]: Successfully connected to host (for camera view)!")
+        if self.components[2][0]:
+            self.socket.sendall(client.send(self, b"rca-1.2:get_dock_status"))
+            self.dock_status = literal_eval(client.receive(self.socket.recv(1024)).decode(encoding = "utf-8", errors = "replace"))
+        pass
+        print("[INFO]: Updated dock status from host.")
 		messagebox.showinfo("Raspbot RCA: Connection Successful", "You are now connected to the bot." + "\n Bot IP (in case you want to use SSH: " + self.host)
 		# AES + RSA-based encryption was not finished, and sections using it were commented out.
 		# print("[INFO]: Generating encryption keys...")
@@ -869,6 +879,11 @@ class client:
 		:param byte_input: byte string to be encrypted.
 		:return: encrypted string, nonce, and HMAC validation.
 		"""
+        if isinstance(byte_input, bytes):
+            pass
+        else:
+            byte_input.encode(encoding = "ascii", errors = "replace")
+        pass
 		ciphering = Salsa20.new(self.key)
 		validation = HMAC.new(self.hmac_key, msg = ciphering.encrypt(byte_input), digestmod = SHA256)
 		return [ciphering.encrypt(byte_input), ciphering.nonce, validation.hexdigest()]

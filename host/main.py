@@ -291,6 +291,11 @@ class host:
         :param byte_input: byte string to be encrypted.
         :return: encrypted string, nonce, and HMAC validation.
         """
+        if isinstance(byte_input, bytes):
+            pass
+        else:
+            byte_input.encode(encoding = "ascii", errors = "replace")
+        pass
         ciphering = Salsa20.new(self.key)
         validation = HMAC.new(self.hmac_key, msg = ciphering.encrypt(byte_input), digestmod = SHA256)
         return [ciphering.encrypt(byte_input), ciphering.nonce, validation.hexdigest()]
