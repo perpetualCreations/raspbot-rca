@@ -65,6 +65,7 @@ class host:
         self.port = 64220
         self.connect_retries = 0
         self.components = [[None], [None, None, None], [None], [None, None]]  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
+        self.dock_status = False
         led_graphics = None
         science = None
         print("[INFO]: Loading configurations...")
@@ -181,6 +182,14 @@ class host:
                             connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                             led_graphics.display("stop", None)
                         pass
+                    else:
+                        connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
+                    pass
+                elif command == b"rca-1.2:get_dock_status":
+                    if self.components[2][0] is True:
+                        connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                        dock_status_str = str(self.dock_status)
+                        connection.sendall(host.send(self, dock_status_str.encode(encoding = "ascii", errors = "replace")))
                     else:
                         connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
                     pass

@@ -84,6 +84,7 @@ class client:
 		self.ping_button = None
 		self.ping_results = ""
 		self.report_content = ""
+		self.dock_status = None
 		print("[INFO]: Loading configurations...")
 		config_parse_load = configparser.ConfigParser()
 		try:
@@ -238,7 +239,7 @@ class client:
 		nav_control_execute_button.grid(row = 0, column = 0)
 		nav_control_load_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Load Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_load_gui(self))
 		nav_control_load_button.grid(row = 1, column = 0, pady = (5, 0))
-		nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_edit(self))
+		nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_edit())
 		nav_control_edit_button.grid(row = 2, column = 0, pady = (5, 0))
 		# sub_frame = tkinter.Frame(control_frame, bg = "#344561")
 		# sub_frame.grid(row = 0, column = 2, padx = (10, 0))
@@ -673,12 +674,19 @@ class client:
 		"""
 		Instructs host to dock with charger station.
 		"""
-		self.socket.sendall(client.send(self, b"c"))
+		self.socket.sendall(client.send(self, b"rca-1.2:command_dock"))
+		if client.receive_acknowledgement(self) is False:
+			return None
+		pass
 	pass
 	def undock(self):
 		"""
 		Instructs host to undock from charger station.
 		"""
+		self.socket.sendall(client.send(self, b"rca-1.2:comamnd_undock"))
+		if client.receive_acknowledgement(self) is False:
+			return None
+		pass
 	pass
 	def os_control_shutdown_wrapper(self):
 		"""
