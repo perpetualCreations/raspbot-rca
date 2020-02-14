@@ -193,6 +193,18 @@ class host:
                     else:
                         connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
                     pass
+                elif command == b"rca-1.2:command_dock":
+                    if self.components[2][0] is True:
+                        # TODO write dock logic
+                    else:
+                        connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
+                    pass
+                elif command == b"rca-1.2:command_undock":
+                    if self.components[2][0] is True:
+                        # TODO write undock logic
+                    else:
+                        connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
+                    pass
                 else:
                     connection.sendall(host.send(self, b"rca-1.2:unknown_command"))
                 pass # add more keys here
