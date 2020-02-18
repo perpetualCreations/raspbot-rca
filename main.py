@@ -916,6 +916,7 @@ class client:
 		This will only be available if enabled, hardware check is performed at creation of main window.
 		:return: none.
 		"""
+
 		pass
 	pass
 pass
