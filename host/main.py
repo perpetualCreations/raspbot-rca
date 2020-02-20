@@ -26,6 +26,7 @@ try:
     import serial
     from ast import literal_eval
     import cv2
+    from .computer_hardware_check import ch_check
     # import hashlib
 except ImportError as e:
     sleep = None
@@ -43,6 +44,7 @@ except ImportError as e:
     multiprocessing = None
     literal_eval = None
     SHA3_512 = None
+    ch_check = None
     # RSA = None
     # AES = None
     # Random = None
@@ -185,6 +187,9 @@ class host:
                     else:
                         connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
                     pass
+                elif command == b"rca-1.2:command_ch_check":
+                    connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
+                    connection.sendall(host.send(self, ch_check()))
                 elif command == b"rca-1.2:get_dock_status":
                     if self.components[2][0] is True:
                         connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
