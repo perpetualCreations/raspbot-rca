@@ -758,7 +758,7 @@ class client:
 		except socket.error as se:
 			print("[FAIL]: Failed to connect! See below for details.")
 			print(se)
-			messagebox.showerror("Raspbot RCA: Connection Failed", "While connecting to the bot for camera view, an error was raised. Please see console output for more details.")
+			messagebox.showerror("Raspbot RCA: Connection Failed", "While connecting to the bot for main communications an error was raised. Please see console output for more details.")
 		pass
 		if client.receive_acknowledgement(self) is False:
 			return None
