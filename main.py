@@ -795,7 +795,7 @@ class client:
 			self.dock_status = literal_eval(client.receive(self, self.socket.recv(1024).decode(encoding = "utf-8", errors = "replace")))
 			print("[INFO]: Updated dock status from host.")
 		pass
-		messagebox.showinfo("Raspbot RCA: Connection Successful", "You are now connected to the bot." + "\n Bot IP (in case you want to use SSH: " + self.host)
+		messagebox.showinfo("Raspbot RCA: Connection Successful", "You are now connected to the bot." + "\n Bot IP (in case you want to use SSH): " + self.host)
 		# AES + RSA-based encryption was not finished, and sections using it were commented out.
 		# print("[INFO]: Generating encryption keys...")
 		# random = Random.new().read
