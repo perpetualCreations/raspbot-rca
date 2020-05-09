@@ -16,7 +16,8 @@
 Servo RAK1SERVO;
 Servo RAK2SERVO;
 
-int pos = 0;    // variable to store the servo position
+int pos1 = 0;
+int pos2 = 0;
 
 void setup() {
   RAK1SERVO.attach(10);
@@ -24,22 +25,22 @@ void setup() {
 }
 
 void loop() {
-  for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+  for (pos1 = 0; pos1 <= 180; pos1 += 1) { // goes from 0 degrees to 180 degrees
     // in steps of 1 degree
-    RAK1SERVO.write(pos);              // tell servo to go to position in variable 'pos'
+    RAK1SERVO.write(pos1);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
-  for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
-    RAK1SERVO.write(pos);              // tell servo to go to position in variable 'pos'
+  for (pos1 = 180; pos1 >= 0; pos1 -= 1) { // goes from 180 degrees to 0 degrees
+    RAK1SERVO.write(pos1);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
-  for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+  for (pos2 = 0; pos2 <= 180; pos2 += 1) { // goes from 0 degrees to 180 degrees
     // in steps of 1 degree
-    RAK2SERVO.write(pos);              // tell servo to go to position in variable 'pos'
+    RAK2SERVO.write(pos2);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
-  for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
-    RAK2SERVO.write(pos);              // tell servo to go to position in variable 'pos'
+  for (pos2 = 180; pos2 >= 0; pos2 -= 1) { // goes from 180 degrees to 0 degrees
+    RAK2SERVO.write(pos2);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
 }
