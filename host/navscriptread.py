@@ -4,9 +4,16 @@
 # Made by Taian Chen
 """
 
+# TODO merge with main.py for host
 # TODO add self param and docstring note as multiprocess
 def nav_script_read(filename):
+	"""
+	Reads
+	:param filename:
+	:return:
+	"""
 	open(filename, "r") as instructions:
+		# TODO fix undefined, remember to integrated everything properly with main.py
 		for line in instructions:
 			instruction_line += 1
 		pass
