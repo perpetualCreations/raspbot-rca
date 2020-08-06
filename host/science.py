@@ -1,7 +1,7 @@
 """
-# Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1
-# science module (for collecting sensor data), intended for RFP Enceladus Project with Raspbot
-# Made by Taian Chen (perpetualCreations)
+Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1
+science.py module, for collecting sensor data, made for RFP Enceladus Project with Raspbot
+Made by Taian Chen
 """
 
 try:

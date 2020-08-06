@@ -1,9 +1,7 @@
 """
-# Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
-# Made by Taian Chen
+Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
+Made by Taian Chen
 """
-
-# TODO modify docstrings
 
 try:
     print("[INFO]: Starting imports...")
@@ -28,7 +26,7 @@ try:
     import cv2
     from .computer_hardware_check import ch_check
     # import hashlib
-except ImportError as e:
+except ImportError as ImportErrorMessage:
     sleep = None
     tkinter = None
     call = None
@@ -50,10 +48,10 @@ except ImportError as e:
     # Random = None
     # hashlib = None
     print("[FAIL]: Imports failed! See below.")
-    print(e)
-except ImportWarning as e:
+    print(ImportErrorMessage)
+except ImportWarning as ImportWarningMessage:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
-    print(e)
+    print(ImportWarningMessage)
 pass
 
 class host:
@@ -68,8 +66,8 @@ class host:
         self.connect_retries = 0
         self.components = [[None], [None, None, None], [None], [None, None]]  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
         self.dock_status = False
-        led_graphics = None
-        science = None
+        led_graphics = None # package name defined, not a variable
+        science = None # package name defined, not a variable
         print("[INFO]: Loading configurations...")
         config_parse_load = configparser.ConfigParser()
         try:
