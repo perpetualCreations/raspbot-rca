@@ -10,6 +10,7 @@ try:
     from platform import system
     from subprocess import call, Popen
     from time import sleep
+    from .socket import comms
 except ImportError as ImportErrorMessage:
     tkinter = None
     messagebox = None
@@ -25,11 +26,12 @@ except ImportWarning as ImportWarningMessage:
 pass
 
 class nav:
-    """Main class"""
+    """
+    Main class
+    """
     def __init__(self, components):
         """
         Initiation instructions.
-        :param components: from main.py the variable self.components should be plugged in here, so nav module can read hardware configuration.
         """
         print("[NAV][INFO]: Nav loaded!")
         self.nav_instructions = None

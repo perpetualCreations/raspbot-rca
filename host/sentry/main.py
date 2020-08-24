@@ -1,7 +1,7 @@
 """
-# Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
+Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 Security Sentry Program
-# Made by Taian Chen
+Made by Taian Chen
 """
 
 try:
@@ -12,6 +12,7 @@ try:
 	from email.mime.multipart import MIMEMultipart
 	import imaplib
 	from sys import exit as stop
+	import pyAudioAnalysis
 except ImportError as ImportErrorMessage:
 	configparser = lambda: exit(1)
 	smtplib = lambda: exit(1)
@@ -39,6 +40,7 @@ class sentry:
 		print("[INFO]: Starting Sentry application...")
 		print("[INFO]: Declaring variables...")
 		self.is_armed = False
+		self.run_loop = True
 		print("[INFO]: Loading configuration...")
 		configparser_load = configparser.ConfigParser()
 		configparser_load.read("main.cfg")
@@ -47,11 +49,22 @@ class sentry:
 		self.host_email[0] = configparser_load["EMAIL"]["host_email"]
 		if "@gmail.com" not in self.host_email:
 			print("[FAIL]: Host email is required to be a GMail address. Please replace entered address in configuration with one that is valid.")
-			stop(1)
+			sentry.quit(self, 1)
 		pass
 		self.host_email[1] = configparser_load["EMAIL"]["host_key"]
 		self.host_email[2] = self.host_email[0].rstrip("@gmail.com")
-		self.run_loop = True
+		print("[INFO]: Attempting to login into host email...")
+		self.SMTP_service = smtplib.SMTP('smtp.gmail.com', 587)
+		self.SMTP_service.ehlo()
+		self.SMTP_service.starttls()
+		try:
+			self.SMTP_service.login(self.host_email[2], self.host_email[1])
+		except smtplib.SMTPException as SMTPErrorMessage:
+			print("[FAIL]: Failed to login into host email. See below for more information.")
+			print(SMTPErrorMessage)
+			sentry.quit(self, 1)
+		pass
+		print("[INFO]: Dispatching email to client...")
 		sentry.client_send(self, "[raspbot] Sentry Control", "Hello user. \nReply to this email with commands to control Raspbot's Sentry program. "
 								"\nValid commands are: \narm - arms sentry\ndisarm - disarms sentry"
 								"\naudio - returns audio recording from last alarm trigger "
@@ -60,8 +73,12 @@ class sentry:
 								"\nAny invalid commands will return a error message. \n \nThank you for using Raspbot Sentry. \n \n"
 								"\nRaspbot Project, by Taian Chen, MIT License since 2020"
 								"\nSee https://dreamerslegacy.xyz for documentation and more.")
-		# TODO start audio listening
+		print("[INFO]: Listening to client...")
 		while self.run_loop is True:
+			while self.is_armed is True:
+				# TODO start audio listening
+				pass
+			pass
 			command = sentry.client_receive(self)
 			if command == "arm":
 				self.is_armed = True
@@ -98,17 +115,7 @@ class sentry:
 		msg['To'] = self.host_email[0]
 		msg['Subject'] = subject
 		msg.attach(MIMEText(message, 'plain'))
-		server = smtplib.SMTP('smtp.gmail.com', 587)
-		server.ehlo()
-		server.starttls()
-		try:
-			server.login(self.host_email[2], self.host_email[1])
-		except smtplib.SMTPException:
-			print("[FAIL]: Failed to login into host email.")
-			# TODO add more advanced error handling, i.e close login and such
-		pass
-		text = msg.as_string()
-		server.sendmail(self.host_email[0], self.client_email, text)
+		self.SMTP_service.sendmail(self.host_email[0], self.client_email, msg.as_string())
 	pass
 
 	def client_receive(self):
@@ -116,9 +123,13 @@ class sentry:
 		Receives a email from client.
 		:return: Contents of received email message.
 		"""
-		email_mapper = imaplib.IMAP4_SSL("imap.gmail.com")
-		email_mapper.login(self.host_email[0], self.host_email[1])
-		email_mapper.select("Inbox")
+		try:
+			email_mapper = imaplib.IMAP4_SSL("imap.gmail.com")
+			email_mapper.login(self.host_email[0], self.host_email[1])
+			email_mapper.select("Inbox")
+		except imaplib.IMAP4.error:
+			pass
+		pass
 		# TODO add imaplib read and output to email_contents
 		email_contents = NotImplemented
 		return email_contents
@@ -132,7 +143,7 @@ class sentry:
 		"""
 		# TODO add any instructions here for quitting
 		sentry.client_send(self, "[raspbot] Sentry Stopped", "Hello user. \nSentry has been stopped and is no longer running. "
-		                        "\nRestart it with terminal." 
+		                        "\nRestart it with terminal. If you have not issued a stop command, its likely an error has occurred." 
 		                        "\n \nThank you for using Raspbot Sentry. \n \n"
 								"\nRaspbot Project, by Taian Chen, MIT License since 2020"
 								"\nSee https://dreamerslegacy.xyz for documentation and more.")

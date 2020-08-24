@@ -6,25 +6,15 @@
 try:
     print("[INFO]: Starting imports...")
     from subprocess import call, Popen
-    from time import sleep
-    from time import strftime
-    from time import gmtime
-    # AES + RSA-based encryption was not finished, and sections using it were commented out.
-    # from Cryptodome.PublicKey import RSA
-    # from Cryptodome import Random
-    # from Cryptodome.Cipher import AES
-    from Cryptodome.Hash import MD5
-    import socket
-    import configparser
-    import multiprocessing
-    import tkinter
+    from time import sleep, strftime, gmtime
+    import socket, configparser, multiprocessing, tkinter, ping3, imagezmq, cv2
     from tkinter import messagebox
     from ast import literal_eval
-    import ping3
-    # import hashlib
-    import imagezmq
-    import cv2
+    # RCA Modules
+    import basics, comms, nav
+    from platform import system
 except ImportError as e:
+    literal_eval = None
     sleep = None
     Popen = None
     strftime = None
@@ -34,16 +24,14 @@ except ImportError as e:
     call = None
     socket = None
     configparser = None
-    MD5 = None
     multiprocessing = None
-    literal_eval = None
     ping3 = None
-    # RSA = None
-    # AES = None
-    # Random = None
-    # hashlib = None
     cv2 = None
     imagezmq = None
+    # RCA Modules
+    basics = None
+    comms = None
+    nav = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
 except ImportWarning as e:
@@ -52,33 +40,25 @@ except ImportWarning as e:
 pass
 
 class client:
-    """Main class."""
+    """
+    Main client class.
+    """
     def __init__(self):
-        """Initiation function of Raspbot RCA."""
+        """
+        Initiation function of Raspbot RCA.
+        """
         print("[INFO]: Starting client Raspbot RC Application...")
         print("[INFO]: Declaring variables...")
-        # AES + RSA-based encryption was not finished, and sections using it were commented out.
-        # self.key = None
-        # self.private = None
-        # self.public = None
-        self.socket = None
-        self.socket_camera = None
-        self.host = ""
-        self.port = 64220
-        self.cam_port = 64221
         self.connect_retries = 0
         self.components = [[None], [None, None, None], [None], [None, None]] # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
-        self.auth = ""
         self.ping_text = None
         self.ping_button = None
         self.ping_results = ""
         self.report_content = ""
-        self.dock_status = None
-
         print("[INFO]: Loading configurations...")
         config_parse_load = configparser.ConfigParser()
         try:
-            config_parse_load.read("main.cfg")
+            config_parse_load.read("hardware.cfg")
             self.components[0][0] = literal_eval(config_parse_load["HARDWARE"]["cam"])
             self.components[1][0] = literal_eval(config_parse_load["HARDWARE"]["sensehat"])
             self.components[1][1] = literal_eval(config_parse_load["HARDWARE"]["distance"])
@@ -86,22 +66,12 @@ class client:
             self.components[2][0] = literal_eval(config_parse_load["HARDWARE"]["charger"])
             self.components[3][0] = literal_eval(config_parse_load["HARDWARE"]["arm"])
             self.components[3][1] = literal_eval(config_parse_load["HARDWARE"]["arm_cam"])
-            self.host = config_parse_load["NET"]["ip"]
-            self.port = config_parse_load["NET"]["port"]
-            self.cam_port = config_parse_load["NET"]["cam_port"]
-            self.port = int(self.port)
-            raw_key = config_parse_load["ENCRYPT"]["key"]
-            raw_key_hash = MD5.new(raw_key.encode(encoding = "ascii", errors = "replace"))
-            self.key = raw_key_hash.hexdigest()
-            self.key = self.key.encode(encoding = "ascii", errors = "replace")
-            self.hmac_key = config_parse_load["ENCRYPT"]["hmac_key"]
-            self.auth = config_parse_load["ENCRYPT"]["auth"]
-            self.auth = self.auth.encode(encoding = "ascii", errors = "replace")
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
-        except FileNotFoundError:
+        except FileNotFoundError as nf:
             print("[FAIL]: Failed to load configurations! Configuration file is missing.")
+            print(nf)
         pass
         print("[INFO]: Starting GUI...")
         self.root = tkinter.Tk()
@@ -114,21 +84,21 @@ class client:
         app_menu = tkinter.Menu(menu)
         hardware_menu = tkinter.Menu(app_menu)
         base_set_menu = tkinter.Menu(hardware_menu)
-        base_set_menu.add_command(label = "Enable", command = lambda: client.set_configuration(self.components[0][0], True, "HARDWARE", "cam", False))
-        base_set_menu.add_command(label = "Disable", command = lambda: client.set_configuration(self.components[1][0], False, "HARDWARE", "cam", False))
+        base_set_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration(self.components[0][0], True, "HARDWARE", "cam", False))
+        base_set_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration(self.components[1][0], False, "HARDWARE", "cam", False))
         rfp_enceladus_menu = tkinter.Menu(hardware_menu)
-        rfp_enceladus_menu.add_command(label = "Enable", command = lambda: client.set_configuration([self.components[1][0], self.components[1][1], self.components[1][2]], [True, True, True], ["HARDWARE", "HARDWARE", "HARDWARE"], ["sensehat", "distance", "dust"], True))
-        rfp_enceladus_menu.add_command(label = "Disable", command = lambda: client.set_configuration([self.components[1][0], self.components[1][1], self.components[1][2]], [False, False, False], ["HARDWARE", "HARDWARE", "HARDWARE"], ["sensehat", "distance", "dust"], True))
+        rfp_enceladus_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration([self.components[1][0], self.components[1][1], self.components[1][2]], [True, True, True], ["HARDWARE", "HARDWARE", "HARDWARE"], ["sensehat", "distance", "dust"], True))
+        rfp_enceladus_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration([self.components[1][0], self.components[1][1], self.components[1][2]], [False, False, False], ["HARDWARE", "HARDWARE", "HARDWARE"], ["sensehat", "distance", "dust"], True))
         upgrade_1_menu = tkinter.Menu(hardware_menu)
-        upgrade_1_menu.add_command(label = "Enable", command = lambda: client.set_configuration(self.components[2][0], True, "HARDWARE", "charger", False))
-        upgrade_1_menu.add_command(label = "Disable", command = lambda: client.set_configuration(self.components[2][0], False, "HARDWARE", "charger", False))
+        upgrade_1_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration(self.components[2][0], True, "HARDWARE", "charger", False))
+        upgrade_1_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration(self.components[2][0], False, "HARDWARE", "charger", False))
         hardware_menu.add_cascade(label = "Base Set", menu = base_set_menu)
         hardware_menu.add_cascade(label = "RFP Enceladus", menu = rfp_enceladus_menu)
         hardware_menu.add_cascade(label = "Upgrade #1", menu = upgrade_1_menu)
         app_menu.add_command(label = "Edit Configs", command = lambda: client.set_configuration_gui())
         app_menu.add_cascade(label = "Edit Hardware Set", menu = hardware_menu)
         app_menu.add_command(label = "AquaSilva Ops", command = None)
-        app_menu.add_command(label = "Exit", command = lambda: client.exit(0))
+        app_menu.add_command(label = "Exit", command = lambda: basics.basics.exit(0))
         menu.add_cascade(label = "App", menu = app_menu)
         net_menu = tkinter.Menu(menu)
         net_tools_menu = tkinter.Menu(net_menu)
@@ -161,9 +131,9 @@ class client:
         self.net_status_data.set("Status: " + "Disconnected")
         net_status_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", textvariable = self.net_status_data, font = ("Calibri", 12))
         net_status_label.grid(row = 1, column = 0, padx = (5, 0), pady = (10, 0))
-        net_disconnect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Disconnect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: client.disconnect(self))
+        net_disconnect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Disconnect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: comms.disconnect.disconnect())
         net_disconnect_button.grid(row = 2, column = 0, padx = (5, 0), pady = (10, 0))
-        net_connect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Connect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: client.connect(self))
+        net_connect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Connect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: comms.connect.connect())
         net_connect_button.grid(row = 3, column = 0, padx = (5, 0))
         net_help_button = tkinter.Button(net_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Net Help", "This panel controls your network connection with the bot. See the NET options in menu bar for additional tools and actions."))
         net_help_button.grid(row = 4, column = 0, padx = (5, 150), pady = (71, 5))
@@ -193,11 +163,11 @@ class client:
         control_frame.grid(row = 1 , column = 3, padx = (5, 0))
         os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
         os_control_frame.grid(row = 0, column = 0, pady = (10, 0))
-        os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", height = 1, width = 10, font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_update")))
+        os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", height = 1, width = 10, font = ("Calibri", 12), command = lambda: comms.interface.send(b"command_update"))
         os_control_update_button.grid(row = 0, column = 0, padx = (5, 5), pady = (40, 5))
         os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Shutdown", height = 1, width = 10, font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper(self))
         os_control_shutdown_button.grid(row = 1, column = 0, padx = (5, 5), pady = (0, 5))
-        os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Reboot", height = 1, width = 10, font = ("Calibri", 12), command = lambda: self.socket.sendall(client.send(self, b"command_reboot")))
+        os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Reboot", height = 1, width = 10, font = ("Calibri", 12), command = lambda: comms.interface.send(b"command_reboot"))
         os_control_reboot_button.grid(row = 2, column = 0, padx = (5, 5), pady = (0, 10))
         os_control_notice_button = tkinter.Button(os_control_frame, bg = "#506a96", fg = "white", text = "!", height = 1, width = 1, command = lambda: messagebox.showinfo("Raspbot RCA: OS Command Notice", "When using this panel's functions, please note that:" + "\n" + "1. OS Update assumes that your host OS is Debian or Debian-based, and updates through APT." + "\n" + "2. Shutdown and reboot uses Linux's built-in functions to do so through shell." + "\n" + "3. After shutting down, there is no way to turn the bot back on besides cutting and restoring power. Please use cautiously."))
         os_control_notice_button.grid(row = 3, column = 0, padx = (1, 80), pady = (50, 2))
@@ -228,7 +198,7 @@ class client:
         nav_control_time_entry_entry.grid(row = 2, column = 1, padx = (10, 10))
         nav_control_script_frame = tkinter.Frame(nav_control_frame, bg = "#506a96")
         nav_control_script_frame.grid(row = 3, column = 1, padx = (10, 10), pady = (18, 18))
-        nav_control_execute_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Execute Nav", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_execute(self, nav_type_data.get(), float(nav_control_time_entry_data.get())))
+        nav_control_execute_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Execute Nav", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_execute(self, nav_type_data.get(), float(nav_control_time_entry_data.get()))) # TODO after completing nav module please change these
         nav_control_execute_button.grid(row = 0, column = 0)
         nav_control_load_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Load Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_load_gui(self))
         nav_control_load_button.grid(row = 1, column = 0, pady = (5, 0))
@@ -288,8 +258,8 @@ class client:
         """
         if loop is True:
             while True:
-                self.socket.sendall(client.send(self, b"rca-1.2:vitals_request"))
-                reply = client.receive(self, self.socket.recv(4096))
+                comms.interface.send(b"rca-1.2:vitals_request")
+                reply = comms.interface.receive()
                 vitals_text_data = reply.decode(encoding = "utf-8", errors = "replace")
                 self.vitals_text.configure(state = tkinter.NORMAL)
                 self.vitals_text.delete("1.0", tkinter.END)
@@ -298,8 +268,8 @@ class client:
                 self.vitals_text.configure(state = tkinter.DISABLED)
             pass
         else:
-            self.socket.sendall(client.send(self, b"rca-1.2:vitals_request"))
-            reply = client.receive(self, self.socket.recv(4096))
+            comms.interface.send(b"rca-1.2:vitals_request")
+            reply = comms.interface.receive()
             vitals_text_data = reply.decode(encoding = "utf-8", errors = "replace")
             self.vitals_text.configure(state = tkinter.NORMAL)
             self.vitals_text.delete("1.0", tkinter.END)
@@ -310,53 +280,12 @@ class client:
         sleep(1)
     pass
     @staticmethod
-    def set_configuration(var, value, section, key, multi):
-        """
-        Edits entry in configuration file and applies new edit to variables.
-        :param var: variable being updated.
-        :param value: value to be assigned to variable and entered into configuration file.
-        :param section: section in the configuration file to be edited.
-        :param key: key to variable in section in the configuration file to be edited.
-        :param multi: boolean for whether to run a for range when reading params, useful when making multiple configuration settings.
-        :return: None
-        """
-        print("[INFO]: Editing configurations...")
-        str(var)
-        str(value)
-        str(section)
-        str(key)
-        if multi is True:
-            cycles = len(var)
-            while cycles != 0:
-                parameter_key = cycles - 1
-                var[parameter_key] = value[parameter_key]
-                config_parse_edit = configparser.ConfigParser()
-                config_parse_edit[section[parameter_key]][key[parameter_key]] = var[parameter_key]
-                with open("main.cfg", "w") as config_write:
-                    config_parse_edit.write(config_write)
-                pass
-                cycles -= 1
-            pass
-            config_write.close()
-        else:
-            var = value
-            config_parse_edit = configparser.ConfigParser()
-            print(section)
-            print(key)
-            config_parse_edit[section][key] = var
-            with open("main.cfg", "w") as config_write:
-                config_parse_edit.write(config_write)
-            pass
-            config_write.close()
-        pass
-    pass
-    @staticmethod
     def set_configuration_gui():
         """
-        Planned:
-        Does exactly what client.set_configuration does, but with a GUI window.
-        Current:
         Either opens nano text editor for Linux systems or will open OS' built-in text editor if not Linux.
+        In the future, does exactly what client.set_configuration does, but with a GUI window.
+
+        TODO update set_configuartion_gui to tkinter GUI
         """
         platform = system()
         if platform in ["Linux", "Ubuntu", "Debian", "Raspbian", "Kubuntu", "Arch", "Arch Linux", "Fedora", "Linux Mint"]:
@@ -373,7 +302,7 @@ class client:
         :return: average latency, nested list with individual latency values, total losses, nested list with individual losses, if host resolution failed
         """
         print("[INFO]: Starting PING test...")
-        scans = [ping3.ping(self.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(self.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(self.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(self.host, timeout = 10, size = 64, unit = "ms")]
+        scans = [ping3.ping(comms.objects.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(comms.objects.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(comms.objects.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(comms.objects.host, timeout = 10, size = 64, unit = "ms")]
         if False in scans:
             return [None, [None, None, None, None], 4, [True, True, True, True], True]
         else:
@@ -407,7 +336,7 @@ class client:
         """
         ping_results_raw = client.ping(self)
         if ping_results_raw[4] is True:
-            self.ping_results = "Unable to resolve hostname," + "\n" + "is the NET configuration correct?" + "\n" + "Host IP was:" + "\n" + self.host
+            self.ping_results = "Unable to resolve hostname," + "\n" + "is the NET configuration correct?" + "\n" + "Host IP was:" + "\n" + comms.objects.host
         else:
             ping_results_raw[0] = round(ping_results_raw[0], 2)
             ping_results_raw[1][0] = round(ping_results_raw[1][0], 2)
@@ -432,7 +361,7 @@ class client:
     pass
     def ping_gui(self):
         """
-        Does exactly what client.set_configuration does, but with a GUI window.
+        Ping tool GUI.
         :return: none.
         """
         root = tkinter.Toplevel()
@@ -459,9 +388,8 @@ class client:
         """
         if report_type == "Science":
             if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
-                self.socket.sendall(client.send(self, b"rca-1.2:command_science_collect"))
-                data = client.receive(self, self.socket.recv(4096))
-                data = data.decode(encoding = "utf-8", errors = "replace")
+                comms.interface.send(b"rca-1.2:command_science_collect")
+                data = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                 if data == "rca-1.2:hardware_unavailable":
                     print("[FAIL]: Host replies that RFP Enceladus hardware is unavailable. This conflicts with current configuration, please correct configurations.")
                     return None
@@ -471,11 +399,11 @@ class client:
                 return None
             pass
         elif report_type == "CH Check":
-            self.socket.sendall(client.send(self, b"rca-1.2:command_ch_check"))
-            if client.receive_acknowledgement(self) is False:
+            comms.interface.send(b"rca-1.2:command_ch_check")
+            if comms.acknowledge.receive_acknowledgement() is False:
                 return None
             pass
-            data = client.receive(self, self.socket.recv(4096))
+            data = comms.interface.receive()
             data = data.decode(encoding="utf-8", errors="replace")
             self.report_content = data
         else:
@@ -528,99 +456,99 @@ class client:
         file_report.close()
         print("[INFO]: Report saved.")
     pass
-pass
-def dock(self):
-    """
-    Instructs host to dock with charger station.
-    """
-    self.socket.sendall(client.send(self, b"rca-1.2:command_dock"))
-    if client.receive_acknowledgement(self) is False:
-        return None
+    def dock(self):
+        """
+        Instructs host to dock with charger station.
+        """
+        comms.interface.send(b"rca-1.2:command_dock")
+        if comms.acknowledge.receive_acknowledgement() is False:
+            return None
+        pass
+        comms.objects.dock_status = True
+    # TODO add logic for dock that triggers other changes
     pass
-    self.dock_status = True
-# TODO add logic for dock that triggers other changes
-pass
-def undock(self):
-    """
-    Instructs host to undock from charger station.
-    :return: none.
-    """
-    self.socket.sendall(client.send(self, b"rca-1.2:comamnd_undock"))
-    if client.receive_acknowledgement(self) is False:
-        return None
+    def undock(self):
+        """
+        Instructs host to undock from charger station.
+        :return: none.
+        """
+        comms.interface.send(b"rca-1.2:comamnd_undock")
+        if comms.acknowledge.receive_acknowledgement() is False:
+            return None
+        pass
+        comms.objects.dock_status = False
+    # TODO add logic for dock that triggers other changes
     pass
-    self.dock_status = False
-# TODO add logic for dock that triggers other changes
-pass
-def os_control_shutdown_wrapper(self):
-    """
-    Creates dialogue asking for user to confirm to shutdown bot.
-    :return: none.
-    """
-    confirm_dialogue = messagebox.askyesno("Raspbot RCA: Confirm Shutdown?", "Are you sure you want to shutdown the bot? There is no way to boot it besides physically restarting its power source, and if the Arduino fails, you may overdischarge your battery.")
-    if confirm_dialogue is True:
-        self.socket.sendall(client.send(self, b"rca-1.2:command_shutdown"))
-        client.disconnect(self)
-    else:
-        return None
+    def os_control_shutdown_wrapper(self):
+        """
+        Creates dialogue asking for user to confirm to shutdown bot.
+        :return: none.
+        """
+        confirm_dialogue = messagebox.askyesno("Raspbot RCA: Confirm Shutdown?", "Are you sure you want to shutdown the bot? There is no way to boot it besides physically restarting its power source, and if the Arduino fails, you may overdischarge your battery.")
+        if confirm_dialogue is True:
+            comms.interface.send(b"rca-1.2:command_shutdown")
+            comms.disconnect.disconnect()
+        else:
+            return None
+        pass
     pass
-pass
-def led_command(self, command, frame):
-    """
-    Issues commands to host for controlling LED matrix on SenseHAT by controlling transmissions.
-    :param command: command to be executed by host.
-    :param frame: index number for target frame set to be played, if command is not image or play, is ignored.
-    :return: none.
-    """
-    self.socket.sendall(client.send(self, b"rca-1.2:led_graphics"))
-    if client.receive_acknowledgement(self) is False:
-        return None
+    @staticmethod
+    def led_command(command, frame):
+        """
+        Issues commands to host for controlling LED matrix on SenseHAT by controlling transmissions.
+        :param command: command to be executed by host.
+        :param frame: index number for target frame set to be played, if command is not image or play, is ignored.
+        :return: none.
+        """
+        comms.interface.send(b"rca-1.2:led_graphics")
+        if comms.acknowledge.receive_acknowledgement() is False:
+            return None
+        pass
+        if frame is None:
+            command_frame = "0"
+        else:
+            command_frame = frame
+        pass
+        comms.interface.send(command.encode(encoding = "ascii", errors = "replace"))
+        if comms.acknowledge.receive_acknowledgement() is False:
+            return None
+        pass
+        if command == "image":
+            comms.interface.send(command_frame.encode(encoding = "ascii", errors = "replace"))
+        pass
     pass
-    if frame is None:
-        command_frame = "0"
-    else:
-        command_frame = frame
+    def led_gui(self):
+        """
+        If SenseHAT is included in hardware configuration, creates GUI for controlling LED matrix on SenseHAT.
+        :return: none.
+        """
+        root = tkinter.Toplevel()
+        root.title("Raspbot RCA-G: LED Controls")
+        root.configure(bg = "#344561")
+        root.geometry('{}x{}'.format(260, 131))
+        root.resizable(width=False, height=False)
+        graphics_title = tkinter.Label(root, text = "LED Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
+        graphics_title.grid(row = 0, column = 0, padx = (0, 290))
+        graphics_led_frame_buttons = tkinter.Frame(root, bg = "#344561")
+        graphics_led_button_off = tkinter.Button(graphics_led_frame_buttons, text = "Off", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command("stop", None))
+        graphics_led_button_off.pack(side = tkinter.TOP)
+        graphics_led_button_hello_world = tkinter.Button(graphics_led_frame_buttons, text = "Hello World", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command("image", "1"))
+        graphics_led_button_hello_world.pack(side = tkinter.BOTTOM)
+        graphics_led_button_idle = tkinter.Button(graphics_led_frame_buttons, text = "Idle", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command("image", "2"))
+        graphics_led_button_idle.pack(side=tkinter.BOTTOM)
+        graphics_led_frame_buttons.grid(row = 2, column = 0, padx = (0, 250))
+        root.mainloop()
     pass
-    self.socket.sendall(client.send(self, command.encode(encoding = "ascii", errors = "replace")))
-    if client.receive_acknowledgement(self) is False:
-        return None
-    pass
-    if command == "image":
-        self.socket.sendall(client.send(self, command_frame.encode(encoding = "ascii", errors = "replace")))
-    pass
-pass
-def led_gui(self):
-    """
-    If SenseHAT is included in hardware configuration, creates GUI for controlling LED matrix on SenseHAT.
-    :return: none.
-    """
-    root = tkinter.Toplevel()
-    root.title("Raspbot RCA-G: LED Controls")
-    root.configure(bg = "#344561")
-    root.geometry('{}x{}'.format(260, 131))
-    root.resizable(width=False, height=False)
-    graphics_title = tkinter.Label(root, text = "LED Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
-    graphics_title.grid(row = 0, column = 0, padx = (0, 290))
-    graphics_led_frame_buttons = tkinter.Frame(root, bg = "#344561")
-    graphics_led_button_off = tkinter.Button(graphics_led_frame_buttons, text = "Off", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command(self, "stop", None))
-    graphics_led_button_off.pack(side = tkinter.TOP)
-    graphics_led_button_hello_world = tkinter.Button(graphics_led_frame_buttons, text = "Hello World", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command(self, "image", "1"))
-    graphics_led_button_hello_world.pack(side = tkinter.BOTTOM)
-    graphics_led_button_idle = tkinter.Button(graphics_led_frame_buttons, text = "Idle", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command(self, "image", "2"))
-    graphics_led_button_idle.pack(side=tkinter.BOTTOM)
-    graphics_led_frame_buttons.grid(row = 2, column = 0, padx = (0, 250))
-    root.mainloop()
-pass
 
-def arm_control_gui(self):
-    """
-    Creates GUI for user to control arm.
-    This will only be available if enabled, hardware check is performed at creation of main window.
-    :return: none.
-    """
+    def arm_control_gui(self):
+        """
+        Creates GUI for user to control arm.
+        This will only be available if enabled, hardware check is performed at creation of main window.
+        :return: none.
+        """
 
+        pass
     pass
-pass
 pass
 
 c = client()

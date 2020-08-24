@@ -3,6 +3,8 @@ Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 Made by Taian Chen
 """
 
+# TODO change docstrings and refractor directory to server.
+
 try:
     print("[INFO]: Starting imports...")
     from subprocess import call
