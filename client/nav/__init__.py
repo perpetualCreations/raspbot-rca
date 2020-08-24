@@ -1,4 +1,14 @@
+"""
+Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
+nav.py module, contains navigation functions
+Made by Taian Chen
+"""
 
+print("[INFO]: Initiating nav module...")
+
+from nav import edit, gui, nav, objects
+
+config_parse_load = objects.configparser.ConfigParser()
 
 try:
     config_parse_load.read(objects.getcwd().strip("comms") + "hardware.cfg")
@@ -15,3 +25,5 @@ except objects.configparser.Error as ce:
 except FileNotFoundError as nf:
     print("[FAIL]: Failed to load configurations! Configuration file is missing.")
 pass
+
+print("[INFO]: Initiating of nav module complete!")
