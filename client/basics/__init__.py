@@ -6,6 +6,6 @@ Made by Taian Chen
 
 print("[INFO]: Initiating basics module...")
 
-from basics import basics
+from basics import basics, objects, process
 
 print("[INFO]: Initiation of comms complete!")

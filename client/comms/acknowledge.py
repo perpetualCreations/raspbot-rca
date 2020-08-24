@@ -32,7 +32,7 @@ def receive_acknowledgement():
     else:
         objects.messagebox.showwarning("Raspbot RCA: Bad Acknowledgement", "The host has replied with an invalid acknowledgement." + "\n Received: " + acknowledgement.decode(encoding = "utf-8", errors = "replace"))
         print("[FAIL]: Did not receive an acknowledgement. Instead received: ")
-        print(acknowledgement.decode(encoding = "uft-8", errors = "replace")) # WARN if buffersize is large enough for overflow, this display code could be a vulnerability. Luckily it's 4096 bytes, but still...
+        print(acknowledgement.decode(encoding = "uft-8", errors = "replace")) # TODO when updating receive make sure it has a set buffersize, otherwise an overflow is possible!
         return False
     pass
 pass

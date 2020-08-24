@@ -1,8 +1,16 @@
+"""
+Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
+nav.py module, contains navigation functions
+Made by Taian Chen
+
+Navigation script editing interface.
+"""
 
 
 def nav_edit():
     """
     Opens OS built-in text editor, similarly to client.set_configuration_gui().
+    Also similarly to client.set_configuration_gui() will be updated to an actual editor.
     :return: none.
     """
     platform = system()

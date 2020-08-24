@@ -42,7 +42,9 @@ socket_camera = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_camera.setblocking(False)
 socket_camera.settimeout(10)
 
-dock_status = None # TODO have main reference this instead.
+dock_status = None
 components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
 
-net_status_data = tkinter.StringVar() # TODO have main reference this variable, and have an update function invoked after a connect/disconnect
+root_placeholder = tkinter.Toplevel()
+root_placeholder.withdraw() # prevents Tkinter from drawing a blank window, since this isn't an actual GUI, just a Toplevel object to allow net_status_data to be a tkinter.StringVar.
+net_status_data = tkinter.StringVar(root_placeholder) # TODO have main reference this variable, and have an update function invoked after a connect/disconnect

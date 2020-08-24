@@ -28,6 +28,7 @@ except ImportError as e:
     ping3 = None
     cv2 = None
     imagezmq = None
+    system = None
     # RCA Modules
     basics = None
     comms = None
@@ -69,12 +70,16 @@ class client:
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
+        except KeyError as ke:
+            print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
+            print(ke)
         except FileNotFoundError as nf:
             print("[FAIL]: Failed to load configurations! Configuration file is missing.")
             print(nf)
         pass
         print("[INFO]: Starting GUI...")
-        self.root = tkinter.Tk()
+        hidden_root = tkinter.Tk() # placeholder Tk object to withdraw the blank window created by messagebox.
+        self.root = tkinter.Toplevel()
         self.root.title("Raspbot RCA: Client")
         self.root.configure(bg = "#344561")
         self.root.geometry('{}x{}'.format(1200, 530))
@@ -97,7 +102,7 @@ class client:
         hardware_menu.add_cascade(label = "Upgrade #1", menu = upgrade_1_menu)
         app_menu.add_command(label = "Edit Configs", command = lambda: client.set_configuration_gui())
         app_menu.add_cascade(label = "Edit Hardware Set", menu = hardware_menu)
-        app_menu.add_command(label = "AquaSilva Ops", command = None)
+        # app_menu.add_command(label = "AquaSilva Ops", command = None) AquaSilva project is suspended, option has been disabled.
         app_menu.add_command(label = "Exit", command = lambda: basics.basics.exit(0))
         menu.add_cascade(label = "App", menu = app_menu)
         net_menu = tkinter.Menu(menu)
@@ -127,9 +132,8 @@ class client:
         net_frame.grid(row = 0, column = 0, padx = (0, 5))
         net_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", text = "Network", font = ("Calibri", 12))
         net_label.grid(row = 0, column = 0, padx = (5, 0))
-        self.net_status_data = tkinter.StringVar()
-        self.net_status_data.set("Status: " + "Disconnected")
-        net_status_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", textvariable = self.net_status_data, font = ("Calibri", 12))
+        comms.objects.net_status_data.set("Status: " + "Disconnected")
+        net_status_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", textvariable = comms.objects.net_status_data, font = ("Calibri", 12))
         net_status_label.grid(row = 1, column = 0, padx = (5, 0), pady = (10, 0))
         net_disconnect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Disconnect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: comms.disconnect.disconnect())
         net_disconnect_button.grid(row = 2, column = 0, padx = (5, 0), pady = (10, 0))
@@ -198,12 +202,14 @@ class client:
         nav_control_time_entry_entry.grid(row = 2, column = 1, padx = (10, 10))
         nav_control_script_frame = tkinter.Frame(nav_control_frame, bg = "#506a96")
         nav_control_script_frame.grid(row = 3, column = 1, padx = (10, 10), pady = (18, 18))
-        nav_control_execute_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Execute Nav", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_execute(self, nav_type_data.get(), float(nav_control_time_entry_data.get()))) # TODO after completing nav module please change these
+        nav_control_execute_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Execute Nav", height = 1, width = 15, font = ("Calibri", 12), command = lambda: nav.nav.nav_execute(nav_type_data.get(), float(nav_control_time_entry_data.get())))
         nav_control_execute_button.grid(row = 0, column = 0)
-        nav_control_load_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Load Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_load_gui(self))
+        nav_control_load_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Load Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: nav.gui.nav_load_gui())
         nav_control_load_button.grid(row = 1, column = 0, pady = (5, 0))
-        nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: client.nav_edit())
+        nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: nav.edit.nav_edit())
         nav_control_edit_button.grid(row = 2, column = 0, pady = (5, 0))
+        self.root.master.withdraw()
+        hidden_root.withdraw()
         self.root.mainloop()
     pass
     def vitals_refresh(self, loop):
@@ -241,7 +247,7 @@ class client:
         Either opens nano text editor for Linux systems or will open OS' built-in text editor if not Linux.
         In the future, does exactly what client.set_configuration does, but with a GUI window.
 
-        TODO update set_configuartion_gui to tkinter GUI
+        TODO update set_configuration_gui to tkinter GUI
         """
         platform = system()
         if platform in ["Linux", "Ubuntu", "Debian", "Raspbian", "Kubuntu", "Arch", "Arch Linux", "Fedora", "Linux Mint"]:
@@ -252,7 +258,8 @@ class client:
             messagebox.showerror("Raspbot RCA: OS Unsupported", "Client OS is unsupported, please manually edit configuration! The accepted operating systems are Linux and Linux distributions, and Windows. If you believe this is a mistake please open an issue on the repository page.")
         pass
     pass
-    def ping(self):
+    @staticmethod
+    def ping():
         """
         Pings host address and records latency and losses.
         :return: average latency, nested list with individual latency values, total losses, nested list with individual losses, if host resolution failed
@@ -290,7 +297,7 @@ class client:
         Wrapper for client.ping() for ping_gui.
         :return: none
         """
-        ping_results_raw = client.ping(self)
+        ping_results_raw = client.ping()
         if ping_results_raw[4] is True:
             self.ping_results = "Unable to resolve hostname," + "\n" + "is the NET configuration correct?" + "\n" + "Host IP was:" + "\n" + comms.objects.host
         else:
@@ -317,24 +324,25 @@ class client:
     pass
     def ping_gui(self):
         """
-        Ping tool GUI.
+        GUI tool for pinging IP addresses.
         :return: none.
         """
-        root = tkinter.Toplevel()
-        root.title("Raspbot RCA-G: Ping Tool")
-        root.configure(bg = "#344561")
-        root.geometry('{}x{}'.format(255, 290))
-        root.resizable(width = False, height = False)
-        self.ping_text = tkinter.Text(root, height = 8, width = 30, bg = "white", fg = "black", font = ("Calibri", 12))
+        print("[INFO]: Displayed ping_gui.")
+        ping_gui = tkinter.Toplevel()
+        ping_gui.title("Raspbot RCA: Ping")
+        ping_gui.configure(bg = "#344561")
+        ping_gui.geometry('{}x{}'.format(255, 290))
+        ping_gui.resizable(width = False, height = False)
+        self.ping_text = tkinter.Text(ping_gui, height = 8, width = 30, bg = "white", fg = "black", font = ("Calibri", 12))
         self.ping_text.grid(row = 0, column = 0, pady = (8, 14), padx = (5, 5))
         self.ping_text.configure(state = tkinter.DISABLED)
-        self.ping_button = tkinter.Button(root, bg = "white", fg = "black", text = "Ping", width = 20, font = ("Calibri", 12), command = lambda: client.ping_wrapper(self))
+        self.ping_button = tkinter.Button(ping_gui, bg = "white", fg = "black", text = "Ping", width = 20, font = ("Calibri", 12), command = lambda: client.ping_wrapper(self))
         self.ping_button.grid(row = 1, column = 0, pady = (0, 2))
-        save_button = tkinter.Button(root, bg = "white", fg = "black", text = "Save", width = 20, font = ("Calibri", 12), command = lambda: client.report_save(self, "PING", self.ping_results))
+        save_button = tkinter.Button(ping_gui, bg = "white", fg = "black", text = "Save", width = 20, font = ("Calibri", 12), command = lambda: client.report_save(self, "PING", self.ping_results))
         save_button.grid(row = 2, column = 0, pady = (0, 2))
-        close_button = tkinter.Button(root, bg = "white", fg = "black", text = "Close", width = 20, font = ("Calibri", 12), command = lambda: root.destroy())
+        close_button = tkinter.Button(ping_gui, bg = "white", fg = "black", text = "Close", width = 20, font = ("Calibri", 12), command = lambda: ping_gui.destroy())
         close_button.grid(row = 3, column = 0, pady = (0, 10))
-        root.mainloop()
+        ping_gui.mainloop()
     pass
     def report_collect(self, report_type):
         """
@@ -376,20 +384,21 @@ class client:
         if self.report_content == "":
             return None
         pass
-        root = tkinter.Toplevel()
-        root.title("Raspbot RCA-G: Report Viewer, " + report_type)
-        root.configure(bg = "#344561")
-        root.geometry('{}x{}'.format(400, 370))
-        root.resizable(width = False, height = False)
-        graphics_report = tkinter.Text(root, height = 15, bg = "white", fg = "black", font = ("Calibri", 12))
+        print("[INFO]: Displayed report_gui.")
+        report_gui = tkinter.Toplevel()
+        report_gui.title("Raspbot RCA: Report Viewer, " + report_type)
+        report_gui.configure(bg = "#344561")
+        report_gui.geometry('{}x{}'.format(400, 370))
+        report_gui.resizable(width = False, height = False)
+        graphics_report = tkinter.Text(report_gui, height = 15, bg = "white", fg = "black", font = ("Calibri", 12))
         graphics_report.configure(state = tkinter.NORMAL)
         graphics_report.insert("1.0", content)
         graphics_report.update_idletasks()
         graphics_report.configure(state = tkinter.DISABLED)
         graphics_report.grid(row = 0, column = 0, pady = (5, 14))
-        graphics_report_close_button = tkinter.Button(root, bg = "white", fg = "black", text = "Close", width = 40, font = ("Calibri", 12), command = lambda: root.destroy())
+        graphics_report_close_button = tkinter.Button(report_gui, bg = "white", fg = "black", text = "Close", width = 40, font = ("Calibri", 12), command = lambda: report_gui.destroy())
         graphics_report_close_button.grid(row = 1, column = 0, pady = (0, 10))
-        root.mainloop()
+        report_gui.mainloop()
     pass
     def report_save(self, report_type, content):
         """
@@ -421,7 +430,7 @@ class client:
             return None
         pass
         comms.objects.dock_status = True
-    # TODO add logic for dock that triggers other changes
+        # TODO add logic for dock that triggers other changes
     pass
     def undock(self):
         """
@@ -433,7 +442,7 @@ class client:
             return None
         pass
         comms.objects.dock_status = False
-    # TODO add logic for dock that triggers other changes
+        # TODO add logic for dock that triggers other changes
     pass
     def os_control_shutdown_wrapper(self):
         """
@@ -478,22 +487,23 @@ class client:
         If SenseHAT is included in hardware configuration, creates GUI for controlling LED matrix on SenseHAT.
         :return: none.
         """
-        root = tkinter.Toplevel()
-        root.title("Raspbot RCA-G: LED Controls")
-        root.configure(bg = "#344561")
-        root.geometry('{}x{}'.format(260, 131))
-        root.resizable(width=False, height=False)
-        graphics_title = tkinter.Label(root, text = "LED Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
+        print("[INFO]: Displayed led_gui.")
+        led_gui = tkinter.Toplevel()
+        led_gui.title("Raspbot RCA: LED Controls")
+        led_gui.configure(bg = "#344561")
+        led_gui.geometry('{}x{}'.format(260, 131))
+        led_gui.resizable(width=False, height=False)
+        graphics_title = tkinter.Label(led_gui, text = "LED Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
         graphics_title.grid(row = 0, column = 0, padx = (0, 290))
-        graphics_led_frame_buttons = tkinter.Frame(root, bg = "#344561")
+        graphics_led_frame_buttons = tkinter.Frame(led_gui, bg = "#344561")
         graphics_led_button_off = tkinter.Button(graphics_led_frame_buttons, text = "Off", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command("stop", None))
         graphics_led_button_off.pack(side = tkinter.TOP)
         graphics_led_button_hello_world = tkinter.Button(graphics_led_frame_buttons, text = "Hello World", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command("image", "1"))
         graphics_led_button_hello_world.pack(side = tkinter.BOTTOM)
         graphics_led_button_idle = tkinter.Button(graphics_led_frame_buttons, text = "Idle", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command("image", "2"))
-        graphics_led_button_idle.pack(side=tkinter.BOTTOM)
+        graphics_led_button_idle.pack(side = tkinter.BOTTOM)
         graphics_led_frame_buttons.grid(row = 2, column = 0, padx = (0, 250))
-        root.mainloop()
+        led_gui.mainloop()
     pass
 
     def arm_control_gui(self):

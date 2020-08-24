@@ -23,6 +23,9 @@ try:
 except objects.configparser.Error as ce:
     print("[FAIL]: Failed to load configurations! See below for details.")
     print(ce)
+except KeyError as ke:
+    print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
+    print(ke)
 except FileNotFoundError as nf:
     print("[FAIL]: Failed to load configurations! Configuration file is missing.")
     print(nf)
@@ -40,6 +43,9 @@ try:
 except objects.configparser.Error as ce:
     print("[FAIL]: Failed to load configurations! See below for details.")
     print(ce)
+except KeyError as ke:
+    print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
+    print(ke)
 except FileNotFoundError as nf:
     print("[FAIL]: Failed to load configurations! Configuration file is missing.")
 pass

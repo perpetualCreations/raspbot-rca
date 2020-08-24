@@ -6,6 +6,8 @@ Made by Taian Chen
 Handles exiting and configuration editing.
 """
 
+from basics import objects
+
 def create_process(target, args):
     """
     Creates a new process from multiprocessing.
@@ -15,10 +17,10 @@ def create_process(target, args):
     """
     if __name__ == '__main__':
         try:
-            dummy = multiprocessing.Process(target=target, args=args)
+            dummy = objects.multiprocessing.Process(target=target, args=args)
             dummy.start()
             dummy.join()
-        except multiprocessing.ProcessError as me:
+        except objects.multiprocessing.ProcessError as me:
             print("[FAIL]: Process creation failed! Details below.")
             print(me)
             return None
@@ -48,6 +50,4 @@ def stop_process(target, error_ignore):
             pass
         pass
     pass
-
-
 pass

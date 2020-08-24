@@ -26,7 +26,7 @@ def nav_execute(direction, run_time):
         return None
     pass
     if get_distance is True:
-        client.create_process(client.nav_telemetry_get, self)
+        objects.basics.process.create_process(nav_telemetry_get)
     pass
 pass
 
@@ -43,12 +43,13 @@ def nav_load(file_name):
     while instruction_line > 0:
         raw_instructions = instructions.readline()
         instructions_split = raw_instructions.split()
-        nav.nav_execute(self, instructions_split[0], instructions_split[1])
-        sleep(int(instructions_split[1]))
+        nav_execute(instructions_split[0], instructions_split[1])
+        objects.sleep(int(instructions_split[1]))
         instruction_line -= 1
     pass
     instructions.close()
 pass
+
 def nav_telemetry_get():
     """
     Listens for telemetry data, made to be ran through multiprocessing.
@@ -56,16 +57,16 @@ def nav_telemetry_get():
     """
     stop = False
     while stop is False:
-        nav_telemetry = self.socket.recv(4096).decode(encoding="utf-8", errors="replace") # TODO update this from self.socket
+        nav_telemetry = objects.comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
         if nav_telemetry == "rca-1.2:nav_end":
             stop = True
             content = "[END]"
         else:
             content = nav_telemetry
         pass
-        self.nav_telemetry_text.configure(state=tkinter.NORMAL)
-        self.nav_telemetry_text.insert("1.0", content)
-        self.nav_telemetry_text.update_idletasks()
-        self.nav_telemetry_text.configure(state=tkinter.DISABLED)
+        objects.nav_telemetry_text.configure(state = objects.tkinter.NORMAL)
+        objects.nav_telemetry_text.insert("1.0", content)
+        objects.nav_telemetry_text.update_idletasks()
+        objects.nav_telemetry_text.configure(state = objects.tkinter.DISABLED)
     pass
 pass
