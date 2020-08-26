@@ -9,9 +9,12 @@ Contains objects for module, including any package imports. Interact with these 
 try:
     import multiprocessing
 except ImportError as ImportErrorMessage:
-    print("[NAV][FAIL]: Import failed!")
+    print("[FAIL]: Import failed!")
     print(ImportErrorMessage)
 except ImportWarning as ImportWarningMessage:
-    print("[NAV][FAIL]: Imports raised warnings.")
+    print("[FAIL]: Imports raised warnings.")
     print(ImportWarningMessage)
 pass
+
+log_file_handle = None # overwritten by basics module's log_init()
+origin_stdout = None # overwritten by basics module's log_init()

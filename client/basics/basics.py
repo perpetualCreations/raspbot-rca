@@ -10,12 +10,14 @@ try:
     import sys
     import configparser
     from time import gmtime, strftime
-    from main import origin_stdout, log_file_handle
+    from basics import objects
 except ImportError as ImportErrorMessage:
     sys = None
     configparser = None
     gmtime = None
     strftime = None
+    objects = None
+    origin_stdout = None
     print("[NAV][FAIL]: Import failed!")
     print(ImportErrorMessage)
 except ImportWarning as ImportWarningMessage:
@@ -23,9 +25,20 @@ except ImportWarning as ImportWarningMessage:
     print(ImportWarningMessage)
 pass
 
+def log_init():
+    """
+    Initiates logging.
+    :return: none.
+    """
+    objects.log_file_handle = open("logs/log-" + make_timestamp() + ".txt", "w")
+    objects.origin_stdout = sys.stdout
+    sys.stdout = objects.log_file_handle
+pass
+
 def make_timestamp():
     """
     Generates timestamp from current UTC time.
+    :return: none.
     """
     print("[INFO]: Generating timestamps...")
     timestamp = strftime("%b%d%Y%H%M%S"), gmtime()
@@ -38,8 +51,8 @@ def exit(status):
     :return: none.
     """
     print("[INFO]: Stopping application...")
-    sys.stdout = origin_stdout
-    log_file_handle.close()
+    sys.stdout = objects.origin_stdout
+    objects.log_file_handle.close()
     sys.exit(status)
 pass
 

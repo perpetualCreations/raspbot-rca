@@ -18,10 +18,10 @@ try:
     from ast import literal_eval
     from os import getcwd
 except ImportError as ImportErrorMessage:
-    print("[NAV][FAIL]: Import failed!")
+    print("[FAIL]: Import failed!")
     print(ImportErrorMessage)
 except ImportWarning as ImportWarningMessage:
-    print("[NAV][FAIL]: Imports raised warnings.")
+    print("[FAIL]: Imports raised warnings.")
     print(ImportWarningMessage)
 pass
 

@@ -9,14 +9,13 @@ try:
     print("[INFO]: Starting imports...")
     from subprocess import call, Popen
     from time import sleep
-    import socket, configparser, tkinter, ping3, imagezmq, cv2, sys
+    import socket, configparser, tkinter, ping3, imagezmq, cv2
     from tkinter import messagebox
     from ast import literal_eval
     from platform import system
     # RCA Modules
     import basics, comms, nav
 except ImportError as e:
-    sys = None
     literal_eval = None
     sleep = None
     Popen = None
@@ -40,10 +39,8 @@ except ImportWarning as e:
     print(e)
 pass
 
-# logging init
-log_file_handle = open("logs/log-" + basics.basics.make_timestamp() + ".txt", "w")
-origin_stdout = sys.stdout
-sys.stdout = log_file_handle
+# logging
+basics.basics.log_init()
 
 class client:
     """
