@@ -8,7 +8,7 @@ Contains acknowledgement handle function.
 
 from comms import objects, interface
 
-def send_acknowledgement():
+def send_acknowledgement(id):
     """
     Sends an acknowledgement byte string.
     Acknowledgments are used generally for confirming authentication and other specific processes (not general data transmission).
@@ -47,6 +47,7 @@ def send_acknowledgement():
     Description: Command sent to host was not recognized, and was not executed. This type of failure should never occur, and unless you have a modified client/host, should be reported immediately.
     ###### n/a for sending as client ######
 
+    :param id: ID of acknowledgement to be issued.
     :return: none.
     """
     try:

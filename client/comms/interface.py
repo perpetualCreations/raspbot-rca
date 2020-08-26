@@ -57,9 +57,10 @@ def receive():
         print("[FAIL]: Message length from host exceeds 4096 bytes, this is above the maximum specification!")
         return None
     else:
-
-    socket_input_spliced = objects.socket_main.recv(4096).split() # TODO is this the right usage of recv???
-    return decrypt(socket_input_spliced[2], socket_input_spliced[1], socket_input_spliced[0])
+        acknowledge.send_acknowledgement(1001)
+    pass
+    socket_input_spliced = objects.socket_main.recv(4096).split()
+    return decrypt(socket_input_spliced[2], socket_input_spliced[1], socket_input_spliced[0]) # TODO finish patching comms
 pass
 
 def encrypt(byte_input):
