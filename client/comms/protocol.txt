@@ -52,7 +52,7 @@ The receiver then will listen for the message.
 # Valid IDs
 A full list of acknowledgements and which are applicable for client/host and for sending/receiving can be found in the acknowledge module in comms.
 
-# How Acknowledgements are Sent/Received
+# How Acknowledgements are Sent/Received (outdated)
 Acknowledgements are in a chicken/egg scenario. They are trying to send something to a receiver, however following standard rules also require and acknowledgement for the acknowledgement transmission, so buffer size can be transferred clearly.
 To mitigate this, receive has a clause: when ValueError is triggered, it checks if the buffer size was 4 sequential carat symbols.
 This logic is bound to ValueError because normally the buffer size is converted from a byte string to an integer to be then converted to an acknowledgement ID. If the byte string is unable to be converted (such as when it is 4 carat symbols), it will raise ValueError.

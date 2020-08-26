@@ -20,11 +20,6 @@ def send_acknowledgement(num_id):
     Due to the receive function needing to send a buffer size acknowledgement, which would require an endless loop of acknowledgements for each send, acknowledgements are encoded in 4 digit number IDs.
     They are:
 
-    Number ID: 0999
-    ID: rca-1.2:receive_ready
-    Description: Never issued by comms.acknowledge. This acknowledgement is used when a normal acknowledgement (1000-1999) cannot be used, and specifically used for the receiver to signal the sender that it is ready to receive.
-    Notice: Due to the ID being a 3 digit number, however the required length to be 4, in integer states it will remain a 3 digit ID, and in string form an additional 0 will be added. This special formatting is never really applicable though, because comms.acknowledge does not handle this ID.
-
     Number ID: 1000
     ID: rca-1.2:connection_acknowledge
     Description: General acknowledgement or confirmation (usually during connect/disconnect).
@@ -57,8 +52,6 @@ def send_acknowledgement(num_id):
     :return: none.
     """
     if num_id in [1000, 1001, 2000]:
-        objects.socket_main.sendall(b"^^^^")
-        objects.socket_main.recv(4)
         objects.socket_main.sendall(str(num_id).encode(encoding = "ascii", errors = "replace"))
     else:
         print("[FAIL]: Tried to issue invalid acknowledgement. This should not be normal behavior.")
@@ -74,11 +67,6 @@ def receive_acknowledgement():
 
     Due to the receive function needing to send a buffer size acknowledgement, which would require an endless loop of acknowledgements for each send, acknowledgements are encoded in 4 digit number IDs.
     They are:
-
-    Number ID: 0999
-    ID: rca-1.2:receive_ready
-    Description: Never issued by comms.acknowledge. This acknowledgement is used when a normal acknowledgement (1000-1999) cannot be used, and specifically used for the receiver to signal the sender that it is ready to receive.
-    Notice: Due to the ID being a 3 digit number, however the required length to be 4, in integer states it will remain a 3 digit ID, and in string form an additional 0 will be added. This special formatting is never really applicable though, because comms.acknowledge does not handle this ID.
 
     Number ID: 1000
     ID: rca-1.2:connection_acknowledge

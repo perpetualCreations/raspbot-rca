@@ -37,14 +37,9 @@ def receive():
     try:
         objects.buffer_size = int(objects.socket_main.recv(4).decode(encoding = "utf-8", errors = "replace"))
     except ValueError as ve:
-        if objects.message_buffer_size == "^^^^": # if what should be the buffer size for receiving the message is 4 sequential carat characters, recognize this as an acknowledgement transmission.
-            objects.socket_main.sendall(b"0999")
-            acknowledge.receive_acknowledgement()
-        else:
-            print("[FAIL]: Message length from host is invalid! See below for more details.")
-            print(ve)
-            return None
-        pass
+        print("[FAIL]: Message length from host is invalid! See below for more details.")
+        print(ve)
+        return None
     pass
     if objects.message_buffer_size > 4096:
         print("[FAIL]: Message length from host exceeds 4096 bytes, this is above the maximum specification!")
@@ -53,8 +48,8 @@ def receive():
     else:
         acknowledge.send_acknowledgement(1001)
     pass
-    socket_input_spliced = objects.socket_main.recv(4096).split()
-    return decrypt(socket_input_spliced[2], socket_input_spliced[1], socket_input_spliced[0]) # TODO finish patching comms
+    socket_input_spliced = objects.socket_main.recv(objects.message_buffer_size).split()
+    return decrypt(socket_input_spliced[2], socket_input_spliced[1], socket_input_spliced[0])
 pass
 
 def encrypt(byte_input):
