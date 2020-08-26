@@ -37,6 +37,7 @@ def receive():
     try:
         objects.buffer_size = int(objects.socket_main.recv(4).decode(encoding = "utf-8", errors = "replace"))
     except ValueError as ve:
+        acknowledge.send_acknowledgement(2003)
         print("[FAIL]: Message length from host is invalid! See below for more details.")
         print(ve)
         return None

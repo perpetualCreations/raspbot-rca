@@ -51,8 +51,9 @@ def send_acknowledgement(num_id):
     :param num_id: ID of acknowledgement to be issued.
     :return: none.
     """
-    if num_id in [1000, 1001, 2000]:
+    if num_id in [1000, 1001, 2000, 2003]:
         objects.socket_main.sendall(str(num_id).encode(encoding = "ascii", errors = "replace"))
+        print("[INFO]: Issued acknowledgement " + '''"''' + objects.acknowledgement_dictionary[num_id] + '''"''' + " or in numeric ID form, " + str(num_id) + ".")
     else:
         print("[FAIL]: Tried to issue invalid acknowledgement. This should not be normal behavior.")
     pass
@@ -120,15 +121,19 @@ def receive_acknowledgement():
         return True
     elif objects.acknowledgement_id == "rca-1.2:buffer_size_over_spec":
         print("[FAIL]: Message length exceeded set maximum buffer size (4096 bytes). This should not be normal behavior.") # buffer size over specification warning
-        objects.messagebox.showwarning("Raspbot RCA: Buffer Size Over Spec", "The message to be sent to the host exceeded the maximum buffer size of 4096 bytes. This should not be normal behavior. \nUnless the script files have been edited, a bug issue should be made.")
+        objects.messagebox.showerror("Raspbot RCA: Buffer Size Over Spec", "The message to be sent to the host exceeded the maximum buffer size of 4096 bytes. This should not be normal behavior. \nUnless the script files have been edited, a bug issue should be made.")
         return False
     elif objects.acknowledgement_id == "rca-1.2:authentication_invalid":
         print("[FAIL]: Did not receive an acknowledgement. Authentication was invalid.") # reply that the authentication values sent to the host were invalid
+        objects.messagebox.showerror("Raspbot RCA: Auth Invalid", "Authentication sent to host was invalid! Are you sure the auth values are the same on both client/host configurations?")
         return False
     elif objects.acknowledgement_id == "rca-1.2:unknown_command":
         print("[FAIL]: Command unrecognized by host.") # command unrecognized warning
-        objects.messagebox.showwarning("Raspbot RCA: Unknown Command", "Command sent to host was not recognized, and was not executed. This should not be normal behavior. ")
+        objects.messagebox.showwarning("Raspbot RCA: Unknown Command", "Command sent to host was not recognized, and was not executed. This should not be normal behavior.")
         return False
+    elif objects.acknowledgement_id == "rca-1.2:buffer_size_invalid":
+        print("[FAIL]: Buffer size sent was invalid, and integer conversion failed! This should not be normal behavior.") # buffer size invalid
+        objects.messagebox.showerror("Raspbot RCA: Buffer Size Invalid", "Buffer size sent to host was not able to be converted into an integer, and is invalid! This should not be normal behavior.")
     else:
         objects.messagebox.showwarning("Raspbot RCA: Bad Acknowledgement", "The host has replied with an invalid acknowledgement ID." + "\n Received: " + str(objects.acknowledgement_num_id))
         print("[FAIL]: Did not receive an acknowledgement. Instead received: ") # invalid acknowledgement warning
