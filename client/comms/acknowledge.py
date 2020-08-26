@@ -8,8 +8,6 @@ Contains acknowledgement handle function.
 
 from comms import objects, interface
 
-# TODO implement 2003
-
 def send_acknowledgement(num_id):
     """
     Sends an acknowledgement byte string.

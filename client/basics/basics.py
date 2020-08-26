@@ -7,16 +7,29 @@ Handles exiting and configuration editing.
 """
 
 try:
-    from sys import exit as app_end
+    import sys
     import configparser
+    from time import gmtime, strftime
+    from main import origin_stdout, log_file_handle
 except ImportError as ImportErrorMessage:
-    app_end = None
+    sys = None
     configparser = None
+    gmtime = None
+    strftime = None
     print("[NAV][FAIL]: Import failed!")
     print(ImportErrorMessage)
 except ImportWarning as ImportWarningMessage:
     print("[NAV][FAIL]: Imports raised warnings.")
     print(ImportWarningMessage)
+pass
+
+def make_timestamp():
+    """
+    Generates timestamp from current UTC time.
+    """
+    print("[INFO]: Generating timestamps...")
+    timestamp = strftime("%b%d%Y%H%M%S"), gmtime()
+    return str(timestamp[0])
 pass
 
 def exit(status):
@@ -25,7 +38,9 @@ def exit(status):
     :return: none.
     """
     print("[INFO]: Stopping application...")
-    app_end(status)
+    sys.stdout = origin_stdout
+    log_file_handle.close()
+    sys.exit(status)
 pass
 
 def set_configuration(file, var, value, section, key, multi):

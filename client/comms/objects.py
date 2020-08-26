@@ -47,7 +47,7 @@ components = [[None], [None, None, None], [None], [None, None]] # components lis
 
 root_placeholder = tkinter.Toplevel()
 root_placeholder.withdraw() # prevents Tkinter from drawing a blank window, since this isn't an actual GUI, just a Toplevel object to allow net_status_data to be a tkinter.StringVar.
-net_status_data = tkinter.StringVar(root_placeholder) # TODO have main reference this variable, and have an update function invoked after a connect/disconnect
+net_status_data = tkinter.StringVar(root_placeholder)
 
 message_buffer_size = None # placeholder, will be overwritten by receiving socket input
 

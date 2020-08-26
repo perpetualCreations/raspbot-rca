@@ -8,31 +8,27 @@ Main client class.
 try:
     print("[INFO]: Starting imports...")
     from subprocess import call, Popen
-    from time import sleep, strftime, gmtime
-    import socket, configparser, multiprocessing, tkinter, ping3, imagezmq, cv2, win32gui, win32con
+    from time import sleep
+    import socket, configparser, tkinter, ping3, imagezmq, cv2, sys
     from tkinter import messagebox
     from ast import literal_eval
     from platform import system
     # RCA Modules
     import basics, comms, nav
 except ImportError as e:
+    sys = None
     literal_eval = None
     sleep = None
     Popen = None
-    strftime = None
-    gmtime = None
     tkinter = None
     messagebox = None
     call = None
     socket = None
     configparser = None
-    multiprocessing = None
     ping3 = None
     cv2 = None
     imagezmq = None
     system = None
-    win32con = None
-    win32gui = None
     # RCA Modules
     basics = None
     comms = None
@@ -43,6 +39,11 @@ except ImportWarning as e:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
     print(e)
 pass
+
+# logging init
+log_file_handle = open("logs/log-" + basics.basics.make_timestamp() + ".txt", "w")
+origin_stdout = sys.stdout
+sys.stdout = log_file_handle
 
 class client:
     """
@@ -434,11 +435,7 @@ class client:
         if self.report_content == "" and report_type != "PING":
             return None
         pass
-        print("[INFO]: Generating timestamps for report...")
-        timestamp = strftime("%b%d%Y%H%M%S"), gmtime()
-        timestamp_output = timestamp[0]
-        timestamp_str = str(timestamp_output)
-        file_report_name = report_type + "_report-" + timestamp_str + ".txt"
+        file_report_name = report_type + "_report-" + basics.basics.make_timestamp() + ".txt"
         print("[INFO]: Generating text file report...")
         file_report = open(file_report_name, "w+")
         file_report.write(content)

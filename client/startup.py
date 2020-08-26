@@ -13,7 +13,7 @@ import configparser
 from platform import system
 from tkinter import messagebox
 import tkinter
-from sys import exit as stop
+import sys
 
 root = tkinter.Tk()
 root.withdraw()
@@ -26,24 +26,28 @@ try:
     gui_hide_console = literal_eval(config_parse_load["GUI"]["hide_console"])
 except configparser.Error as ce:
     messagebox.showerror("Raspbot RCA: Startup Error", "Unable to load configurations. Check configuration files!")
-    stop(1)
+    sys.exit(1)
 except KeyError as ke:
     messagebox.showerror("Raspbot RCA: Startup Error", "Unable to load configurations. Check configuration files!")
-    stop(1)
+    sys.exit(1)
 except FileNotFoundError as nf:
     messagebox.showerror("Raspbot RCA: Startup Error", "Unable to load configurations. See if configuration file exists, it appears to be missing!")
-    stop(1)
+    sys.exit(1)
 pass
 
-if gui_hide_console is True:
-    if system() == "Windows":
-        call("pythonw main.py", shell = True) # pythonw hides console output.
+if system() == "Windows":
+    if gui_hide_console is True:
+        call("pythonw main.py", shell = True)
     else:
-        # assumes you are running a Linux system.
-        call("python main.py > /dev/null 2>&1", shell = True) # uses nohup to redirect output to /dev/null and any errors also to /dev/null.
+        call("python main.py", shell = True)
     pass
 else:
-    call("python main.py", shell = True) # normal execution, a console window will appear.
+    # assumes you are running a Linux system.
+    if gui_hide_console is True:
+        call("python main.py > /dev/null 2>&1", shell = True)
+    else:
+        call("python main.py", shell = True)
+    pass
 pass
 
 # below here is where logging options will be added.
