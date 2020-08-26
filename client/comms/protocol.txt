@@ -1,0 +1,61 @@
+### NOTICE ###
+This file outlines the Raspbot RCA communications protocol.
+It is only helpful for developers trying to modify the software or understand it.
+This was originally made for sanity checking the comms module, it may not be complete.
+TODO finish protocol outline and move to dedicated docs folder
+### NOTICE ###
+
+The protocol involves two computers, the onboard host computer in Raspbot's internals, and a separate client computer.
+Support for multiple client computers is currently not offered. To do so would require architectural changes and design decisions that are out of the current scope of the project.
+
+[Socket Structure]
+The communication protocol as mentioned above uses a host and client. The host is running two server sockets, one for main communications and the latter for camera signal.
+The client also runs two sockets, and like the host will reserve one for main communications and the other for camera signal.
+
+[Encryption and Security]
+
+# Encryption Protocol
+The communications protocol makes use of Salsa20 encryption, supplemented with HMAC. These two standards use strings to work, please change them in the comms module configuration file for both sides.
+
+# Security
+The communication protocol at connect/disconnect will use a common authentication string. This value is stored on the client in plaintext, however is stored as a hash on the host side.
+
+[Connect/Disconnect]
+
+# Pre-requisites
+To begin communications and operation, the client and host must be on the same network. It is recommended for the host to have a static IP address.
+Please see OS specific documentation on how to change your host IP address.
+The client must know this address, and also the main and camera network ports that the host is listening on. These values are configured in the comms module configuration file.
+
+The client when commanded will send a connection request to the host, initiating the connection process.
+It will then listen for a 1000 acknowledgement (general acknowledgement). Once it receives confirmation from the host, it will send the authentication string, as outlined in the Encryption and Security section.
+If the string is invalid, the host will deny the connection process, and a 2001 acknowledgement (invalid authentication) will be sent.
+If the string is valid however, the process will repeat for the camera socket.
+
+When disconnecting, socket.close() is invoked.
+
+[Send/Receive]
+
+# Pre-requisites
+The client must be connected to a host and must have finished authentication to send/receive.
+
+To send a message, first the length of the message must be sent. The length of a message may not exceed 4096 bytes, otherwise a 2000 acknowledgement (buffer size over specification) will be returned from the receiver.
+If the length is under or equal to 4096 bytes, the receiver will reply with a 1001 acknowledgement (buffer size ok).
+After sending the 1001 acknowledgement, it will begin listening for the message. The sender may now transmit the message.
+
+To receive a message, the receiver must be listening for the 4 byte message length to be used as the buffer size. If the buffer_size is over 4096 bytes, it will return a 2000 acknowledgement (buffer size over specification).
+If the length is under or equal to 4096 bytes, the receiver will reply with a 1001 acknowledgement (buffer size ok).
+The receiver then will listen for the message.
+
+[Acknowledgement]
+
+# Valid IDs
+A full list of acknowledgements and which are applicable for client/host and for sending/receiving can be found in the acknowledge module in comms.
+
+# How Acknowledgements are Sent/Received
+Acknowledgements are in a chicken/egg scenario. They are trying to send something to a receiver, however following standard rules also require and acknowledgement for the acknowledgement transmission, so buffer size can be transferred clearly.
+To mitigate this, receive has a clause: when ValueError is triggered, it checks if the buffer size was 4 sequential carat symbols.
+This logic is bound to ValueError because normally the buffer size is converted from a byte string to an integer to be then converted to an acknowledgement ID. If the byte string is unable to be converted (such as when it is 4 carat symbols), it will raise ValueError.
+If this check fails, exception logic continues. However if the check passes, the receive function sends 0999, as it recognizes this is an acknowledgement transmission, and is limited to 4 bytes, and does not need a buffer size transmission.
+The sender of the acknowledgement will listen for 4 bytes, that are filled by the previous 0999 byte string, before sending the acknowledgement ID, which again, is 4 bytes.
+The receiver listens for the 4 byte acknowledgement ID, and the acknowledgement is processed.

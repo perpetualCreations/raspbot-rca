@@ -8,7 +8,9 @@ Contains acknowledgement handle function.
 
 from comms import objects, interface
 
-def send_acknowledgement(id):
+# TODO implement 2003
+
+def send_acknowledgement(num_id):
     """
     Sends an acknowledgement byte string.
     Acknowledgments are used generally for confirming authentication and other specific processes (not general data transmission).
@@ -47,29 +49,19 @@ def send_acknowledgement(id):
     Description: Command sent to host was not recognized, and was not executed. This type of failure should never occur, and unless you have a modified client/host, should be reported immediately.
     ###### n/a for sending as client ######
 
-    :param id: ID of acknowledgement to be issued.
+    Number ID: 2003
+    ID: rca-1.2:buffer_size_invalid
+    Description: Not implemented! Reply when message length received is not an integer.
+
+    :param num_id: ID of acknowledgement to be issued.
     :return: none.
     """
-    try:
-        objects.acknowledgement_id = objects.acknowledgement_dictionary[objects.acknowledgement_num_id]
-    except KeyError as ke:
-        print("[FAIL]: Acknowledgement number ID to alphabetical ID conversion failed! See below for more details.")
-        print(ke)
-        return False
-    pass
-    if objects.acknowledgement_id == "rca-1.2:connection_acknowledge":
-        print("[INFO]: Received general acknowledgement.") # general acknowledgement
-        return True
-    elif objects.acknowledgement_id == "rca-1.2:buffer_size_ok":
-        print("[INFO]: Received buffer-size acknowledgement.") # buffer size acknowledgement
-        return True
-    elif objects.acknowledgement_id == "rca-1.2:buffer_size_over_spec":
-        print("[FAIL]: Message length exceeded set maximum buffer size (4096 bytes). This should not be normal behavior.") # buffer size over specification warning
-        objects.messagebox.showwarning("Raspbot RCA: Buffer Size Over Spec", "The message to be sent to the host exceeded the maximum buffer size of 4096 bytes. This should not be normal behavior. \nUnless the script files have been edited, a bug issue should be made.")
-        return False
+    if num_id in [1000, 1001, 2000]:
+        objects.socket_main.sendall(b"^^^^")
+        objects.socket_main.recv(4)
+        objects.socket_main.sendall(str(num_id).encode(encoding = "ascii", errors = "replace"))
     else:
-        print("[FAIL]: Invalid acknowledgement ID was issued! This should not be normal behavior.")
-        return None
+        print("[FAIL]: Tried to issue invalid acknowledgement. This should not be normal behavior.")
     pass
 pass
 
@@ -107,6 +99,10 @@ def receive_acknowledgement():
     Number ID: 2002
     ID: rca-1.2:unknown_command
     Description: Command sent to host was not recognized, and was not executed. This type of failure should never occur, and unless you have a modified client/host, should be reported immediately.
+
+    Number ID: 2003
+    ID: rca-1.2:buffer_size_invalid
+    Description: Not implemented! Reply when message length received is not an integer.
 
     :return: True/False boolean, only returns True when an acknowledgement is successfully received, otherwise returns False for errors.
     """

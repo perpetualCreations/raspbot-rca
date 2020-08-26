@@ -8,30 +8,23 @@ This script handles interfacing functions.
 
 from comms import objects, disconnect, acknowledge
 
-def send(message, acknowledgement):
+def send(message):
     """
     Wrapper for host.encrypt, formats output to be readable for sending, and accesses objects.socket_main to send it.
     This no longer requires to be used as socket.sendall(interface.send(self, b"message")).
     :param message: message to be encrypted.
-    :param acknowledgement: whether this transmission is an acknowledgement, marked with a boolean.
     :return: none
     """
-    if acknowledgement is False:
-        encrypted = encrypt(message)
-        if len(encrypted) > 4096:
-            print("[FAIL]: Message length is greater than 4096 bytes!")
-            return None
-        pass
-        objects.socket_main.sendall(str(len(encrypted)).encode(encoding = "ascii", errors = "replace"))
-        if acknowledge.receive_acknowledgement() is False:
-            return None
-        pass
-        objects.socket_main.sendall(encrypted[1] + b" " + encrypted[2] + b" " + encrypted[0])
-    else:
-        objects.socket_main.sendall(b"^^^^")
-        objects.socket_main.recv(4)
-        objects.socket_main.sendall(str(message).encode(encoding = "ascii", errors = "replace"))
+    encrypted = encrypt(message)
+    if len(encrypted) > 4096:
+        print("[FAIL]: Message length is greater than 4096 bytes!")
+        return None
     pass
+    objects.socket_main.sendall(str(len(encrypted)).encode(encoding = "ascii", errors = "replace"))
+    if acknowledge.receive_acknowledgement() is False:
+        return None
+    pass
+    objects.socket_main.sendall(encrypted[1] + b" " + encrypted[2] + b" " + encrypted[0])
 pass
 
 def receive():
@@ -55,6 +48,7 @@ def receive():
     pass
     if objects.message_buffer_size > 4096:
         print("[FAIL]: Message length from host exceeds 4096 bytes, this is above the maximum specification!")
+        acknowledge.send_acknowledgement(2000)
         return None
     else:
         acknowledge.send_acknowledgement(1001)
