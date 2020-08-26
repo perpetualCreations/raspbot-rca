@@ -6,30 +6,61 @@ Made by Taian Chen
 This script handles interfacing functions.
 """
 
-from comms import objects, disconnect
+from comms import objects, disconnect, acknowledge
 
-def send(message):
+def send(message, acknowledgement):
     """
     Wrapper for host.encrypt, formats output to be readable for sending, and accesses objects.socket_main to send it.
     This no longer requires to be used as socket.sendall(interface.send(self, b"message")).
     :param message: message to be encrypted.
+    :param acknowledgement: whether this transmission is an acknowledgement, marked with a boolean.
     :return: none
     """
-    encrypted = encrypt(message)
-    objects.socket_main.sendall(encrypted[1] + b" " + encrypted[2] + b" " + encrypted[0])
+    if acknowledgement is False:
+        encrypted = encrypt(message)
+        if len(encrypted) > 4096:
+            print("[FAIL]: Message length is greater than 4096 bytes!")
+            return None
+        pass
+        objects.socket_main.sendall(str(len(encrypted)).encode(encoding = "ascii", errors = "replace"))
+        if acknowledge.receive_acknowledgement() is False:
+            return None
+        pass
+        objects.socket_main.sendall(encrypted[1] + b" " + encrypted[2] + b" " + encrypted[0])
+    else:
+        objects.socket_main.sendall(b"^^^^")
+        objects.socket_main.recv(4)
+        objects.socket_main.sendall(str(message).encode(encoding = "ascii", errors = "replace"))
+    pass
 pass
-
 
 def receive():
     """
     Wrapper for host.decrypt, formats received input and returns decrypted message. socket.socket_main.recv is now built-in.
+    interface.receive has no termination-based method of detecting the end of a message. Instead, it receives 4 bytes,
     This no longer requires to be used as host.receive(self, socket.receive(integer)).
     :return: decrypted message.
     """
+    try:
+        objects.buffer_size = int(objects.socket_main.recv(4).decode(encoding = "utf-8", errors = "replace"))
+    except ValueError as ve:
+        if objects.message_buffer_size == "^^^^": # if what should be the buffer size for receiving the message is 4 sequential carat characters, recognize this as an acknowledgement transmission.
+            objects.socket_main.sendall(b"0999")
+            acknowledge.receive_acknowledgement()
+        else:
+            print("[FAIL]: Message length from host is invalid! See below for more details.")
+            print(ve)
+            return None
+        pass
+    pass
+    if objects.message_buffer_size > 4096:
+        print("[FAIL]: Message length from host exceeds 4096 bytes, this is above the maximum specification!")
+        return None
+    else:
+
     socket_input_spliced = objects.socket_main.recv(4096).split() # TODO is this the right usage of recv???
     return decrypt(socket_input_spliced[2], socket_input_spliced[1], socket_input_spliced[0])
 pass
-
 
 def encrypt(byte_input):
     """
@@ -46,7 +77,6 @@ def encrypt(byte_input):
     validation = objects.HMAC.new(objects.hmac_key, msg = ciphering.encrypt(byte_input), digestmod = objects.SHA256)
     return [ciphering.encrypt(byte_input), ciphering.nonce, validation.hexdigest()]
 pass
-
 
 def decrypt(encrypted_input, validate, nonce):
     """

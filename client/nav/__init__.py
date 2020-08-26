@@ -11,7 +11,7 @@ from nav import edit, gui, nav, objects
 config_parse_load = objects.configparser.ConfigParser()
 
 try:
-    config_parse_load.read(objects.getcwd().strip("comms") + "hardware.cfg")
+    config_parse_load.read("hardware.cfg")
     objects.components[0][0] = objects.literal_eval(config_parse_load["HARDWARE"]["cam"])
     objects.components[1][0] = objects.literal_eval(config_parse_load["HARDWARE"]["sensehat"])
     objects.components[1][1] = objects.literal_eval(config_parse_load["HARDWARE"]["distance"])

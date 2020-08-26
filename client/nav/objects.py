@@ -13,7 +13,7 @@ try:
     from subprocess import call, Popen
     from time import sleep
     import configparser
-    import comms
+    from main import comms # this is just utterly stupid. but it probably works. probably. i feel like theres a better way of doing this.
     import basics
     from ast import literal_eval
     from os import getcwd

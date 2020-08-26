@@ -1,18 +1,20 @@
 """
-# Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
-# Made by Taian Chen
+Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
+Made by Taian Chen
+
+Main client class.
 """
 
 try:
     print("[INFO]: Starting imports...")
     from subprocess import call, Popen
     from time import sleep, strftime, gmtime
-    import socket, configparser, multiprocessing, tkinter, ping3, imagezmq, cv2
+    import socket, configparser, multiprocessing, tkinter, ping3, imagezmq, cv2, win32gui, win32con
     from tkinter import messagebox
     from ast import literal_eval
+    from platform import system
     # RCA Modules
     import basics, comms, nav
-    from platform import system
 except ImportError as e:
     literal_eval = None
     sleep = None
@@ -29,6 +31,8 @@ except ImportError as e:
     cv2 = None
     imagezmq = None
     system = None
+    win32con = None
+    win32gui = None
     # RCA Modules
     basics = None
     comms = None
@@ -52,10 +56,11 @@ class client:
         print("[INFO]: Declaring variables...")
         self.connect_retries = 0
         self.components = [[None], [None, None, None], [None], [None, None]] # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
-        self.ping_text = None
-        self.ping_button = None
-        self.ping_results = ""
-        self.report_content = ""
+        self.ping_text = None # GUI element referenced across two functions, has a class variable to allow for it
+        self.ping_button = None # GUI element referenced across two functions, has a class variable to allow for it
+        self.ping_results = "" # placeholder, overwritten by any return from ping functions to be displayed as results
+        self.report_content = "" # placeholder, overwritten by any return from report functions
+        self.gui_hide_console = False # configuration variable to hide/show Python console
         print("[INFO]: Loading configurations...")
         config_parse_load = configparser.ConfigParser()
         try:
@@ -77,31 +82,49 @@ class client:
             print("[FAIL]: Failed to load configurations! Configuration file is missing.")
             print(nf)
         pass
+        config_parse_load = configparser.ConfigParser()
+        try:
+            config_parse_load.read("main.cfg")
+            self.gui_hide_console = literal_eval(config_parse_load["GUI"]["hide_console"])
+        except configparser.Error as ce:
+            print("[FAIL]: Failed to load configurations! See below for details.")
+            print(ce)
+        except KeyError as ke:
+            print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
+            print(ke)
+        except FileNotFoundError as nf:
+            print("[FAIL]: Failed to load configurations! Configuration file is missing.")
+            print(nf)
+        pass
         print("[INFO]: Starting GUI...")
         hidden_root = tkinter.Tk() # placeholder Tk object to withdraw the blank window created by messagebox.
         self.root = tkinter.Toplevel()
         self.root.title("Raspbot RCA: Client")
         self.root.configure(bg = "#344561")
         self.root.geometry('{}x{}'.format(1200, 530))
-        self.root.resizable(width=False, height=False)
+        self.root.resizable(width = False, height = False)
         menu = tkinter.Menu(self.root)
         self.root.config(menu = menu)
         app_menu = tkinter.Menu(menu)
+        console_display_menu = tkinter.Menu(app_menu)
         hardware_menu = tkinter.Menu(app_menu)
         base_set_menu = tkinter.Menu(hardware_menu)
-        base_set_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration(self.components[0][0], True, "HARDWARE", "cam", False))
-        base_set_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration(self.components[1][0], False, "HARDWARE", "cam", False))
+        base_set_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.components[0][0], True, "HARDWARE", "cam", False))
+        base_set_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.components[1][0], False, "HARDWARE", "cam", False))
         rfp_enceladus_menu = tkinter.Menu(hardware_menu)
-        rfp_enceladus_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration([self.components[1][0], self.components[1][1], self.components[1][2]], [True, True, True], ["HARDWARE", "HARDWARE", "HARDWARE"], ["sensehat", "distance", "dust"], True))
-        rfp_enceladus_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration([self.components[1][0], self.components[1][1], self.components[1][2]], [False, False, False], ["HARDWARE", "HARDWARE", "HARDWARE"], ["sensehat", "distance", "dust"], True))
+        rfp_enceladus_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration("hardware.cfg", [self.components[1][0], self.components[1][1], self.components[1][2]], [True, True, True], ["HARDWARE", "HARDWARE", "HARDWARE"], ["sensehat", "distance", "dust"], True))
+        rfp_enceladus_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration("hardware.cfg", [self.components[1][0], self.components[1][1], self.components[1][2]], [False, False, False], ["HARDWARE", "HARDWARE", "HARDWARE"], ["sensehat", "distance", "dust"], True))
         upgrade_1_menu = tkinter.Menu(hardware_menu)
-        upgrade_1_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration(self.components[2][0], True, "HARDWARE", "charger", False))
-        upgrade_1_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration(self.components[2][0], False, "HARDWARE", "charger", False))
+        upgrade_1_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.components[2][0], True, "HARDWARE", "charger", False))
+        upgrade_1_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.components[2][0], False, "HARDWARE", "charger", False))
         hardware_menu.add_cascade(label = "Base Set", menu = base_set_menu)
         hardware_menu.add_cascade(label = "RFP Enceladus", menu = rfp_enceladus_menu)
         hardware_menu.add_cascade(label = "Upgrade #1", menu = upgrade_1_menu)
         app_menu.add_command(label = "Edit Configs", command = lambda: client.set_configuration_gui())
         app_menu.add_cascade(label = "Edit Hardware Set", menu = hardware_menu)
+        app_menu.add_cascade(label = "Toggle Console Window at Startup", menu = console_display_menu)
+        console_display_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.gui_hide_console, True, "GUI", "hide_console", False))
+        console_display_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.gui_hide_console, False, "GUI", "hide_console", False))
         # app_menu.add_command(label = "AquaSilva Ops", command = None) AquaSilva project is suspended, option has been disabled.
         app_menu.add_command(label = "Exit", command = lambda: basics.basics.exit(0))
         menu.add_cascade(label = "App", menu = app_menu)
@@ -208,6 +231,7 @@ class client:
         nav_control_load_button.grid(row = 1, column = 0, pady = (5, 0))
         nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: nav.edit.nav_edit())
         nav_control_edit_button.grid(row = 2, column = 0, pady = (5, 0))
+        print("[INFO]: Loading complete. If you see a console window and wish to hide it, please disable it under the top menu, under App.")
         self.root.master.withdraw()
         hidden_root.withdraw()
         self.root.mainloop()

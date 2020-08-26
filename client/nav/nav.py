@@ -26,7 +26,7 @@ def nav_execute(direction, run_time):
         return None
     pass
     if get_distance is True:
-        objects.basics.process.create_process(nav_telemetry_get)
+        objects.basics.process.create_process(nav_telemetry_get, ())
     pass
 pass
 

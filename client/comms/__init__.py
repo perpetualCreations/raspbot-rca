@@ -9,11 +9,11 @@ Please note self.dock_status is now comms.objects.dock_status instead.
 print("[INFO]: Initiating comms module...")
 
 from comms import interface, connect, disconnect, acknowledge, objects
-# TODO add module to handle disconnects from host
+# TODO add error handling for disconnect
 
 config_parse_load = objects.configparser.ConfigParser()
 try:
-    config_parse_load.read("comms.cfg")
+    config_parse_load.read("comms/comms.cfg")
     objects.key = (objects.MD5.new((config_parse_load["ENCRYPT"]["key"]).encode(encoding = "ascii", errors = "replace")).hexdigest()).encode(encoding = "ascii", errors = "replace") # this was previously split into a multi-liner instead of an one-liner. why? i'm not sure why there's an extra encode either
     objects.hmac_key = config_parse_load["ENCRYPT"]["hmac_key"]
     objects.auth = (config_parse_load["ENCRYPT"]["auth"]).encode(encoding = "ascii", errors = "replace") # not sure why there's an extra encode here either, the auth message sent to host should be converted into a byte string anyways
@@ -32,7 +32,7 @@ except FileNotFoundError as nf:
 pass
 
 try:
-    config_parse_load.read(objects.getcwd().strip("comms") + "hardware.cfg")
+    config_parse_load.read("hardware.cfg")
     objects.components[0][0] = objects.literal_eval(config_parse_load["HARDWARE"]["cam"])
     objects.components[1][0] = objects.literal_eval(config_parse_load["HARDWARE"]["sensehat"])
     objects.components[1][1] = objects.literal_eval(config_parse_load["HARDWARE"]["distance"])

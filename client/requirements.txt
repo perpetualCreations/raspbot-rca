@@ -1,12 +1,12 @@
-ping3
+ping3>=2.4.0
 pyserial
 pycryptodome
 opencv-contrib-python
 numpy
 pyzmq
 imutils
-imagezmq
-future
+imagezmq>=1.0.1
+future>=0.18.2
 Pillow >= 7.1.0
 pyAudioAnalysis
 psutil

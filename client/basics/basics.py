@@ -28,9 +28,10 @@ def exit(status):
     app_end(status)
 pass
 
-def set_configuration(var, value, section, key, multi):
+def set_configuration(file, var, value, section, key, multi):
     """
     Edits entry in configuration file and applies new edit to variables.
+    :param file: configuration file.
     :param var: variable being updated.
     :param value: value to be assigned to variable and entered into configuration file.
     :param section: section in the configuration file to be edited.
@@ -50,7 +51,7 @@ def set_configuration(var, value, section, key, multi):
             var[parameter_key] = value[parameter_key]
             config_parse_edit = configparser.ConfigParser()
             config_parse_edit[section[parameter_key]][key[parameter_key]] = var[parameter_key]
-            with open("main.cfg", "w") as config_write:
+            with open(file, "w") as config_write:
                 config_parse_edit.write(config_write)
             pass
             cycles -= 1
@@ -59,10 +60,8 @@ def set_configuration(var, value, section, key, multi):
     else:
         var = value
         config_parse_edit = configparser.ConfigParser()
-        print(section)
-        print(key)
         config_parse_edit[section][key] = var
-        with open("main.cfg", "w") as config_write:
+        with open(file, "w") as config_write:
             config_parse_edit.write(config_write)
         pass
         config_write.close()
