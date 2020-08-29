@@ -145,12 +145,10 @@ class client:
         self.vitals_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 0))
         vitals_refresh_button = tkinter.Button(vitals_frame, text = "Refresh", bg = "white", fg = "black", command = lambda: client.vitals_refresh(self, False))
         vitals_refresh_button.grid(row = 2, column = 0, padx = (5, 5), pady = (10, 5))
-        cam_view_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0)
-        cam_view_frame.grid(row = 0, column = 2, padx = (10, 0), pady = (15, 0))
         multi_frame = tkinter.Frame(self.root, bg = "#344561")
         multi_frame.grid(row = 1, column = 0, padx = (10, 0), pady = (10, 0))
         net_frame = tkinter.Frame(multi_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        net_frame.grid(row = 0, column = 0, padx = (0, 5))
+        net_frame.grid(row = 0, column = 0, padx = (0, 8))
         net_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", text = "Network", font = ("Calibri", 12))
         net_label.grid(row = 0, column = 0, padx = (5, 0))
         comms.objects.net_status_data.set("Status: " + "Disconnected")
@@ -163,7 +161,7 @@ class client:
         net_help_button = tkinter.Button(net_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Net Help", "This panel controls your network connection with the bot. See the NET options in menu bar for additional tools and actions."))
         net_help_button.grid(row = 4, column = 0, padx = (5, 150), pady = (71, 5))
         report_frame = tkinter.Frame(multi_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        report_frame.grid(row = 0, column = 2, padx = (5, 0))
+        report_frame.grid(row = 0, column = 2, padx = (8, 0))
         report_label = tkinter.Label(report_frame, bg = "#506a96", fg = "white", text = "Reports", font = ("Calibri", 12))
         report_label.grid(row = 0, column = 0, padx = (5, 0))
         report_type_list = [
@@ -183,7 +181,7 @@ class client:
         report_save_button = tkinter.Button(report_frame, bg = "white", fg = "black", text = "Save", font = ("Calibri", 12), width = 10, command = lambda: client.report_save(self, report_type_data.get(), self.report_content))
         report_save_button.grid(row = 4, column = 0, padx = (5, 0), pady = (5, 0))
         report_help_button = tkinter.Button(report_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Report Help", "This panel allows you to request, view, and save reports of a vareity of types. These include computer hardware checks (CH Check) and science reports (Science, RFP Enceladus)."))
-        report_help_button.grid(row = 5, column = 0, padx = (5, 150), pady = (22, 7))
+        report_help_button.grid(row = 5, column = 0, padx = (5, 150), pady = (25, 6))
         control_frame = tkinter.Frame(self.root, bg = "#344561")
         control_frame.grid(row = 1 , column = 3, padx = (5, 0))
         os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
@@ -192,12 +190,12 @@ class client:
         os_control_update_button.grid(row = 0, column = 0, padx = (5, 5), pady = (40, 5))
         os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Shutdown", height = 1, width = 10, font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper(self))
         os_control_shutdown_button.grid(row = 1, column = 0, padx = (5, 5), pady = (0, 5))
-        os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Reboot", height = 1, width = 10, font = ("Calibri", 12), command = lambda: comms.interface.send(b"command_reboot"))
+        os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Reboot", height = 1, width = 10, font = ("Calibri", 12),command = lambda: comms.interface.send(b"command_reboot"))
         os_control_reboot_button.grid(row = 2, column = 0, padx = (5, 5), pady = (0, 10))
         os_control_notice_button = tkinter.Button(os_control_frame, bg = "#506a96", fg = "white", text = "!", height = 1, width = 1, command = lambda: messagebox.showinfo("Raspbot RCA: OS Command Notice", "When using this panel's functions, please note that:" + "\n" + "1. OS Update assumes that your host OS is Debian or Debian-based, and updates through APT." + "\n" + "2. Shutdown and reboot uses Linux's built-in functions to do so through shell." + "\n" + "3. After shutting down, there is no way to turn the bot back on besides cutting and restoring power. Please use cautiously."))
         os_control_notice_button.grid(row = 3, column = 0, padx = (1, 80), pady = (50, 2))
         nav_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        nav_control_frame.grid(row = 0, column = 1, padx = (10, 0))
+        nav_control_frame.grid(row = 0, column = 1, padx = (10, 0), pady = (0, 0))
         nav_control_label = tkinter.Label(nav_control_frame, bg = "#506a96", fg = "white", text = "Navigation", font = ("Calibri", 12))
         nav_control_label.grid(row = 0, column = 0, padx = (10, 20), pady = (5, 0))
         nav_control_help = tkinter.Button(nav_control_frame, bg = "#506a96", fg = "white", text = "?", font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Nav Help", "This panel allows you to control the bot's movement through selections." + "\n" + "To chose a direction or action, select an option from the dropdown menu, and then enter the number of seconds the motors should be run." + "\n" + "Alternatively, you can create and load navigations through the buttons below Execute Nav. These create another interface for you to write scripts and load them." + "\n" + "It should be noted in some cases navigation will be unavailable (i.e when charging)."))
@@ -226,9 +224,17 @@ class client:
         nav_control_execute_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Execute Nav", height = 1, width = 15, font = ("Calibri", 12), command = lambda: nav.nav.nav_execute(nav_type_data.get(), float(nav_control_time_entry_data.get())))
         nav_control_execute_button.grid(row = 0, column = 0)
         nav_control_load_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Load Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: nav.gui.nav_load_gui())
-        nav_control_load_button.grid(row = 1, column = 0, pady = (5, 0))
+        nav_control_load_button.grid(row = 1, column = 0, pady = (4, 0))
         nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: nav.edit.nav_edit())
-        nav_control_edit_button.grid(row = 2, column = 0, pady = (5, 0))
+        nav_control_edit_button.grid(row = 2, column = 0, pady = (4, 0))
+        nav_status_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0, height = 50, width = 60)
+        nav_status_frame.grid(row = 0, column = 1)
+        nav_status_label = tkinter.Label(nav_status_frame, bg = "#506a96", fg = "white", text = "Navigation Telemetry", font = ("Calibri", 12))
+        nav_status_label.grid(row = 0, column = 0, padx = (5, 0))
+        nav_status_text = tkinter.Text(nav_status_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 50, font = ("Calibri", 10))
+        nav_status_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 0))
+        nav_status_refresh_button = tkinter.Button(nav_status_frame, text = "Refresh", bg = "white", fg = "black", command = lambda: client.vitals_refresh(self, False))
+        nav_status_refresh_button.grid(row = 2, column = 0, padx = (5, 5), pady = (10, 5))
         print("[INFO]: Loading complete. If you see a console window and wish to hide it, please disable it under the top menu, under App.")
         self.root.master.withdraw()
         hidden_root.withdraw()
@@ -448,7 +454,6 @@ class client:
             return None
         pass
         comms.objects.dock_status = True
-        # TODO add logic for dock that triggers other changes
     pass
     def undock(self):
         """
@@ -460,7 +465,6 @@ class client:
             return None
         pass
         comms.objects.dock_status = False
-        # TODO add logic for dock that triggers other changes
     pass
     def os_control_shutdown_wrapper(self):
         """
