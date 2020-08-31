@@ -34,12 +34,15 @@ except ImportError as e:
     nav = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
+    exit(1)
 except ImportWarning as e:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
     print(e)
+    exit(1)
 pass
 
-# logging
+# logging, bottom line is to stop PyCharm from throwing a warning when ImportError is raised and basics becomes a None boolean object.
+# noinspection PyUnboundLocalVariable
 basics.basics.log_init()
 
 class client:
@@ -97,6 +100,7 @@ class client:
         print("[INFO]: Starting GUI...")
         hidden_root = tkinter.Tk() # placeholder Tk object to withdraw the blank window created by messagebox.
         self.root = tkinter.Toplevel()
+        self.root.protocol("WM_DELETE_WINDOW", basics.basics.window_close_exit)
         self.root.title("Raspbot RCA: Client")
         self.root.configure(bg = "#344561")
         self.root.geometry('{}x{}'.format(1200, 530))
@@ -146,7 +150,7 @@ class client:
         vitals_refresh_button = tkinter.Button(vitals_frame, text = "Refresh", bg = "white", fg = "black", command = lambda: client.vitals_refresh(self, False))
         vitals_refresh_button.grid(row = 2, column = 0, padx = (5, 5), pady = (10, 5))
         multi_frame = tkinter.Frame(self.root, bg = "#344561")
-        multi_frame.grid(row = 1, column = 0, padx = (10, 0), pady = (10, 0))
+        multi_frame.grid(row = 1, column = 0, padx = (18, 8), pady = (10, 0))
         net_frame = tkinter.Frame(multi_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
         net_frame.grid(row = 0, column = 0, padx = (0, 8))
         net_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", text = "Network", font = ("Calibri", 12))
@@ -159,7 +163,7 @@ class client:
         net_connect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Connect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: comms.connect.connect())
         net_connect_button.grid(row = 3, column = 0, padx = (5, 0))
         net_help_button = tkinter.Button(net_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Net Help", "This panel controls your network connection with the bot. See the NET options in menu bar for additional tools and actions."))
-        net_help_button.grid(row = 4, column = 0, padx = (5, 150), pady = (71, 5))
+        net_help_button.grid(row = 4, column = 0, padx = (6, 149), pady = (71, 5))
         report_frame = tkinter.Frame(multi_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
         report_frame.grid(row = 0, column = 2, padx = (8, 0))
         report_label = tkinter.Label(report_frame, bg = "#506a96", fg = "white", text = "Reports", font = ("Calibri", 12))
@@ -181,11 +185,11 @@ class client:
         report_save_button = tkinter.Button(report_frame, bg = "white", fg = "black", text = "Save", font = ("Calibri", 12), width = 10, command = lambda: client.report_save(self, report_type_data.get(), self.report_content))
         report_save_button.grid(row = 4, column = 0, padx = (5, 0), pady = (5, 0))
         report_help_button = tkinter.Button(report_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Report Help", "This panel allows you to request, view, and save reports of a vareity of types. These include computer hardware checks (CH Check) and science reports (Science, RFP Enceladus)."))
-        report_help_button.grid(row = 5, column = 0, padx = (5, 150), pady = (25, 6))
+        report_help_button.grid(row = 5, column = 0, padx = (6, 149), pady = (27, 4))
         control_frame = tkinter.Frame(self.root, bg = "#344561")
-        control_frame.grid(row = 1 , column = 3, padx = (5, 0))
+        control_frame.grid(row = 1 , column = 1, padx = (8, 0))
         os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        os_control_frame.grid(row = 0, column = 0, pady = (10, 0))
+        os_control_frame.grid(row = 0, column = 0, padx = (0, 8), pady = (10, 0))
         os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", height = 1, width = 10, font = ("Calibri", 12), command = lambda: comms.interface.send(b"command_update"))
         os_control_update_button.grid(row = 0, column = 0, padx = (5, 5), pady = (40, 5))
         os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Shutdown", height = 1, width = 10, font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper(self))
@@ -193,7 +197,7 @@ class client:
         os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Reboot", height = 1, width = 10, font = ("Calibri", 12),command = lambda: comms.interface.send(b"command_reboot"))
         os_control_reboot_button.grid(row = 2, column = 0, padx = (5, 5), pady = (0, 10))
         os_control_notice_button = tkinter.Button(os_control_frame, bg = "#506a96", fg = "white", text = "!", height = 1, width = 1, command = lambda: messagebox.showinfo("Raspbot RCA: OS Command Notice", "When using this panel's functions, please note that:" + "\n" + "1. OS Update assumes that your host OS is Debian or Debian-based, and updates through APT." + "\n" + "2. Shutdown and reboot uses Linux's built-in functions to do so through shell." + "\n" + "3. After shutting down, there is no way to turn the bot back on besides cutting and restoring power. Please use cautiously."))
-        os_control_notice_button.grid(row = 3, column = 0, padx = (1, 80), pady = (50, 2))
+        os_control_notice_button.grid(row = 3, column = 0, padx = (5, 75), pady = (48, 4))
         nav_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
         nav_control_frame.grid(row = 0, column = 1, padx = (10, 0), pady = (0, 0))
         nav_control_label = tkinter.Label(nav_control_frame, bg = "#506a96", fg = "white", text = "Navigation", font = ("Calibri", 12))
@@ -228,7 +232,7 @@ class client:
         nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: nav.edit.nav_edit())
         nav_control_edit_button.grid(row = 2, column = 0, pady = (4, 0))
         nav_status_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0, height = 50, width = 60)
-        nav_status_frame.grid(row = 0, column = 1)
+        nav_status_frame.grid(row = 0, column = 1, pady = (15, 0))
         nav_status_label = tkinter.Label(nav_status_frame, bg = "#506a96", fg = "white", text = "Navigation Telemetry", font = ("Calibri", 12))
         nav_status_label.grid(row = 0, column = 0, padx = (5, 0))
         nav_status_text = tkinter.Text(nav_status_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 50, font = ("Calibri", 10))
@@ -240,6 +244,7 @@ class client:
         hidden_root.withdraw()
         self.root.mainloop()
     pass
+
     def vitals_refresh(self, loop):
         """
         Requests bot vitals.
@@ -269,6 +274,7 @@ class client:
         pass
         sleep(1)
     pass
+
     @staticmethod
     def set_configuration_gui():
         """
@@ -286,6 +292,7 @@ class client:
             messagebox.showerror("Raspbot RCA: OS Unsupported", "Client OS is unsupported, please manually edit configuration! The accepted operating systems are Linux and Linux distributions, and Windows. If you believe this is a mistake please open an issue on the repository page.")
         pass
     pass
+
     @staticmethod
     def ping():
         """
@@ -320,6 +327,7 @@ class client:
             return result
         pass
     pass
+
     def ping_wrapper(self):
         """
         Wrapper for client.ping() for ping_gui.
@@ -350,6 +358,7 @@ class client:
         self.ping_text.update_idletasks()
         self.ping_text.configure(state = tkinter.DISABLED)
     pass
+
     def ping_gui(self):
         """
         GUI tool for pinging IP addresses.
@@ -372,6 +381,7 @@ class client:
         close_button.grid(row = 3, column = 0, pady = (0, 10))
         ping_gui.mainloop()
     pass
+
     def report_collect(self, report_type):
         """
         Sends a report request to host with given type and sets self.report_content with results.
@@ -402,6 +412,7 @@ class client:
             return None
         pass
     pass
+
     def report_gui(self, report_type, content):
         """
         Views a report with given type and contents.
@@ -428,6 +439,7 @@ class client:
         graphics_report_close_button.grid(row = 1, column = 0, pady = (0, 10))
         report_gui.mainloop()
     pass
+
     def report_save(self, report_type, content):
         """
         Saves a report with given type and contents.
@@ -445,6 +457,7 @@ class client:
         file_report.close()
         print("[INFO]: Report saved.")
     pass
+
     def dock(self):
         """
         Instructs host to dock with charger station.
@@ -455,6 +468,7 @@ class client:
         pass
         comms.objects.dock_status = True
     pass
+
     def undock(self):
         """
         Instructs host to undock from charger station.
@@ -466,6 +480,7 @@ class client:
         pass
         comms.objects.dock_status = False
     pass
+
     def os_control_shutdown_wrapper(self):
         """
         Creates dialogue asking for user to confirm to shutdown bot.
@@ -479,6 +494,7 @@ class client:
             return None
         pass
     pass
+
     @staticmethod
     def led_command(command, frame):
         """
@@ -504,6 +520,7 @@ class client:
             comms.interface.send(command_frame.encode(encoding = "ascii", errors = "replace"))
         pass
     pass
+
     def led_gui(self):
         """
         If SenseHAT is included in hardware configuration, creates GUI for controlling LED matrix on SenseHAT.

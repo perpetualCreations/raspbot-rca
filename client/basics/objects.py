@@ -7,7 +7,9 @@ Contains objects for module, including any package imports. Interact with these 
 """
 
 try:
-    import multiprocessing
+    import multiprocessing, sys, configparser
+    from time import gmtime, strftime
+    from tkinter import messagebox
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Import failed!")
     print(ImportErrorMessage)

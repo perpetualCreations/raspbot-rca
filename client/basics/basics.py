@@ -6,24 +6,7 @@ Made by Taian Chen
 Handles exiting and configuration editing.
 """
 
-try:
-    import sys
-    import configparser
-    from time import gmtime, strftime
-    from basics import objects
-except ImportError as ImportErrorMessage:
-    sys = None
-    configparser = None
-    gmtime = None
-    strftime = None
-    objects = None
-    origin_stdout = None
-    print("[NAV][FAIL]: Import failed!")
-    print(ImportErrorMessage)
-except ImportWarning as ImportWarningMessage:
-    print("[NAV][FAIL]: Imports raised warnings.")
-    print(ImportWarningMessage)
-pass
+from basics import objects
 
 def log_init():
     """
@@ -31,8 +14,8 @@ def log_init():
     :return: none.
     """
     objects.log_file_handle = open("logs/log-" + make_timestamp() + ".txt", "w")
-    objects.origin_stdout = sys.stdout
-    sys.stdout = objects.log_file_handle
+    objects.origin_stdout = objects.sys.stdout
+    objects.sys.stdout = objects.log_file_handle
 pass
 
 def make_timestamp():
@@ -41,8 +24,18 @@ def make_timestamp():
     :return: none.
     """
     print("[INFO]: Generating timestamps...")
-    timestamp = strftime("%b%d%Y%H%M%S"), gmtime()
+    timestamp = objects.strftime("%b%d%Y%H%M%S"), objects.gmtime()
     return str(timestamp[0])
+pass
+
+def window_close_exit():
+    """
+    Wrapper for exit, linked to protocol handler for when the GUI window is closed.
+    :return: 
+    """
+    if objects.messagebox.askyesno("Raspbot RCA: Quit?", "Are you sure you want to exit?") is True:
+        exit(0)
+    pass
 pass
 
 def exit(status):
@@ -51,9 +44,9 @@ def exit(status):
     :return: none.
     """
     print("[INFO]: Stopping application...")
-    sys.stdout = objects.origin_stdout
+    objects.sys.stdout = objects.origin_stdout
     objects.log_file_handle.close()
-    sys.exit(status)
+    objects.sys.exit(status)
 pass
 
 def set_configuration(file, var, value, section, key, multi):
@@ -77,7 +70,7 @@ def set_configuration(file, var, value, section, key, multi):
         while cycles != 0:
             parameter_key = cycles - 1
             var[parameter_key] = value[parameter_key]
-            config_parse_edit = configparser.ConfigParser()
+            config_parse_edit = objects.configparser.ConfigParser()
             config_parse_edit[section[parameter_key]][key[parameter_key]] = var[parameter_key]
             with open(file, "w") as config_write:
                 config_parse_edit.write(config_write)
@@ -87,7 +80,7 @@ def set_configuration(file, var, value, section, key, multi):
         config_write.close()
     else:
         var = value
-        config_parse_edit = configparser.ConfigParser()
+        config_parse_edit = objects.configparser.ConfigParser()
         config_parse_edit[section][key] = var
         with open(file, "w") as config_write:
             config_parse_edit.write(config_write)
