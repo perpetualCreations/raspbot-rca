@@ -60,13 +60,9 @@ def nav_telemetry_get():
         nav_telemetry = objects.comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
         if nav_telemetry == "rca-1.2:nav_end":
             stop = True
-            content = "[END]"
+            objects.nav_telemetry_text = "[END]"
         else:
-            content = nav_telemetry
+            objects.nav_telemetry_text = nav_telemetry
         pass
-        objects.nav_telemetry_text.configure(state = objects.tkinter.NORMAL)
-        objects.nav_telemetry_text.insert("1.0", content)
-        objects.nav_telemetry_text.update_idletasks()
-        objects.nav_telemetry_text.configure(state = objects.tkinter.DISABLED)
     pass
 pass

@@ -30,4 +30,4 @@ nav_instruction_line = None
 
 components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
 
-nav_telemetry_text = None # TODO when telemetry text box is added to the main GUI, apply this variable as textvariable in text box.
+nav_telemetry_text = None

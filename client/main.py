@@ -235,10 +235,13 @@ class client:
         nav_status_frame.grid(row = 0, column = 1, padx = (12, 0), pady = (15, 0))
         nav_status_label = tkinter.Label(nav_status_frame, bg = "#506a96", fg = "white", text = "Navigation Telemetry", font = ("Calibri", 12))
         nav_status_label.grid(row = 0, column = 0, padx = (5, 0))
-        nav_status_text = tkinter.Text(nav_status_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 53, font = ("Calibri", 10))
-        nav_status_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 0))
+        self.nav_status_text = tkinter.Text(nav_status_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 53, font = ("Calibri", 10))
+        self.nav_status_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 0))
         nav_status_refresh_button = tkinter.Button(nav_status_frame, text = "Refresh", bg = "white", fg = "black", command = lambda: client.vitals_refresh(self, False))
         nav_status_refresh_button.grid(row = 2, column = 0, padx = (5, 5), pady = (10, 5))
+        print("[INFO]: Multiprocessing for main GUI starting...")
+        self.process_vitals_refresh = basics.process.create_process(client.vitals_refresh, (self, True))
+        self.process_nav_telemetry_refresh = basics.process.create_process(client.nav_telemetry_refresh, (self, True))
         print("[INFO]: Loading complete. If you see a console window and wish to hide it, please disable it under the top menu, under App.")
         self.root.master.withdraw()
         hidden_root.withdraw()
@@ -271,6 +274,30 @@ class client:
             self.vitals_text.insert("1.0", vitals_text_data)
             self.vitals_text.update_idletasks()
             self.vitals_text.configure(state = tkinter.DISABLED)
+        pass
+        sleep(1)
+    pass
+
+    def nav_telemetry_refresh(self, loop):
+        """
+        Refreshes navigation telemetry display.
+        :param loop: boolean input deciding whether the function should loop. Enable only for multiprocessing.
+        :return: none.
+        """
+        if loop is True:
+            while True:
+                self.nav_status_text.configure(state = tkinter.NORMAL)
+                self.nav_status_text.delete("1.0", tkinter.END)
+                self.nav_status_text.insert("1.0", nav.objects.nav_telemetry_text)
+                self.nav_status_text.update_idletasks()
+                self.nav_status_text.configure(state = tkinter.DISABLED)
+            pass
+        else:
+            self.nav_status_text.configure(state = tkinter.NORMAL)
+            self.nav_status_text.delete("1.0", tkinter.END)
+            self.nav_status_text.insert("1.0", nav.objects.nav_telemetry_text)
+            self.nav_status_text.update_idletasks()
+            self.nav_status_text.configure(state = tkinter.DISABLED)
         pass
         sleep(1)
     pass
