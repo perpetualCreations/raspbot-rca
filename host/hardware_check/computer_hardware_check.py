@@ -2,7 +2,7 @@
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1
 computer_hardware_check.py module, for checking hardware status.
 Sourced from an WIP version of RemotePotentia, an open-source remote server management software
-Made by Taian Chen
+Made by perpetualCreations
 """
 
 # TODO reformat, this is rather dated, I copied it from another dead project from several years ago.

@@ -1,6 +1,6 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
-Made by Taian Chen
+Made by perpetualCreations
 
 Startup script.
 Currently it's rather excessive and unnecessary, it only handles whether to run with or without a console output.

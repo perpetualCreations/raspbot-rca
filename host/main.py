@@ -1,6 +1,6 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
-Made by Taian Chen
+Made by perpetualCreations
 """
 
 try:

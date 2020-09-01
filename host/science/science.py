@@ -1,31 +1,10 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1
-science.py module, for collecting sensor data, made for RFP Enceladus Project with Raspbot
-Made by Taian Chen
-"""
+science module, for collecting sensor data, made for RFP Enceladus Project with Raspbot
+Made by perpetualCreations
 
-try:
-    print("[S_RFP-ENCELADUS][INFO]: Starting imports...")
-    import tkinter
-    from sense_hat import SenseHat
-    from time import gmtime
-    from time import strftime
-    import serial
-    from time import sleep
-except ImportError as e:
-    tkinter = None
-    gmtime = None
-    strftime = None
-    SenseHat = None
-    serial = None
-    sleep = None
-    print("[S_RFP-ENCELADUS][FAIL]: Imports failed! See below.")
-    print(e)
-    exit(1)
-except ImportWarning as e:
-    print("[S_RFP-ENCELADUS][FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
-    print(e)
-pass
+Main module for collecting sensor data.
+"""
 
 class science:
     """Module for data collection from sensor components."""

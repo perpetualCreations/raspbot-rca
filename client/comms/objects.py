@@ -1,7 +1,7 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 comms module, allows for socket communications.
-Made by Taian Chen
+Made by perpetualCreations
 
 Contains objects for module, including any package imports. Interact with these objects through comms.objects.
 """

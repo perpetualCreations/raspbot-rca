@@ -1,7 +1,7 @@
 """
 # Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 # Authentication Key Hashing Tool, allows for users to hash a chosen auth key and automatically put the output into the host configuration.
-# Made by Taian Chen
+# Made by perpetualCreations
 """
 
 import configparser

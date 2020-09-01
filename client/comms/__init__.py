@@ -1,7 +1,7 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 comms module, contains functions for socket communications.
-Made by Taian Chen
+Made by perpetualCreations
 
 Please note self.dock_status is now comms.objects.dock_status instead.
 """

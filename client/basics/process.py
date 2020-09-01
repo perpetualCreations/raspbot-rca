@@ -1,7 +1,7 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 basics module, contains basic application functions such as exiting client software, multiprocessing, and editing configs.
-Made by Taian Chen
+Made by perpetualCreations
 
 Handles exiting and configuration editing.
 """

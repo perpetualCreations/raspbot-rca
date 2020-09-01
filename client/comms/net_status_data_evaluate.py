@@ -1,7 +1,7 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 comms module, allows for socket communications.
-Made by Taian Chen
+Made by perpetualCreations
 
 Evaluates objects.net_status_data and returns True/False boolean.
 After importing utilize as net_status_data_evaluate.evaluate().
