@@ -3,17 +3,11 @@ Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 Made by Taian Chen
 """
 
-# TODO change docstrings and refractor directory to server.
-
 try:
     print("[INFO]: Starting imports...")
     from subprocess import call
     from subprocess import Popen
     from time import sleep
-    # AES + RSA-based encryption was not finished, and sections using it were commented out.
-    # from Cryptodome.PublicKey import RSA
-    # from Cryptodome import Random
-    # from Cryptodome.Cipher import AES
     from Cryptodome.Cipher import Salsa20
     from Cryptodome.Hash import HMAC
     from Cryptodome.Hash import SHA256
@@ -27,7 +21,6 @@ try:
     from ast import literal_eval
     import cv2
     from .computer_hardware_check import ch_check
-    # import hashlib
 except ImportError as ImportErrorMessage:
     sleep = None
     tkinter = None
@@ -45,10 +38,6 @@ except ImportError as ImportErrorMessage:
     literal_eval = None
     SHA3_512 = None
     ch_check = None
-    # RSA = None
-    # AES = None
-    # Random = None
-    # hashlib = None
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
 except ImportWarning as ImportWarningMessage:
@@ -102,8 +91,8 @@ class host:
         if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
             print("[INFO]: Importing RFP Enceladus packages...")
             try:
-                from .science import science
-                from .led_graphics import led_graphics
+                import science
+                import hardware_check
             except ImportError as ree:
                 science = None
                 led_graphics = None
