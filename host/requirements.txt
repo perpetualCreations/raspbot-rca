@@ -2,3 +2,4 @@ pyserial
 future
 imutils
 Pillow
+psutil
