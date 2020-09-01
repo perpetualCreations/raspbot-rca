@@ -1,7 +1,4 @@
-
-
-
-
-
-
-
+pyserial
+future
+imutils
+Pillow

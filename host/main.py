@@ -142,8 +142,7 @@ class host:
                 elif command == b"rca-1.2:command_science_collect":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                     if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2]:
-                        science_module = science()
-                        connection.sendall(host.send(self, science_module.science_get()))
+                        connection.sendall(host.send(self, science.science.get()))
                     else:
                         connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
                     pass

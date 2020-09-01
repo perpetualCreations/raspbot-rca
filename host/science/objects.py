@@ -7,19 +7,11 @@ Contains objects for module, including any package imports. Interact with these 
 """
 
 try:
-    import tkinter
-    from sense_hat import SenseHat
-    from time import gmtime
-    from time import strftime
-    import serial
-    from time import sleep
+    import tkinter, serial
+    import sense_hat
+    from time import gmtime, strftime, sleep
 except ImportError as e:
-    tkinter = None
-    gmtime = None
-    strftime = None
-    SenseHat = None
-    serial = None
-    sleep = None
+    sense_hat = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
     exit(1)
@@ -28,3 +20,4 @@ except ImportWarning as e:
     print(e)
 pass
 
+sense = sense_hat.SenseHat()
