@@ -12,7 +12,7 @@ try:
     from sys import exit as app_end
     from ast import literal_eval
     # RCA Modules
-    import hardware_check, led_graphics, basics
+    import hardware_check, led_graphics, basics, science
 except ImportError as ImportErrorMessage:
     sleep = None
     tkinter = None
@@ -27,9 +27,10 @@ except ImportError as ImportErrorMessage:
     multiprocessing = None
     literal_eval = None
     SHA3_512 = None
-    computer_hardware_check = None
+    hardware_check = None
     led_graphics = None
     basics = None
+    science = None
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
 except ImportWarning as ImportWarningMessage:
@@ -53,8 +54,6 @@ class host:
         self.connect_retries = 0
         self.components = [[None], [None, None, None], [None], [None, None]]  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
         self.dock_status = False
-        led_graphics = None # package name defined, not a variable
-        science = None # package name defined, not a variable
         print("[INFO]: Loading configurations...")
         config_parse_load = configparser.ConfigParser()
         try:
@@ -84,20 +83,7 @@ class host:
         except FileNotFoundError:
             print("[FAIL]: Failed to load configurations! Configuration file is missing.")
         pass
-        if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
-            print("[INFO]: Importing RFP Enceladus packages...")
-            try:
-                import science
-                import hardware_check
-            except ImportError as ree:
-                science = None
-                led_graphics = None
-                print("[FAIL]: Imports failed! See below.")
-                print(ree)
-            except ImportWarning as ree:
-                print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
-                print(ree)
-            pass
+        if self.components[1][0] is True:
             self.pattern_led = [["error1.png", "error2.png"], ["helloworld.png"], ["idle1.png", "idle2.png"], ["power-on.png"], ["power-off.png"], ["start1.png", "start2.png", "start3.png", "start4.png"]]
         pass
         print("[INFO]: Creating open server socket...")
@@ -150,7 +136,7 @@ class host:
                     nav_run_time = nav_command_list[1]
                     nav_distance_accept = nav_command_list[2]
                     host.serial("/dev/ttyACM0", "send", nav_direction.encode(encoding = "ascii", errors = "replace"))
-                    host.create_process(host.nav_timer, (self, int(nav_run_time), literal_eval(nav_distance_accept)))
+                    basics.process.create_process(host.nav_timer, (self, int(nav_run_time), literal_eval(nav_distance_accept)))
                 elif command == b"rca-1.2:disconnected":
                     self.socket.close()
                     print("[INFO]: Client has disconnected.")
@@ -166,7 +152,7 @@ class host:
                             led_graphics.led_graphics.display("image", self.pattern_led[int(host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace"))])
                         elif led_command == b"stop":
                             connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-                            led_graphics.display("stop", None)
+                            led_graphics.led_graphics.display("stop", None)
                         pass
                     else:
                         connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
@@ -276,7 +262,7 @@ class host:
             validation.hexverify(validate)
         except ValueError:
             self.socket.close()
-            host.restart()
+            basics.restart_shutdown.restart()
             raise Exception("[FAIL]: Message is not authentic, failed HMAC validation!")
         pass
         ciphering = Salsa20.new(self.key, nonce = nonce)
@@ -301,29 +287,6 @@ class host:
             print("[FAIL]: Did not receive an acknowledgement. Instead received: ")
             print(acknowledgement.decode(encoding = "uft-8", errors = "replace"))
             return False
-        pass
-    pass
-    @staticmethod
-    def create_process(target, args):
-        """
-        Creates a new process from multiprocessing.
-        :param target: the function being processed.
-        :param args: the arguments for said function being processed.
-        :return: if failed, returns nothing. otherwise returns dummy variable.
-        """
-        if __name__ == '__main__':
-            try:
-                dummy = multiprocessing.Process(target = target, args = args)
-                dummy.start()
-                dummy.join()
-            except multiprocessing.ProcessError as me:
-                print("[FAIL]: Process creation failed! Details below.")
-                print(me)
-                return None
-            pass
-            return dummy
-        else:
-            return None
         pass
     pass
     def nav_timer(self, nav_run_time, nav_distance_accept):
