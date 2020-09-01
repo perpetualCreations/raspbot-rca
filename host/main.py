@@ -5,27 +5,17 @@ Made by perpetualCreations
 
 try:
     print("[INFO]: Starting imports...")
-    from subprocess import call
-    from subprocess import Popen
     from time import sleep
     from Cryptodome.Cipher import Salsa20
-    from Cryptodome.Hash import HMAC
-    from Cryptodome.Hash import SHA256
-    from Cryptodome.Hash import MD5
-    from Cryptodome.Hash import SHA3_512
-    import socket
-    import configparser
+    from Cryptodome.Hash import HMAC, SHA256, MD5, SHA3_512, cv2
+    import socket, configparser, multiprocessing, serial
     from sys import exit as app_end
-    import multiprocessing
-    import serial
     from ast import literal_eval
-    import cv2
-    from .computer_hardware_check import ch_check
+    # RCA Modules
+    import hardware_check, led_graphics, basics
 except ImportError as ImportErrorMessage:
     sleep = None
     tkinter = None
-    call = None
-    Popen = None
     Salsa20 = None
     HMAC = None
     SHA256 = None
@@ -37,13 +27,19 @@ except ImportError as ImportErrorMessage:
     multiprocessing = None
     literal_eval = None
     SHA3_512 = None
-    ch_check = None
+    computer_hardware_check = None
+    led_graphics = None
+    basics = None
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
 except ImportWarning as ImportWarningMessage:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
     print(ImportWarningMessage)
 pass
+
+# logging, bottom line is to stop PyCharm from throwing a warning when ImportError is raised and basics becomes a None boolean object.
+# noinspection PyUnboundLocalVariable
+basics.basics.log_init()
 
 class host:
     """Main class."""
@@ -124,19 +120,19 @@ class host:
                 print("[FAIL]: Client authentication invalid! Given code does not match authentication code.")
                 connection.sendall(host.send(self, b"rca-1.2:authentication_invalid"))
                 self.socket.close()
-                host.restart()
+                basics.restart_shutdown.restart()
             pass
             while True:
                 command = host.receive(self, connection.recv(4096))
                 if command == b"rca-1.2:command_shutdown":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-                    host.shutdown()
+                    basics.restart_shutdown.shutdown()
                 elif command == b"rca-1.2:command_reboot":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-                    host.reboot()
+                    basics.restart_shutdown.reboot()
                 elif command == b"rca-1.2:command_update":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-                    host.os_update()
+                    basics.basics.os_update()
                 elif command == b"rca-1.2:command_battery_check":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                 elif command == b"rca-1.2:command_science_collect":
@@ -158,7 +154,7 @@ class host:
                 elif command == b"rca-1.2:disconnected":
                     self.socket.close()
                     print("[INFO]: Client has disconnected.")
-                    host.restart()
+                    basics.restart_shutdown.restart()
                 elif command == b"rca-1.2:led_graphics":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                     if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
@@ -167,7 +163,7 @@ class host:
                             raise NotImplementedError
                         elif led_command == b"image":
                             connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-                            led_graphics.display("image", self.pattern_led[int(host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace"))])
+                            led_graphics.led_graphics.display("image", self.pattern_led[int(host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace"))])
                         elif led_command == b"stop":
                             connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                             led_graphics.display("stop", None)
@@ -177,7 +173,9 @@ class host:
                     pass
                 elif command == b"rca-1.2:command_ch_check":
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
-                    connection.sendall(host.send(self, ch_check()))
+                    hardware_check.computer_hardware_check.collect()
+                    hardware_check.computer_hardware_check.convert()
+                    connection.sendall(host.send(self, hardware_check.computer_hardware_check.report()))
                 elif command == b"rca-1.2:get_dock_status":
                     if self.components[2][0] is True:
                         connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
@@ -219,54 +217,13 @@ class host:
         if direction == "receive":
             return arduino_connect.readline().decode(encoding = "utf-8", errors = "replace")
         elif direction == "send":
-            if message not in [""]: # TODO list all possible comamnds
+            if message not in [""]: # TODO list all possible commands
                 return None
             pass
             arduino_connect.write(message.encode(encoding = "ascii", errors = "replace"))
             return None
         else:
             return None
-        pass
-    pass
-    @staticmethod
-    def set_configuration(var, value, section, key, multi):
-        """
-        Edits entry in configuration file and applies new edit to variables.
-        :param var: variable being updated.
-        :param value: value to be assigned to variable and entered into configuration file.
-        :param section: section in the configuration file to be edited.
-        :param key: key to variable in section in the configuration file to be edited.
-        :param multi: boolean for whether to run a for range when reading params, useful when making multiple configuration settings.
-        :return: None
-        """
-        print("[INFO]: Editing configurations...")
-        str(var)
-        str(value)
-        str(section)
-        str(key)
-        if multi is True:
-            cycles = len(var)
-            while cycles != 0:
-                parameter_key = cycles - 1
-                var[parameter_key] = value[parameter_key]
-                config_parse_edit = configparser.ConfigParser()
-                config_parse_edit[section[parameter_key]][key[parameter_key]] = var[parameter_key]
-                with open("main.cfg", "w") as config_write:
-                    config_parse_edit.write(config_write)
-                pass
-                cycles -= 1
-            pass
-            config_write.close()
-        else:
-            var = value
-            config_parse_edit = configparser.ConfigParser()
-            print(section)
-            print(key)
-            config_parse_edit[section][key] = var
-            with open("main.cfg", "w") as config_write:
-                config_parse_edit.write(config_write)
-            pass
-            config_write.close()
         pass
     pass
     def send(self, message):
@@ -389,36 +346,6 @@ class host:
             pass
             sleep(1)
         pass
-    pass
-    @staticmethod
-    def restart():
-        """Restarts application."""
-        print("[INFO]: Restarting application...")
-        Popen("main.py")
-        host.exit(0)
-    pass
-    @staticmethod
-    def shutdown():
-        """Shuts down bot."""
-        call("sudo shutdown now", shell = True)
-    pass
-    @staticmethod
-    def reboot():
-        """Reboots bot."""
-        call("sudo reboot now", shell = True)
-    pass
-    @staticmethod
-    def exit(status):
-        """Stops application."""
-        print("[INFO]: Stopping application...")
-        app_end(status)
-    pass
-    @staticmethod
-    def os_update():
-        """Updates apt packages and host operating system."""
-        call("sudo apt-get update && sudo apt-get upgrade -y", shell = True)
-        call("sudo apt update && sudo apt upgrade -y", shell = True)
-        return True
     pass
 pass
 

@@ -6,6 +6,6 @@ Made by perpetualCreations
 
 print("[INFO]: Initiating basics module...")
 
-from basics import basics, objects, process
+from basics import basics, objects, process, restart_shutdown
 
 print("[INFO]: Initiation of basics complete!")
