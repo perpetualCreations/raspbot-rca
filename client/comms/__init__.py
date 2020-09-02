@@ -43,11 +43,14 @@ try:
 except objects.configparser.Error as ce:
     print("[FAIL]: Failed to load configurations! See below for details.")
     print(ce)
+    objects.basics.exit(1)
 except KeyError as ke:
     print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
     print(ke)
-except FileNotFoundError as nf:
+    objects.basics.exit(1)
+except FileNotFoundError:
     print("[FAIL]: Failed to load configurations! Configuration file is missing.")
+    objects.basics.exit(1)
 pass
 
 print("[INFO]: Initiating of comms complete!")

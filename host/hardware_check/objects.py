@@ -12,18 +12,15 @@ try:
     import psutil as stat
     from platform import system, release, version
     from socket import gethostname, error as socket_error
+    from basics import basics
 except ImportError as ImportErrorMessage:
-    socket = None
-    system = None
-    release = None
-    version = None
-    gethostname = None
-    socket_error = None
     print("[FAIL]: Import failed!")
     print(ImportErrorMessage)
+    basics.exit(1)
 except ImportWarning as ImportWarningMessage:
     print("[FAIL]: Imports raised warnings.")
     print(ImportWarningMessage)
+    basics.exit(1)
 pass
 
 # Below are all variables that computer_hardware_check.collect output to

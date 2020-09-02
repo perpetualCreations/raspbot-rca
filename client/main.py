@@ -16,22 +16,6 @@ try:
     # RCA Modules
     import basics, comms, nav
 except ImportError as e:
-    literal_eval = None
-    sleep = None
-    Popen = None
-    tkinter = None
-    messagebox = None
-    call = None
-    socket = None
-    configparser = None
-    ping3 = None
-    cv2 = None
-    imagezmq = None
-    system = None
-    # RCA Modules
-    basics = None
-    comms = None
-    nav = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
     exit(1)
@@ -76,12 +60,15 @@ class client:
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
+            basics.basics.exit(1)
         except KeyError as ke:
             print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
             print(ke)
+            basics.basics.exit(1)
         except FileNotFoundError as nf:
             print("[FAIL]: Failed to load configurations! Configuration file is missing.")
             print(nf)
+            basics.basics.exit(1)
         pass
         config_parse_load = configparser.ConfigParser()
         try:
@@ -90,12 +77,15 @@ class client:
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
+            basics.basics.exit(1)
         except KeyError as ke:
             print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
             print(ke)
+            basics.basics.exit(1)
         except FileNotFoundError as nf:
             print("[FAIL]: Failed to load configurations! Configuration file is missing.")
             print(nf)
+            basics.basics.exit(1)
         pass
         print("[INFO]: Starting GUI...")
         hidden_root = tkinter.Tk() # placeholder Tk object to withdraw the blank window created by messagebox.
@@ -416,7 +406,7 @@ class client:
         :return: none.
         """
         if report_type == "Science":
-            if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
+            if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2] is True:
                 comms.interface.send(b"rca-1.2:command_science_collect")
                 data = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                 if data == "rca-1.2:hardware_unavailable":

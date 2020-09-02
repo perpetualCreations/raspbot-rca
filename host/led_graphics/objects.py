@@ -9,15 +9,15 @@ Contains objects for module, including any package imports. Interact with these 
 try:
     import sense_hat
     from time import sleep
+    from basics import basics
 except ImportError as e:
-    sense_hat = None
-    sleep = None
     print("[FAIL]: Imports failed! See below for details.")
     print(e)
-    exit(1)
+    basics.exit(1)
 except ImportWarning as e:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
     print(e)
+    basics.exit(1)
 pass
 
 sense = sense_hat.SenseHat()

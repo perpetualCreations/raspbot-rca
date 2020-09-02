@@ -10,14 +10,15 @@ try:
     import tkinter, serial
     import sense_hat
     from time import gmtime, strftime, sleep
+    from basics import basics
 except ImportError as e:
-    sense_hat = None
     print("[FAIL]: Imports failed! See below.")
     print(e)
-    exit(1)
+    basics.exit(1)
 except ImportWarning as e:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
     print(e)
+    basics.exit(1)
 pass
 
 sense = sense_hat.SenseHat()

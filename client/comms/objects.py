@@ -18,13 +18,15 @@ try:
     import configparser
     from ast import literal_eval
     from os import getcwd
+    from basics import basics
 except ImportError as ImportErrorMessage:
-    socket = None
     print("[FAIL]: Import failed!")
     print(ImportErrorMessage)
+    basics.exit(1)
 except ImportWarning as ImportWarningMessage:
     print("[FAIL]: Imports raised warnings.")
     print(ImportWarningMessage)
+    basics.exit(1)
 pass
 
 key = None # Salsa20 encryption key

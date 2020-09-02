@@ -13,4 +13,4 @@ with open("main.cfg", "w") as config_write:
     config_parse.write(config_write)
 pass
 config_write.close()
-print("[AKH][INFO]: Done.")
+print("[INFO]: Done.")

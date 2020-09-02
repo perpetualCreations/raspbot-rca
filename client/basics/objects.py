@@ -10,12 +10,15 @@ try:
     import multiprocessing, sys, configparser
     from time import gmtime, strftime
     from tkinter import messagebox
+    from basics import basics
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Import failed!")
     print(ImportErrorMessage)
+    basics.exit(1)
 except ImportWarning as ImportWarningMessage:
     print("[FAIL]: Imports raised warnings.")
     print(ImportWarningMessage)
+    basics.exit(1)
 pass
 
 log_file_handle = None # overwritten by basics module's log_init()

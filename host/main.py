@@ -14,23 +14,6 @@ try:
     # RCA Modules
     import hardware_check, led_graphics, basics, science
 except ImportError as ImportErrorMessage:
-    sleep = None
-    tkinter = None
-    Salsa20 = None
-    HMAC = None
-    SHA256 = None
-    socket = None
-    configparser = None
-    MD5 = None
-    app_end = None
-    serial = None
-    multiprocessing = None
-    literal_eval = None
-    SHA3_512 = None
-    hardware_check = None
-    led_graphics = None
-    basics = None
-    science = None
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
 except ImportWarning as ImportWarningMessage:
@@ -58,13 +41,6 @@ class host:
         config_parse_load = configparser.ConfigParser()
         try:
             config_parse_load.read("main.cfg")
-            self.components[0][0] = literal_eval(config_parse_load["HARDWARE"]["cam"])
-            self.components[1][0] = literal_eval(config_parse_load["HARDWARE"]["sensehat"])
-            self.components[1][1] = literal_eval(config_parse_load["HARDWARE"]["distance"])
-            self.components[1][2] = literal_eval(config_parse_load["HARDWARE"]["dust"])
-            self.components[2][0] = literal_eval(config_parse_load["HARDWARE"]["charger"])
-            self.components[3][0] = literal_eval(config_parse_load["HARDWARE"]["arm"])
-            self.components[3][1] = literal_eval(config_parse_load["HARDWARE"]["arm_cam"])
             self.host = config_parse_load["NET"]["ip"]
             self.port = config_parse_load["NET"]["port"]
             self.cam_port = config_parse_load["NET"]["cam_port"]
@@ -80,8 +56,35 @@ class host:
         except configparser.Error as ce:
             print("[FAIL]: Failed to load configurations! See below for details.")
             print(ce)
+            basics.basics.exit(1)
+        except KeyError as ke:
+            print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
+            print(ke)
+            basics.basics.exit(1)
         except FileNotFoundError:
             print("[FAIL]: Failed to load configurations! Configuration file is missing.")
+            basics.basics.exit(1)
+        pass
+        try:
+            config_parse_load.read("hardware.cfg")
+            self.components[0][0] = literal_eval(config_parse_load["HARDWARE"]["cam"])
+            self.components[1][0] = literal_eval(config_parse_load["HARDWARE"]["sensehat"])
+            self.components[1][1] = literal_eval(config_parse_load["HARDWARE"]["distance"])
+            self.components[1][2] = literal_eval(config_parse_load["HARDWARE"]["dust"])
+            self.components[2][0] = literal_eval(config_parse_load["HARDWARE"]["charger"])
+            self.components[3][0] = literal_eval(config_parse_load["HARDWARE"]["arm"])
+            self.components[3][1] = literal_eval(config_parse_load["HARDWARE"]["arm_cam"])
+        except configparser.Error as ce:
+            print("[FAIL]: Failed to load configurations! See below for details.")
+            print(ce)
+            basics.basics.exit(1)
+        except KeyError as ke:
+            print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
+            print(ke)
+            basics.basics.exit(1)
+        except FileNotFoundError:
+            print("[FAIL]: Failed to load configurations! Configuration file is missing.")
+            basics.basics.exit(1)
         pass
         if self.components[1][0] is True:
             self.pattern_led = [["error1.png", "error2.png"], ["helloworld.png"], ["idle1.png", "idle2.png"], ["power-on.png"], ["power-off.png"], ["start1.png", "start2.png", "start3.png", "start4.png"]]
