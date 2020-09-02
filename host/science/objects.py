@@ -11,6 +11,7 @@ try:
     import sense_hat
     from time import gmtime, strftime, sleep
     from basics import basics
+    import configparser
 except ImportError as e:
     print("[FAIL]: Imports failed! See below.")
     print(e)
@@ -21,4 +22,8 @@ except ImportWarning as e:
     basics.exit(1)
 pass
 
-sense = sense_hat.SenseHat()
+components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
+
+if components[1][0] is True:
+    sense = sense_hat.SenseHat()
+pass
