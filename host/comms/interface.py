@@ -6,7 +6,7 @@ Made by perpetualCreations
 This script handles interfacing functions.
 """
 
-from comms import objects, disconnect, acknowledge
+from comms import objects, acknowledge
 
 def send(message):
     """
@@ -80,7 +80,8 @@ def decrypt(encrypted_input, validate, nonce):
     try:
         validation.hexverify(validate)
     except ValueError:
-        disconnect.disconnect()
+        objects.socket_main.close()
+        objects.socket_camera.close()
         print("[FAIL]: Message is not authentic, failed HMAC validation!")
     pass
     ciphering = objects.Salsa20.new(objects.key, nonce = nonce)

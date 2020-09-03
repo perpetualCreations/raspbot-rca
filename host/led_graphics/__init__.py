@@ -2,6 +2,8 @@
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1, revised for v1.2
 led_graphics module, for controlling onboard LED matrix
 Made by perpetualCreations
+
+Host-only module.
 """
 
 print("[INFO]: Initiating led_graphics module...")

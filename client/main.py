@@ -35,7 +35,7 @@ class client:
     """
     def __init__(self):
         """
-        Initiation function of Raspbot RCA.
+        Initiation function of Raspbot RCA. Reads configs and starts various process and GUI.
         """
         print("[INFO]: Starting client Raspbot RC Application...")
         print("[INFO]: Declaring variables...")

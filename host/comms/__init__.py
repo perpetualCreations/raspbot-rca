@@ -3,13 +3,12 @@ Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 comms module, contains functions for socket communications.
 Made by perpetualCreations
 
-Please note self.dock_status is now comms.objects.dock_status instead.
-Client version of comms module.
+Host version of comms module.
 """
 
 print("[INFO]: Initiating comms module...")
 
-from comms import interface, connect, disconnect, acknowledge, objects
+from comms import interface, acknowledge, objects
 # TODO add error handling for disconnect
 
 config_parse_load = objects.configparser.ConfigParser()
@@ -24,12 +23,15 @@ try:
 except objects.configparser.Error as ce:
     print("[FAIL]: Failed to load configurations! See below for details.")
     print(ce)
+    basics.exit(1)
 except KeyError as ke:
     print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
     print(ke)
+    basics.exit(1)
 except FileNotFoundError as nf:
     print("[FAIL]: Failed to load configurations! Configuration file is missing.")
     print(nf)
+    basics.exit(1)
 pass
 
 try:
