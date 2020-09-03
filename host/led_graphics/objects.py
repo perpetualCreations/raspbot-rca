@@ -7,9 +7,10 @@ Contains objects for module, including any package imports. Interact with these 
 """
 
 try:
+    from basics import basics
     import sense_hat
     from time import sleep
-    from basics import basics
+    import configparser
 except ImportError as e:
     print("[FAIL]: Imports failed! See below for details.")
     print(e)
@@ -20,4 +21,5 @@ except ImportWarning as e:
     basics.exit(1)
 pass
 
-sense = sense_hat.SenseHat()
+components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
+sense = None # SenseHAT object, overwritten by __init__ after reading hardware configuration

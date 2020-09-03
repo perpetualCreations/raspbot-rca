@@ -7,8 +7,8 @@ try:
     print("[INFO]: Starting imports...")
     from time import sleep
     from Cryptodome.Cipher import Salsa20
-    from Cryptodome.Hash import HMAC, SHA256, MD5, SHA3_512, cv2
-    import socket, configparser, multiprocessing, serial
+    from Cryptodome.Hash import HMAC, SHA256, MD5, SHA3_512
+    import socket, configparser, multiprocessing, serial, cv2
     from sys import exit as app_end
     from ast import literal_eval
     # RCA Modules
@@ -135,11 +135,8 @@ class host:
                     connection.sendall(host.send(self, b"rca-1.2:connection_acknowledge"))
                     nav_command = host.receive(self, connection.recv(4096)).decode(encoding = "utf-8", errors = "replace")
                     nav_command_list = nav_command.split()
-                    nav_direction = nav_command_list[0]
-                    nav_run_time = nav_command_list[1]
-                    nav_distance_accept = nav_command_list[2]
-                    host.serial("/dev/ttyACM0", "send", nav_direction.encode(encoding = "ascii", errors = "replace"))
-                    basics.process.create_process(host.nav_timer, (self, int(nav_run_time), literal_eval(nav_distance_accept)))
+                    basics.basics.serial("/dev/ttyACM0", "send", nav_command_list[0].encode(encoding = "ascii", errors = "replace"))
+                    basics.process.create_process(host.nav_timer, (self, int(nav_command_list[1]), literal_eval(nav_command_list[2])))
                 elif command == b"rca-1.2:disconnected":
                     self.socket.close()
                     print("[INFO]: Client has disconnected.")
@@ -191,28 +188,6 @@ class host:
                     connection.sendall(host.send(self, b"rca-1.2:unknown_command"))
                 pass # add more keys here
             pass
-        pass
-    pass
-    @staticmethod
-    def serial(port, direction, message):
-        """
-        Sends or receives serial communications to the Arduino integration.
-        :param port: the port that the Arduino is connected to.
-        :param direction: whether to expect to receive or send.
-        :param message: what contents to send, or if receiving leave as None.
-        :return: if receiving, decoded string, if sending or invalid direction, none.
-        """
-        arduino_connect = serial.Serial(port = port, timeout = 5)
-        if direction == "receive":
-            return arduino_connect.readline().decode(encoding = "utf-8", errors = "replace")
-        elif direction == "send":
-            if message not in [""]: # TODO list all possible commands
-                return None
-            pass
-            arduino_connect.write(message.encode(encoding = "ascii", errors = "replace"))
-            return None
-        else:
-            return None
         pass
     pass
     def send(self, message):
@@ -290,27 +265,6 @@ class host:
             print("[FAIL]: Did not receive an acknowledgement. Instead received: ")
             print(acknowledgement.decode(encoding = "uft-8", errors = "replace"))
             return False
-        pass
-    pass
-    def nav_timer(self, nav_run_time, nav_distance_accept):
-        """
-        Navigation timer for multiprocessing, counts down until run time is over, also reads distance telemetry and forwards to client.
-        :param nav_run_time:
-        :param nav_distance_accept:
-        :return: none.
-        """
-        nav_run_time_countdown = nav_run_time
-        while nav_run_time_countdown != 0:
-            nav_run_time_countdown -= 1
-            if nav_distance_accept is True:
-                host.serial("/dev/ttyACM0", "send", b"T")
-                self.socket.sendall(host.send(self, host.serial("/dev/ttyACM0", "recieve", None)))
-            pass
-            if nav_run_time_countdown == 0:
-                self.socket.sendall(host.send(self, b"rca-1.2:nav_end"))
-                host.serial("/dev/ttyACM0", "send", b"A")
-            pass
-            sleep(1)
         pass
     pass
 pass

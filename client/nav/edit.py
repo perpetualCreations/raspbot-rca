@@ -1,7 +1,7 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 nav.py module, contains navigation functions
-Made by Taian Chen
+Made by perpetualCreations
 
 Navigation script editing interface.
 """

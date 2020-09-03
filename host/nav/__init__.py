@@ -1,14 +1,14 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 nav.py module, contains navigation functions
-Made by perpetualCreations
+Made by Taian Chen
 
-Client version of nav module.
+Host version of nav module.
 """
 
 print("[INFO]: Initiating nav module...")
 
-from nav import edit, gui, nav, objects
+from nav import nav, objects
 
 config_parse_load = objects.configparser.ConfigParser()
 

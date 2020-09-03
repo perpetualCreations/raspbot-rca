@@ -20,8 +20,7 @@ def nav_execute(direction, run_time):
     else:
         get_distance = False
     pass
-    instructions = direction + " " + run_time + " " + str(get_distance)
-    objects.comms.interface.send(instructions.encode(encoding = "ascii", errors = "replace"))
+    objects.comms.interface.send((direction + " " + run_time + " " + str(get_distance)).encode(encoding = "ascii", errors = "replace"))
     if objects.comms.acknowledge.receive_acknowledgement() is False:
         return None
     pass
