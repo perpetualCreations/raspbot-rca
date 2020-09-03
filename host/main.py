@@ -11,8 +11,13 @@ try:
     import socket, configparser, multiprocessing, serial, cv2
     from sys import exit as app_end
     from ast import literal_eval
-    # RCA Modules
-    import hardware_check, led_graphics, basics, science
+    # RCA Modules, basics is first to let logging start earlier
+    import basics
+    # logging
+    # bottom line is to stop PyCharm from throwing a warning when ImportError is raised and basics becomes a None boolean object.
+    # noinspection PyUnboundLocalVariable
+    basics.basics.log_init()
+    import hardware_check, led_graphics, science
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
@@ -20,10 +25,6 @@ except ImportWarning as ImportWarningMessage:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
     print(ImportWarningMessage)
 pass
-
-# logging, bottom line is to stop PyCharm from throwing a warning when ImportError is raised and basics becomes a None boolean object.
-# noinspection PyUnboundLocalVariable
-basics.basics.log_init()
 
 class host:
     """Main class."""

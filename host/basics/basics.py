@@ -13,6 +13,7 @@ def log_init():
     Initiates logging.
     :return: none.
     """
+    print("[INFO]: Output redirected from console to logging.")
     objects.log_file_handle = open("logs/log-" + make_timestamp() + ".txt", "w")
     objects.origin_stdout = objects.sys.stdout
     objects.sys.stdout = objects.log_file_handle
