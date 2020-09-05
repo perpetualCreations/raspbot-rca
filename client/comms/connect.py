@@ -22,6 +22,7 @@ def connect():
         objects.messagebox.showerror("Raspbot RCA: Connection Failed", "While connecting to the bot for main communications an error was raised. Please see console output for more details.")
     pass
     if acknowledge.receive_acknowledgement() is False:
+        disconnect.disconnet()
         return None
     pass
     interface.send(objects.auth)
