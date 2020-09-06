@@ -9,10 +9,11 @@ try:
     import socket, configparser, multiprocessing, serial, cv2
     from sys import exit as app_end
     from ast import literal_eval
+    from Cryptodome.Hash import SHA3_512
     # RCA Modules, basics is first to let logging start earlier
     import basics
     # logging initiation
-    basics.basics.log_init()
+    # basics.basics.log_init() TODO undo logging disable from debug
     import hardware_check, led_graphics, science, comms
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
@@ -63,39 +64,39 @@ class host:
         pass
         comms.connect_accept.connect_accept()
         print("[INFO]: Received connection from ", comms.objects.client_address, ".")
-        comms.acknowledge.send(1000)
-        data = SHA3_512.new(comms.interface.receive()).hexdigest().encode(encoding = "ascii", errors = "replace")
-        if data == self.auth:
+        comms.acknowledge.send_acknowledgement(1000)
+        data = (SHA3_512.new(comms.interface.receive()).hexdigest()).encode(encoding = "ascii", errors = "replace")
+        if data == comms.objects.auth:
             print("[INFO]: Client authenticated!")
-            comms.acknowledge.send(1000)
+            comms.acknowledge.send_acknowledgement(1000)
         else:
             print("[FAIL]: Client authentication invalid! Given code does not match authentication code.")
-            comms.acknowledge.send_acknowledgement(2001)
+            comms.acknowledge.send_acknowledgement_acknowledgement(2001)
             comms.objects.socket_main.close(1)
             basics.restart_shutdown.restart()
         pass
         while True:
             command = comms.interface.receive()
             if command == b"rca-1.2:command_shutdown":
-                comms.acknowledge.send_acknowledgement(1000)
+                comms.acknowledge.send_acknowledgement_acknowledgement(1000)
                 basics.restart_shutdown.shutdown()
             elif command == b"rca-1.2:command_reboot":
-                comms.acknowledge.send(1000)
+                comms.acknowledge.send_acknowledgement(1000)
                 basics.restart_shutdown.reboot()
             elif command == b"rca-1.2:command_update":
-                comms.acknowledge.send(1000)
+                comms.acknowledge.send_acknowledgement(1000)
                 basics.basics.os_update()
             elif command == b"rca-1.2:command_battery_check":
-                comms.acknowledge.send(1000)
+                comms.acknowledge.send_acknowledgement(1000)
             elif command == b"rca-1.2:command_science_collect":
-                comms.acknowledge.send(1000)
+                comms.acknowledge.send_acknowledgement(1000)
                 if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2]:
                     connection.sendall(host.send(self, science.science.get()))
                 else:
                     connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
                 pass
             elif command == b"rca-1.2:nav_start":
-                comms.acknowledge.send(1000)
+                comms.acknowledge.send_acknowledgement(1000)
                 nav_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                 nav_command_list = nav_command.split()
                 basics.basics.serial("/dev/ttyACM0", "send", nav_command_list[0].encode(encoding = "ascii", errors = "replace"))
@@ -105,30 +106,30 @@ class host:
                 print("[INFO]: Client has disconnected.")
                 basics.restart_shutdown.restart()
             elif command == b"rca-1.2:led_graphics":
-                comms.acknowledge.send(1000)
+                comms.acknowledge.send_acknowledgement(1000)
                 if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
                     led_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                     if led_command == b"play":
                         raise NotImplementedError
                     elif led_command == b"image":
-                        comms.acknowledge.send(1000)
+                        comms.acknowledge.send_acknowledgement(1000)
                         led_graphics.led_graphics.display("image", self.pattern_led[
                             int(comms.interface.receive().decode(encoding = "utf-8", errors = "replace"))])
                     elif led_command == b"stop":
-                        comms.acknowledge.send(1000)
+                        comms.acknowledge.send_acknowledgement(1000)
                         led_graphics.led_graphics.display("stop", None)
                     pass
                 else:
                     connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
                 pass
             elif command == b"rca-1.2:command_ch_check":
-                comms.acknowledge.send(1000)
+                comms.acknowledge.send_acknowledgement(1000)
                 hardware_check.computer_hardware_check.collect()
                 hardware_check.computer_hardware_check.convert()
                 connection.sendall(host.send(self, hardware_check.computer_hardware_check.report()))
             elif command == b"rca-1.2:get_dock_status":
                 if self.components[2][0] is True:
-                    comms.acknowledge.send(1000)
+                    comms.acknowledge.send_acknowledgement(1000)
                     dock_status_str = str(self.dock_status)
                     connection.sendall(host.send(self, dock_status_str.encode(encoding = "ascii", errors = "replace")))
                 else:

@@ -33,6 +33,7 @@ key = None # Salsa20 encryption key
 hmac_key = None # HMAC replay attack mitigation key
 auth = None # Authentication key
 
+host = None # host address goes here, for binding socket
 port = 64220 # default port config, is overwritten by configuration file read
 cam_port = 64221 # default port config, is overwritten by configuration file read
 

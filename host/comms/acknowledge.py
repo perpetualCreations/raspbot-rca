@@ -90,7 +90,9 @@ def receive_acknowledgement():
     :return: True/False boolean, only returns True when an acknowledgement is successfully received, otherwise returns False for errors.
     """
     try:
-        objects.acknowledgement_num_id = int(interface.receive())
+        objects.socket_init.setblocking(True)
+        objects.acknowledgement_num_id = int(objects.socket_main.recv(4).decode(encoding = "utf-8", errors = "replace"))
+        objects.socket_init.setblocking(False)
     except objects.socket.error as sae:
         print("[FAIL]: Failed to receive acknowledgement. See below for details.")
         print(sae)

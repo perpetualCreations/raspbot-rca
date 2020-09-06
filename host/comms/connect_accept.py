@@ -14,7 +14,7 @@ def connect_accept():
     """
     objects.socket_init.setblocking(False)
     objects.socket_init.settimeout(5)
-    objects.socket_init.bind((objects.socket.gethostname(), objects.port))
+    objects.socket_init.bind((objects.host, objects.port))
     objects.socket_init.setblocking(True)
     objects.socket_init.listen()
     objects.socket_main, objects.client_address = objects.socket_init.accept()

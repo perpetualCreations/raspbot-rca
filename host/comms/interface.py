@@ -8,51 +8,6 @@ This script handles interfacing functions.
 
 from comms import objects, acknowledge
 
-def send(message):
-    """
-    Wrapper for encrypt, formats output to be readable for sending, and accesses objects.socket_main to send it.
-    This no longer requires to be used as socket.sendall(interface.send(self, b"message")).
-    :param message: message to be encrypted.
-    :return: none
-    """
-    encrypted = encrypt(message)
-    if len(encrypted) > 4096:
-        print("[FAIL]: Message length is greater than 4096 bytes!")
-        return None
-    pass
-    objects.socket_main.sendall(str(len(encrypted)).encode(encoding = "ascii", errors = "replace"))
-    if acknowledge.receive_acknowledgement() is False:
-        return None
-    pass
-    objects.socket_main.sendall(encrypted[1] + b" " + encrypted[2] + b" " + encrypted[0])
-pass
-
-def receive():
-    """
-    Wrapper for decrypt, formats received input and returns decrypted message. socket.socket_main.recv is now built-in.
-    interface.receive has no termination-based method of detecting the end of a message. Instead, it receives 4 bytes,
-    This no longer requires to be used as host.receive(self, socket.receive(integer)).
-    :return: decrypted message.
-    """
-    try:
-        objects.buffer_size = int(objects.socket_main.recv(4).decode(encoding = "utf-8", errors = "replace"))
-    except ValueError as ve:
-        acknowledge.send_acknowledgement(2003)
-        print("[FAIL]: Message length from host is invalid! See below for more details.")
-        print(ve)
-        return None
-    pass
-    if objects.message_buffer_size > 4096:
-        print("[FAIL]: Message length from host exceeds 4096 bytes, this is above the maximum specification!")
-        acknowledge.send_acknowledgement(2000)
-        return None
-    else:
-        acknowledge.send_acknowledgement(1001)
-    pass
-    socket_input_spliced = objects.socket_main.recv(objects.message_buffer_size).split()
-    return decrypt(socket_input_spliced[2], socket_input_spliced[1], socket_input_spliced[0])
-pass
-
 def encrypt(byte_input):
     """
     Takes byte input and returns encrypted input using a key and encryption nonce.
@@ -87,3 +42,56 @@ def decrypt(encrypted_input, validate, nonce):
     ciphering = objects.Salsa20.new(objects.key, nonce = nonce)
     return ciphering.decrypt(encrypted_input)
 pass
+
+def send(message):
+    """
+    Wrapper for encrypt, formats output to be readable for sending, and accesses objects.socket_main to send it.
+    This no longer requires to be used as socket.sendall(interface.send(self, b"message")).
+    :param message: message to be encrypted.
+    :return: none
+    """
+    try:
+        message.encode(encoding = "ascii", errors = "replace")
+    except AttributeError:
+        pass
+    pass
+    encrypted = encrypt(message)
+    if len(encrypted) > 4096:
+        print("[FAIL]: Message length is greater than 4096 bytes!")
+        return None
+    pass
+    objects.socket_main.sendall(str(len(encrypted)).encode(encoding = "ascii", errors = "replace"))
+    if acknowledge.receive_acknowledgement() is False:
+        return None
+    pass
+    objects.socket_main.sendall(encrypted[1] + b" " + encrypted[2] + b" " + encrypted[0])
+pass
+
+def receive():
+    """
+    Wrapper for decrypt, formats received input and returns decrypted message. socket.socket_main.recv is now built-in.
+    interface.receive has no termination-based method of detecting the end of a message. Instead, it receives 4 bytes,
+    This no longer requires to be used as host.receive(self, socket.receive(integer)).
+    :return: decrypted message.
+    """
+    try:
+        objects.message_buffer_size = int(objects.socket_main.recv(4).decode(encoding = "utf-8", errors = "replace"))
+    except ValueError as ve:
+        acknowledge.send_acknowledgement(2003)
+        print("[FAIL]: Message length from host is invalid! See below for more details.")
+        print(ve)
+        return None
+    pass
+    if objects.message_buffer_size > 4096:
+        print("[FAIL]: Message length from host exceeds 4096 bytes, this is above the maximum specification!")
+        acknowledge.send_acknowledgement(2000)
+        return None
+    else:
+        acknowledge.send_acknowledgement(1001)
+    pass
+    socket_input_spliced = objects.socket_main.recv(objects.message_buffer_size).split()
+    print(objects.message_buffer_size)
+    print(socket_input_spliced) # TODO undo debug
+    return decrypt(socket_input_spliced[2], socket_input_spliced[1], socket_input_spliced[0])
+pass
+

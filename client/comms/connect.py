@@ -15,14 +15,14 @@ def connect():
     """
     print("[INFO]: Creating socket connection...")
     try:
-        objects.socket.connect((objects.host, objects.port))
+        objects.socket_main.connect((objects.host, objects.port))
     except objects.socket.error as se:
         print("[FAIL]: Failed to connect! See below for details.")
         print(se)
         objects.messagebox.showerror("Raspbot RCA: Connection Failed", "While connecting to the bot for main communications an error was raised. Please see console output for more details.")
     pass
     if acknowledge.receive_acknowledgement() is False:
-        disconnect.disconnet()
+        disconnect.disconnect()
         return None
     pass
     interface.send(objects.auth)
