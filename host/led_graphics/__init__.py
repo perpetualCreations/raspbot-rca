@@ -8,7 +8,7 @@ Host-only module.
 
 print("[INFO]: Initiating led_graphics module...")
 
-from led_graphics import led_graphics, objects, errors
+from led_graphics import objects
 
 config_parse_load = objects.configparser.ConfigParser()
 
@@ -35,7 +35,13 @@ except FileNotFoundError as nf:
 pass
 
 if objects.components[1][0] is True:
+    import sense_hat
     objects.sense = sense_hat.SenseHat()
+    objects.module_active = True
+    from led_graphics import led_graphics, errors
+else:
+    led_graphics = None
+    errors = None
 pass
 
 print("[INFO]: Initiation of led_graphics complete!")

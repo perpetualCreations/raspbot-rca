@@ -44,10 +44,8 @@ if system() == "Windows":
 else:
     # assumes you are running a Linux system.
     if gui_hide_console is True:
-        call("python main.py > /dev/null 2>&1", shell = True)
+        call("python main.py > logs/log.txt", shell = True)
     else:
         call("python main.py", shell = True)
     pass
 pass
-
-# below here is where logging options will be added.

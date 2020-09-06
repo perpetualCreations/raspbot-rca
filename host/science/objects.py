@@ -7,11 +7,10 @@ Contains objects for module, including any package imports. Interact with these 
 """
 
 try:
-    import tkinter, serial
-    import sense_hat
+    import tkinter, serial, configparser
     from time import gmtime, strftime, sleep
     from basics import basics
-    import configparser
+    from ast import literal_eval
 except ImportError as e:
     print("[FAIL]: Imports failed! See below.")
     print(e)
@@ -24,6 +23,4 @@ pass
 
 components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
 
-if components[1][0] is True:
-    sense = sense_hat.SenseHat()
-pass
+sense_hat = None # module placeholder, actually imported from __init__ instead so hardware check runs first

@@ -4,11 +4,13 @@ comms module, contains functions for socket communications.
 Made by perpetualCreations
 
 Host version of comms module.
+
+To setup the communications protocol for host, connect_accept must be invoked to start listening for connections.
 """
 
 print("[INFO]: Initiating comms module...")
 
-from comms import interface, acknowledge, objects
+from comms import interface, acknowledge, objects, net_status_data_evaluate, connect_accept
 # TODO add error handling for disconnect
 
 config_parse_load = objects.configparser.ConfigParser()

@@ -8,9 +8,9 @@ Contains objects for module, including any package imports. Interact with these 
 
 try:
     from basics import basics
-    import sense_hat
     from time import sleep
     import configparser
+    from ast import literal_eval
 except ImportError as e:
     print("[FAIL]: Imports failed! See below for details.")
     print(e)
@@ -22,4 +22,6 @@ except ImportWarning as e:
 pass
 
 components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
+
 sense = None # SenseHAT object, overwritten by __init__ after reading hardware configuration
+module_active = False # boolean indicating whether this module is active, as in cases where SenseHAT is unavailable it will be mostly disabled
