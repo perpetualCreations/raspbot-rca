@@ -39,9 +39,8 @@ cam_port = 64221 # default port config, is overwritten by configuration file rea
 
 dock_status = None
 components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
-message_buffer_size = None # placeholder, will be overwritten by receiving socket input
 
-acknowledgement_dictionary = {1000:"rca-1.2:connection_acknowledge", 1001:"rca-1.2:buffer_size_ok", 2000:"rca-1.2:buffer_size_over_spec", 2001:"rca-1.2:authentication_invalid", 2002:"rca-1.2:unknown_command", 2003:"rca-1.2:buffer_size_invalid"} # look up dictionary to convert numeric ID codes to readable alphabetical IDs
+acknowledgement_dictionary = {1000:"rca-1.2:connection_acknowledge", 2001:"rca-1.2:authentication_invalid", 2002:"rca-1.2:unknown_command"} # look up dictionary to convert numeric ID codes to readable alphabetical IDs
 acknowledgement_id = None # placeholder, will be overwritten by lookup with acknowledgement_dictionary
 acknowledgement_num_id = None # placeholder, will be overwritten by receiving socket input
 

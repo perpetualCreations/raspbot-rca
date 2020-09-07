@@ -13,7 +13,7 @@ try:
     # RCA Modules, basics is first to let logging start earlier
     import basics
     # logging initiation
-    # basics.basics.log_init() TODO undo logging disable from debug
+    basics.basics.log_init()
     import hardware_check, led_graphics, science, comms
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
@@ -65,20 +65,22 @@ class host:
         comms.connect_accept.connect_accept()
         print("[INFO]: Received connection from ", comms.objects.client_address, ".")
         comms.acknowledge.send_acknowledgement(1000)
-        data = (SHA3_512.new(comms.interface.receive()).hexdigest()).encode(encoding = "ascii", errors = "replace")
+        data_receiving = comms.interface.receive()
+        print(data_receiving)
+        data = (SHA3_512.new(data_receiving).hexdigest()).encode(encoding = "ascii", errors = "replace")
         if data == comms.objects.auth:
             print("[INFO]: Client authenticated!")
             comms.acknowledge.send_acknowledgement(1000)
         else:
-            print("[FAIL]: Client authentication invalid! Given code does not match authentication code.")
-            comms.acknowledge.send_acknowledgement_acknowledgement(2001)
-            comms.objects.socket_main.close(1)
+            print("[FAIL]: Client authentication invalid! Given code does not match authentication code, received: " + data.decode(encoding = "utf-8", errors = "replace") + ".")
+            comms.acknowledge.send_acknowledgement(2001)
+            comms.objects.socket_main.close(0)
             basics.restart_shutdown.restart()
         pass
         while True:
             command = comms.interface.receive()
             if command == b"rca-1.2:command_shutdown":
-                comms.acknowledge.send_acknowledgement_acknowledgement(1000)
+                comms.acknowledge.send_acknowledgement(1000)
                 basics.restart_shutdown.shutdown()
             elif command == b"rca-1.2:command_reboot":
                 comms.acknowledge.send_acknowledgement(1000)

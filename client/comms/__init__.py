@@ -16,7 +16,7 @@ config_parse_load = objects.configparser.ConfigParser()
 try:
     config_parse_load.read("comms/comms.cfg")
     objects.key = (objects.MD5.new((config_parse_load["ENCRYPT"]["key"]).encode(encoding = "ascii", errors = "replace")).hexdigest()).encode(encoding = "ascii", errors = "replace") # this was previously split into a multi-liner instead of an one-liner. why? i'm not sure why there's an extra encode either
-    objects.hmac_key = (config_parse_load["ENCRYPT"]["hmac_key"]).encode(encoding = "ascii", errors = "replace")
+    objects.hmac_key = config_parse_load["ENCRYPT"]["hmac_key"]
     objects.auth = (config_parse_load["ENCRYPT"]["auth"]).encode(encoding = "ascii", errors = "replace") # not sure why there's an extra encode here either, the auth message sent to host should be converted into a byte string anyways
     objects.host = config_parse_load["NET"]["ip"]
     objects.port = int(config_parse_load["NET"]["port"])
