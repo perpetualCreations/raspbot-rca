@@ -9,7 +9,7 @@ try:
     print("[INFO]: Starting imports...")
     from subprocess import call, Popen
     from time import sleep
-    import socket, configparser, tkinter, ping3, imagezmq, cv2
+    import socket, configparser, tkinter, ping3, imagezmq
     from tkinter import messagebox
     from ast import literal_eval
     from platform import system

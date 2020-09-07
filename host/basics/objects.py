@@ -7,7 +7,7 @@ Contains objects for module, including any package imports. Interact with these 
 """
 
 try:
-    import multiprocessing, sys, configparser
+    import multiprocessing, sys, configparser, serial
     from time import gmtime, strftime
     from subprocess import call, Popen
     from basics import basics

@@ -1,5 +1,8 @@
 pyserial
-future
-imutils
-Pillow
+pycryptodomex
+sense-hat
 psutil
+pyzmq
+numpy
+imagezmq
+
