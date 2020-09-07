@@ -10,6 +10,7 @@ try:
     from basics import basics, serial
     import configparser
     from ast import literal_eval
+    from comms import interface
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Import failed!")
     print(ImportErrorMessage)

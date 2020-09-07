@@ -6,8 +6,6 @@ Made by perpetualCreations
 Contains navigation execution function.
 """
 
-# TODO when comms is implemented, please change socket interactions in timer function
-
 from nav import objects
 
 def nav_timer(nav_run_time, nav_distance_accept):
@@ -22,12 +20,12 @@ def nav_timer(nav_run_time, nav_distance_accept):
         nav_run_time_countdown -= 1
         if nav_distance_accept is True and objects.components[1][1] is True:
             host.serial("/dev/ttyACM0", "send", b"T")
-            socket.sendall(host.send(self, serial.serial("/dev/ttyACM0", "receive", None)))
+            objects.interface.send(serial.serial("/dev/ttyACM0", "receive", None))
         else:
-            socket.sendall(host.send(self, b"No Data"))
+            objects.interface.send(b"No Data")
         pass
         if nav_run_time_countdown == 0:
-            socket.sendall(host.send(self, b"rca-1.2:nav_end"))
+            objects.interface.send(b"rca-1.2:nav_end")
             host.serial("/dev/ttyACM0", "send", b"A")
         pass
         sleep(1)
