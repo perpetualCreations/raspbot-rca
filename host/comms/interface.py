@@ -51,7 +51,7 @@ def send(message):
     :return: none
     """
     encrypted = encrypt(message)
-    objects.socket_main.sendall(encrypted[1] + b" " + encrypted[2] + b" " + encrypted[0])
+    objects.socket_main.sendall(encrypted[1] + b" div " + encrypted[2] + b" div " + encrypted[0])
 pass
 
 def receive():
@@ -60,6 +60,6 @@ def receive():
     This no longer requires to be used as host.receive(self, socket.receive(integer)).
     :return: decrypted message.
     """
-    socket_input_spliced = objects.socket_main.recv(4096).split()
+    socket_input_spliced = objects.socket_main.recv(8192).split(b" div ")
     return decrypt(socket_input_spliced[2], socket_input_spliced[1], socket_input_spliced[0])
 pass

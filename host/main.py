@@ -77,6 +77,7 @@ class host:
             basics.restart_shutdown.restart()
         pass
         comms.camera_capture.connect()
+        print("[INFO]: Waiting for commands...")
         while True:
             command = comms.interface.receive()
             if command == b"rca-1.2:command_shutdown":
@@ -93,9 +94,9 @@ class host:
             elif command == b"rca-1.2:command_science_collect":
                 comms.acknowledge.send_acknowledgement(1000)
                 if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2]:
-                    connection.sendall(host.send(self, science.science.get()))
+                    comms.interface.send(science.science.get())
                 else:
-                    connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
+                    comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass
             elif command == b"rca-1.2:nav_start":
                 comms.acknowledge.send_acknowledgement(1000)
@@ -105,7 +106,7 @@ class host:
                 basics.process.create_process(host.nav_timer, (self, int(nav_command_list[1]), literal_eval(nav_command_list[2])))
             elif command == b"rca-1.2:disconnected":
                 basics.process.stop_process(comms.objects.process, True)
-                comms.objects.socket_main.close(0)
+                comms.objects.socket_main.close()
                 print("[INFO]: Client has disconnected.")
                 basics.restart_shutdown.restart()
             elif command == b"rca-1.2:led_graphics":
@@ -116,45 +117,45 @@ class host:
                         raise NotImplementedError
                     elif led_command == b"image":
                         comms.acknowledge.send_acknowledgement(1000)
-                        led_graphics.led_graphics.display("image", self.pattern_led[
-                            int(comms.interface.receive().decode(encoding = "utf-8", errors = "replace"))])
+                        led_graphics.led_graphics.display("image", self.pattern_led[int(comms.interface.receive().decode(encoding = "utf-8", errors = "replace"))])
                     elif led_command == b"stop":
                         comms.acknowledge.send_acknowledgement(1000)
                         led_graphics.led_graphics.display("stop", None)
                     pass
                 else:
-                    connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
+                    comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass
             elif command == b"rca-1.2:command_ch_check":
                 comms.acknowledge.send_acknowledgement(1000)
                 hardware_check.computer_hardware_check.collect()
                 hardware_check.computer_hardware_check.convert()
-                connection.sendall(host.send(self, hardware_check.computer_hardware_check.report()))
+                comms.interface.send(hardware_check.computer_hardware_check.report().encode(encoding = "ascii", errors = "replace"))
             elif command == b"rca-1.2:get_dock_status":
                 if self.components[2][0] is True:
                     comms.acknowledge.send_acknowledgement(1000)
                     dock_status_str = str(self.dock_status)
-                    connection.sendall(host.send(self, dock_status_str.encode(encoding = "ascii", errors = "replace")))
+                    comms.interface.send(dock_status_str.encode(encoding = "ascii", errors = "replace"))
                 else:
-                    connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
+                    comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass
             elif command == b"rca-1.2:command_dock":
                 if self.components[2][0] is True:
                     pass
                     # TODO write dock logic
                 else:
-                    connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
+                    comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass
             elif command == b"rca-1.2:command_undock":
                 if self.components[2][0] is True:
                     pass
                     # TODO write undock logic
                 else:
-                    connection.sendall(host.send(self, b"rca-1.2:hardware_unavailable"))
+                    comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass
             else:
-                connection.sendall(host.send(self, b"rca-1.2:unknown_command"))
+               comms.interface.send(b"rca-1.2:unknown_command")
             pass  # add more keys here
+            print("[INFO]: Executed command: " + command.decode(encoding = "utf-8", errors = "replace"))
         pass
     pass
 pass

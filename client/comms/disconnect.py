@@ -16,6 +16,5 @@ def disconnect():
     objects.process.stop_process(objects.process_camera_feed, True)
     interface.send(b"rca-1.2:disconnected")
     objects.net_status_data.set("Status: " + "Disconnected")
-    objects.socket.close(0)
     print("[INFO]: Disconnected from bot.")
 pass

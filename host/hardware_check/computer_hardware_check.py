@@ -96,21 +96,37 @@ def collect():
         print("[INFO]: Hostname unattainable. Setting as None.")
         objects.hostname = None
     pass
-    print("[INFO]: Attempting to retrieve system sensor data... (automatic fallback)")
-    sensor_temperature = objects.stat.sensors_temperatures()
-    if sensor_temperature == {}:
+    print("[INFO]: Attempting to retrieve system sensor data...")
+    try:
+        objects.sensor_temperature = objects.stat.sensors_temperatures()
+    except AttributeError:
         objects.sensor_temperature = "No Data"
     pass
-    sensor_fans = objects.stat.sensors_fans()
-    if sensor_fans == {}:
+    if objects.sensor_temperature == {}:
+        objects.sensor_temperature = "No Data"
+    pass
+    try:
+        objects.sensor_fans = objects.stat.sensors_fans()
+    except AttributeError:
+        objects.sensor_temperature = "No Data"
+    pass
+    if objects.sensor_fans == {}:
         objects.sensor_fans = "No Data"
     pass
-    sensor_power = objects.stat.sensors_battery()
-    if sensor_power is None:
+    try:
+        objects.sensor_power = objects.stat.sensors_battery()
+    except AttributeError:
         objects.sensor_power = "No Data"
     pass
-    system_users = objects.stat.users()
-    if not system_users:
+    if objects.sensor_power is None:
+        objects.sensor_power = "No Data"
+    pass
+    try:
+        objects.system_users = objects.stat.users()
+    except AttributeError:
+        objects.system_users = "No Data"
+    pass
+    if not objects.system_users:
         objects.system_users = "No Data"
     pass
     print("[INFO]: Retrieval complete.")

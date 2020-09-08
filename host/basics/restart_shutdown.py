@@ -13,8 +13,8 @@ def restart():
     Restarts application.
     :return: none.
     """
-    print("[INFO]: Restarting application...")
-    objects.Popen("main.py")
+    print("[INFO]: Starting new instance of application...")
+    objects.Popen("python main.py")
     basics.exit(0)
 pass
 
@@ -23,7 +23,7 @@ def shutdown():
     Shuts down bot.
     :return: none.
     """
-    objects.call("sudo shutdown now", shell=True)
+    objects.call("sudo shutdown now", shell = True)
     basics.exit(0)
 pass
 

@@ -23,7 +23,7 @@ def connect():
     """
     print("[INFO]: Initiating camera stream...")
     objects.camera_send = objects.imagezmq.ImageSender(connect_to = "tcp://" + objects.client_address[0] + ":" + str(objects.cam_port))
-    objects.camera_stream = VideoStream(usePiCamera = False).start()
-    sleep(2)
+    objects.camera_stream = objects.VideoStream(usePiCamera = False).start()
+    objects.sleep(2)
     objects.process_camera_capture = objects.process.create_process(capture, ())
 pass
