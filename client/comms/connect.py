@@ -6,7 +6,7 @@ Made by perpetualCreations
 Contains connect function.
 """
 
-from comms import objects, interface, disconnect, acknowledge
+from comms import objects, interface, disconnect, acknowledge, camera_render
 
 def connect():
     """
@@ -31,24 +31,10 @@ def connect():
         disconnect.disconnect()
         return None
     pass
+    print("[INFO]: Trying to start camera feed...")
+    objects.image_hub = objects.imagezmq.ImageHub()
+    objects.process_camera_feed = objects.process.create_process(camera_render.render, ())
     print("[INFO]: Successfully connected to host!")
-    print("[INFO]: Creating socket connection (for camera view)...")
-    try:
-        objects.socket_camera.connect((objects.host, objects.cam_port))
-    except objects.socket.error as sce:
-        print("[FAIL]: Failed to connect! See below for details.")
-        print(sce)
-        objects.messagebox.showerror("Raspbot RCA: Connection Failed", "While connecting to the bot for camera view, an error was raised. Please see console output for more details.")
-    pass
-    if acknowledge.receive_acknowledgement() is False:
-        return None
-    pass
-    interface.send(objects.auth)
-    if acknowledge.receive_acknowledgement() is False:
-        print("[INFO]: Closing connection due to invalid authentication...")
-        disconnect.disconnect()
-    pass
-    print("[INFO]: Successfully connected to host (for camera view)!")
     if objects.components[2][0]:
         interface.send(b"rca-1.2:get_dock_status")
         objects.dock_status = objects.literal_eval(interface.receive().decode(encoding = "utf-8", errors = "replace"))

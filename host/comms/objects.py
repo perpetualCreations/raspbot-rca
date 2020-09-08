@@ -7,18 +7,17 @@ Contains objects for module, including any package imports. Interact with these 
 """
 
 try:
-    import tkinter
+    import tkinter, socket, configparser, imagezmq
+    from imutils.video import VideoStream
     from tkinter import messagebox
     from platform import system
     from subprocess import call, Popen
     from time import sleep
-    import socket
     from Cryptodome.Cipher import Salsa20
     from Cryptodome.Hash import HMAC, SHA256, MD5
-    import configparser
     from ast import literal_eval
     from os import getcwd
-    from basics import basics
+    from basics import basics, process
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Import failed!")
     print(ImportErrorMessage)
@@ -35,7 +34,7 @@ auth = None # Authentication key
 
 host = None # host address goes here, for binding socket
 port = 64220 # default port config, is overwritten by configuration file read
-cam_port = 64221 # default port config, is overwritten by configuration file read
+cam_port = 64221
 
 dock_status = None
 components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
@@ -48,3 +47,8 @@ socket_init = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # socket object 
 socket_main = None # actually the connection object, gets overwritten by connect_accept.
 
 client_address = None # client IP address
+
+camera_send = None # ImageZMQ's ImageSender object, overwritten by camera_capture.connect
+camera_stream = None # VideoStream object, overwritten by camera_capture.connect
+
+process_camera_capture = None # placeholder for multiprocessing object that runs capturing

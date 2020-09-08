@@ -3,3 +3,5 @@ pycryptodomex
 pyzmq
 numpy
 imagezmq
+imutils
+opencv-contrib-python

@@ -66,7 +66,6 @@ class host:
         print("[INFO]: Received connection from ", comms.objects.client_address, ".")
         comms.acknowledge.send_acknowledgement(1000)
         data_receiving = comms.interface.receive()
-        print(data_receiving)
         data = (SHA3_512.new(data_receiving).hexdigest()).encode(encoding = "ascii", errors = "replace")
         if data == comms.objects.auth:
             print("[INFO]: Client authenticated!")
@@ -77,6 +76,7 @@ class host:
             comms.objects.socket_main.close(0)
             basics.restart_shutdown.restart()
         pass
+        comms.camera_capture.connect()
         while True:
             command = comms.interface.receive()
             if command == b"rca-1.2:command_shutdown":
@@ -104,6 +104,7 @@ class host:
                 basics.basics.serial("/dev/ttyACM0", "send", nav_command_list[0].encode(encoding = "ascii", errors = "replace"))
                 basics.process.create_process(host.nav_timer, (self, int(nav_command_list[1]), literal_eval(nav_command_list[2])))
             elif command == b"rca-1.2:disconnected":
+                basics.process.stop_process(comms.objects.process, True)
                 comms.objects.socket_main.close(0)
                 print("[INFO]: Client has disconnected.")
                 basics.restart_shutdown.restart()

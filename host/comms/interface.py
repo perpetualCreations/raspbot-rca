@@ -37,7 +37,6 @@ def decrypt(encrypted_input, validate, nonce):
         validation.hexverify(validate.decode(encoding = "utf-8", errors = "replace"))
     except ValueError:
         objects.socket_main.close()
-        # objects.socket_camera.close()
         print("[FAIL]: Message is not authentic, failed HMAC validation!")
     pass
     ciphering = objects.Salsa20.new(objects.key, nonce = nonce)

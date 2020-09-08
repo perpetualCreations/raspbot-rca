@@ -10,7 +10,7 @@ To setup the communications protocol for host, connect_accept must be invoked to
 
 print("[INFO]: Initiating comms module...")
 
-from comms import interface, acknowledge, objects, net_status_data_evaluate, connect_accept
+from comms import interface, acknowledge, objects, net_status_data_evaluate, connect_accept, camera_capture
 # TODO add error handling for disconnect
 
 config_parse_load = objects.configparser.ConfigParser()
@@ -59,6 +59,6 @@ pass
 
 objects.host = objects.socket.gethostname()
 # uncomment line below to force host address socket to be bound to localhost
-objects.host = "localhost"
+# objects.host = "localhost"
 
 print("[INFO]: Initiating of comms complete!")

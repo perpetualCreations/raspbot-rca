@@ -9,7 +9,7 @@ Client version of comms module.
 
 print("[INFO]: Initiating comms module...")
 
-from comms import interface, connect, disconnect, acknowledge, objects
+from comms import interface, connect, disconnect, acknowledge, objects, camera_render, net_status_data_evaluate
 # TODO add error handling for disconnect
 
 config_parse_load = objects.configparser.ConfigParser()
@@ -20,7 +20,6 @@ try:
     objects.auth = (config_parse_load["ENCRYPT"]["auth"]).encode(encoding = "ascii", errors = "replace") # not sure why there's an extra encode here either, the auth message sent to host should be converted into a byte string anyways
     objects.host = config_parse_load["NET"]["ip"]
     objects.port = int(config_parse_load["NET"]["port"])
-    objects.cam_port = int(config_parse_load["NET"]["cam_port"])
 except objects.configparser.Error as ce:
     print("[FAIL]: Failed to load configurations! See below for details.")
     print(ce)
