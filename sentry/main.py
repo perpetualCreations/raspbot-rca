@@ -1,7 +1,7 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
 Security Sentry Program
-Made by Taian Chen
+Made by perpetualCreations
 """
 
 try:
@@ -71,7 +71,7 @@ class sentry:
 								"\nvideo - returns video recording from last alarm trigger "
 								"\nstop - stops sentry script, start again through SSH control of Raspbot"
 								"\nAny invalid commands will return a error message. \n \nThank you for using Raspbot Sentry. \n \n"
-								"\nRaspbot Project, by Taian Chen, MIT License since 2020"
+								"\nRaspbot Project, by perpetualCreations, MIT License since 2020"
 								"\nSee https://dreamerslegacy.xyz for documentation and more.")
 		print("[INFO]: Listening to client...")
 		while self.run_loop is True:
@@ -145,7 +145,7 @@ class sentry:
 		sentry.client_send(self, "[raspbot] Sentry Stopped", "Hello user. \nSentry has been stopped and is no longer running. "
 		                        "\nRestart it with terminal. If you have not issued a stop command, its likely an error has occurred." 
 		                        "\n \nThank you for using Raspbot Sentry. \n \n"
-								"\nRaspbot Project, by Taian Chen, MIT License since 2020"
+								"\nRaspbot Project, by perpetualCreations, MIT License since 2020"
 								"\nSee https://dreamerslegacy.xyz for documentation and more.")
 		stop(exit_code)
 	pass
