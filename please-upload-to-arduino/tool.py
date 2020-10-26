@@ -21,6 +21,12 @@ with open("rca_upload_me_session_" + str(randint(1, 9999)) + ".ino", "w") as scr
 // See documentation on pinouts and additional information.
     """
 
+    if input("Are you using PlatformIO or another editor other than the default Arduino IDE to build and upload? (y/n) ") in ["Y", "y"]:
+        script += """
+// Arduino Library
+#include <Arduino.h>
+        """
+
     if literal_eval(config["HARDWARE"]["arm"]) is True:
         # library and variable initiation for arm servos.
         script += """
@@ -54,16 +60,19 @@ int incomingData;
 void setup() {
   Serial.begin(9600);
   
+  // Reserved Motor Pins
   pinMode(12, OUTPUT);
-  pinMode(9, OUTPUT);
+  pinMode(13, OUTPUT);
 
   pinMode(3, OUTPUT);
   pinMode(11, OUTPUT);
   
-  pinMode(13, OUTPUT);
+  pinMode(9, OUTPUT);
   pinMode(8, OUTPUT);
   
-  pinMode(10, INPUT);
+  // Power Distribution System Control Pins
+  pinMode(4, OUTPUT);
+  pinMode(2, OUTPUT);
     """
 
     if literal_eval(config["HARDWARE"]["arm"]) is True:
@@ -88,6 +97,9 @@ void loop() {
   // C = Spin Counterclockwise
   // A = Arrest
   // V = Tells Arduino Next is Angle Digit
+  // * = Battery Voltage
+  // (, ) = Switch Ext/Int Power Relay
+  // <, > = Switch Motor Power Supply MOSFET
 
   if (Serial.available() > 0) {
 
@@ -105,7 +117,33 @@ void loop() {
         pass
     pass
 
-    script += """
+    script += """ 
+    if (incomingData == '*') {
+      int value = analogRead(A3);
+      float voltage = value * (5.0 / 1023.0);
+      
+      Serial.write(voltage);
+      Serial.write('\n');
+      
+      delay(1000);
+    }
+    
+    if (incomingData == '(') {
+      digitalWrite(2, HIGH);
+    }
+    
+    if (incomingData == ')') {
+      digitalWrite(2, LOW);
+    }
+    
+    if (incomingData == '<') {
+      digitalWrite(4, HIGH);
+    }
+    
+    if (incomingData == '>') {
+      digitalWrite(4, LOW);
+    }
+    
     if (incomingData == 'F') {
       digitalWrite(12, HIGH);
       digitalWrite(9, LOW);
@@ -214,21 +252,29 @@ void loop() {
         script += """
     if (incomingData == 'X') {
       RAKSERVOREADIDTRIGGER = true;
+      
+      delay(1000);
     }
     
     if (incomingData == 'V') {
       RAKSERVOREADTRIGGER = true;
+      
+      delay(1000);
     }
     
     if (incomingData == '1') {
       if (RAKSERVOREADIDTRIGGER == true) {
         RAKSERVOREADIDTRIGGER = false;
         RAKSERVOREADID = 1;
+        
+        delay(1000);
       }
       
       if (RAKSERVOREADTRIGGER == true) {
         RAKSERVOREADTRIGGER = false;
         RAKANGLEREAD = 1;
+        
+        delay(1000);
       }
     }
     
@@ -236,10 +282,14 @@ void loop() {
       if (RAKSERVOREADIDTRIGGER == true) {
         RAKSERVOREADIDTRIGGER = false;
         RAKSERVOREADID = 1;
+        
+        delay(1000);
       }
       if (RAKSERVOREADTRIGGER == true) {
         RAKSERVOREADTRIGGER = false;
         RAKANGLEREAD = 2;
+        
+        delay(1000);
       }
     }
     
@@ -247,6 +297,8 @@ void loop() {
       if (RAKSERVOREADTRIGGER == true) {
         RAKSERVOREADTRIGGER = false;
         RAKANGLEREAD = 3;
+        
+        delay(1000);
       }
     }
     
@@ -254,6 +306,8 @@ void loop() {
       if (RAKSERVOREADTRIGGER == true) {
         RAKSERVOREADTRIGGER = false;
         RAKANGLEREAD = 4;
+        
+        delay(1000);
       }
     }
     
@@ -261,6 +315,8 @@ void loop() {
       if (RAKSERVOREADTRIGGER == true) {
         RAKSERVOREADTRIGGER = false;
         RAKANGLEREAD = 5;
+        
+        delay(1000);
       }
     }
     
@@ -268,6 +324,8 @@ void loop() {
       if (RAKSERVOREADTRIGGER == true) {
         RAKSERVOREADTRIGGER = false;
         RAKANGLEREAD = 6;
+        
+        delay(1000);
       }
     }
     
@@ -275,6 +333,8 @@ void loop() {
       if (RAKSERVOREADTRIGGER == true) {
         RAKSERVOREADTRIGGER = false;
         RAKANGLEREAD = 7;
+        
+        delay(1000);
       }
     }
     
@@ -282,6 +342,8 @@ void loop() {
       if (RAKSERVOREADTRIGGER == true) {
         RAKSERVOREADTRIGGER = false;
         RAKANGLEREAD = 8;
+        
+        delay(1000);
       }
     }
     
@@ -289,6 +351,8 @@ void loop() {
       if (RAKSERVOREADTRIGGER == true) {
         RAKSERVOREADTRIGGER = false;
         RAKANGLEREAD = 9;
+        
+        delay(1000);
       }
     }
     
@@ -296,6 +360,8 @@ void loop() {
       if (RAKSERVOREADTRIGGER == true) {
         RAKSERVOREADTRIGGER = false;
         RAKANGLEREAD = 0;
+        
+        delay(1000);
       }
     }
         """

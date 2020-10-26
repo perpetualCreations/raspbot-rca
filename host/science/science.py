@@ -52,11 +52,11 @@ def get():
         orientation = "No Data"
         compass_str = "No Data"
         accelerometer = "No Data"
-    print("[INFO]: Starting serial connection with Grove Arduino integration...")
+    print("[INFO]: Starting serial connection with Arduino...")
     try:
         arduino = objects.serial.Serial('/dev/ttyACM0', timeout = 5)
     except objects.serial.serialutil.SerialException as se:
-        print("[FAIL]: Failed to create connection with Grove Arduino integration! See details below.")
+        print("[FAIL]: Failed to create connection with Arduino! See details below.")
         print(se)
         return None
     pass

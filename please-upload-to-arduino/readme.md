@@ -1,4 +1,4 @@
-Run the Arduino script generation tool, labelled clearly as "tool.py."
+Run the Arduino script generation tool, labeled clearly as "tool.py."
 You will be asked to provide a path to your hardware configuration file (i.e C:/Users/pc1636/Raspbot RCA/client/hardware.cfg or /home/pc1636/Raspbot RCA/client/hardware.cfg).
 
 Please make sure you have edited your hardware configuration file and changed it from its default settings.
