@@ -573,4 +573,4 @@ class client:
     pass
 pass
 
-c = client()
+if __name__ == "__main__": client()

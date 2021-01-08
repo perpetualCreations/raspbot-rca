@@ -93,7 +93,7 @@ class host:
             elif command == b"rca-1.2:command_science_collect":
                 comms.acknowledge.send_acknowledgement(1000)
                 if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2]:
-                    comms.interface.send(science.science.get())
+                    comms.interface.send(science.get())
                 else:
                     comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass
@@ -156,4 +156,4 @@ class host:
     pass
 pass
 
-h = host()
+if __name__ == "__main__": host()

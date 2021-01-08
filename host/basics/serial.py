@@ -7,6 +7,8 @@ Serial communications function contained within this module.
 Other wrapper functions that make use of serial are included as well.
 """
 
+from basics import objects
+
 def serial(port, direction, message = None):
     """
     Sends or receives serial communications to the Arduino integration.
@@ -15,13 +17,10 @@ def serial(port, direction, message = None):
     :param message: what contents to send, or if receiving leave as None.
     :return: if receiving, decoded string, if sending or invalid direction, none.
     """
-    arduino_connect = serial.Serial(port = port, timeout = 5)
-    if direction == "receive":
-        return arduino_connect.readline().decode(encoding = "utf-8", errors = "replace")
-    elif direction == "send":
-        arduino_connect.write(message.encode(encoding = "ascii", errors = "replace"))
-    else:
-        return None
+    connect = objects.serial.Serial(port = port, timeout = 5)
+    if direction == "receive": return connect.readline().decode(encoding = "utf-8", errors = "replace")
+    elif direction == "send": connect.write(message.encode(encoding = "ascii", errors = "replace"))
+    else: return None
     pass
 pass
 
