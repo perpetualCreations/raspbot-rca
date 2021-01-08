@@ -14,18 +14,14 @@ from ast import literal_eval
 config = configparser.ConfigParser()
 config.read(input("Path to hardware configuration: "))
 
-with open("rca_upload_me_session_" + str(randint(1, 9999)) + ".ino", "w") as script_export:
+with open("rca_upload_me_" + str(randint(1, 9999)) + ".cpp", "w") as script_export:
     script = """// Raspbot Remote Control Application, Arduino Instructions for Serial Commandment
-// Auto-generated instructions for Arduino.
+// Auto-Generated
 
 // See documentation on pinouts and additional information.
-    """
 
-    if input("Are you using PlatformIO or another editor other than the default Arduino IDE to build and upload? (y/n) ") in ["Y", "y"]:
-        script += """
-// Arduino Library
-#include <Arduino.h>
-        """
+#include <Arduino.h>"""
+
 
     if literal_eval(config["HARDWARE"]["arm"]) is True:
         # library and variable initiation for arm servos.
@@ -52,6 +48,13 @@ bool RAKSERVOREADIDTRIGGER = false;
         """
         pass
     pass
+
+    if literal_eval(config["HARDWARE"]["charger"]):
+        script += """
+// PDU Variables
+int value;
+float voltage;
+        """
 
     script += """
 // Common Variables
@@ -98,8 +101,8 @@ void loop() {
   // A = Arrest
   // V = Tells Arduino Next is Angle Digit
   // * = Battery Voltage
-  // (, ) = Switch Ext/Int Power Relay
-  // <, > = Switch Motor Power Supply MOSFET
+  // (, ) = Switch Ext/Int Power Relay, when HIGH, internal
+  // <, > = Switch Motor Power Supply MOSFET, when HIGH, ON
 
   if (Serial.available() > 0) {
 
@@ -111,7 +114,7 @@ void loop() {
         script += """
     if (RAK1ANGLEDIGIT == 0 && RAKANGLEREAD == 1) {
       RAK1ANGLEDIGIT = 3;
-      RAK1SERVO.write(int(RAK1ANGLEDATA[0] + RAK1ANGLEDIGIT[1] + RAK1ANGLEDATA[2]));
+      RAK1SERVO.write(int(RAK1ANGLEDATA[0] + RAK1ANGLEDATA[1] + RAK1ANGLEDATA[2]));
     }
         """
         pass
@@ -123,7 +126,7 @@ void loop() {
       float voltage = value * (5.0 / 1023.0);
       
       Serial.write(voltage);
-      Serial.write('\n');
+      Serial.write('\\n');
       
       delay(1000);
     }

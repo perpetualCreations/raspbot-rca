@@ -14,7 +14,7 @@ try:
     import basics
     # logging initiation
     basics.basics.log_init()
-    import hardware_check, led_graphics, science, comms
+    import hardware_check, led_graphics, science, comms, power, nav
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
@@ -35,7 +35,6 @@ class host:
         print("[INFO]: Declaring variables...")
         self.connect_retries = 0
         self.components = [[None], [None, None, None], [None], [None, None]]  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
-        self.dock_status = False
         print("[INFO]: Loading configurations...")
         config_parse_load = configparser.ConfigParser()
         try:
@@ -102,7 +101,7 @@ class host:
                 comms.acknowledge.send_acknowledgement(1000)
                 nav_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                 nav_command_list = nav_command.split()
-                basics.basics.serial("/dev/ttyACM0", "send", nav_command_list[0].encode(encoding = "ascii", errors = "replace"))
+                basics.serial.serial("/dev/ttyACM0", "send", nav_command_list[0].encode(encoding = "ascii", errors = "replace"))
                 basics.process.create_process(host.nav_timer, (self, int(nav_command_list[1]), literal_eval(nav_command_list[2])))
             elif command == b"rca-1.2:disconnected":
                 basics.process.stop_process(comms.objects.process, True)
@@ -133,22 +132,19 @@ class host:
             elif command == b"rca-1.2:get_dock_status":
                 if self.components[2][0] is True:
                     comms.acknowledge.send_acknowledgement(1000)
-                    dock_status_str = str(self.dock_status)
-                    comms.interface.send(dock_status_str.encode(encoding = "ascii", errors = "replace"))
+                    comms.interface.send(str(power.objects.dock_status).encode(encoding = "ascii", errors = "replace"))
                 else:
                     comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass
             elif command == b"rca-1.2:command_dock":
                 if self.components[2][0] is True:
-                    pass
-                    # TODO write dock logic
+                    power.dock.dock()
                 else:
                     comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass
             elif command == b"rca-1.2:command_undock":
                 if self.components[2][0] is True:
-                    pass
-                    # TODO write undock logic
+                    power.dock.undock()
                 else:
                     comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass

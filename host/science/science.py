@@ -21,21 +21,14 @@ def get():
     print("[INFO]: Starting data collection...")
     if objects.components[1][0] is True:
         print("[INFO]: Collecting data from sensors on SenseHAT...")
-        temperature_data_raw = objects.sense.get_temperature_from_humidity()
-        temperature_data = round(temperature_data_raw, 2)
-        pressure_data_raw = objects.sense.get_pressure()
-        pressure_data = round(pressure_data_raw, 2)
-        humidity_data_raw = objects.sense.get_humidity()
-        humidity_data = round(humidity_data_raw, 2)
         objects.sense.set_imu_config(True, True, True)
         orientation_raw = objects.sense.get_orientation_degrees()
-        compass_raw = objects.sense.compass
-        compass = round(compass_raw, 2)
+        compass = round(objects.sense.compass, 2)
         accelerometer_data = objects.sense.get_accelerometer_raw()
         print("[INFO]: Collection completed.")
-        temperature_str = str(temperature_data) + "C"
-        pressure_str = str(pressure_data) + " Millibars"
-        humidity_str = str(humidity_data) + "% Humidity"
+        temperature_str = str(round(objects.sense.get_temperature_from_humidity(), 2)) + "C"
+        pressure_str = str(round(objects.sense.get_pressure(), 2)) + " Millibars"
+        humidity_str = str(round(objects.sense.get_humidity(), 2)) + "% Humidity"
         orientation_roll = str(round(orientation_raw["roll"], 2))
         orientation_pitch = str(round(orientation_raw["pitch"], 2))
         orientation_yaw = str(round(orientation_raw["yaw"], 2))
@@ -89,10 +82,6 @@ def get():
         print("[INFO]: No data for ToF sensor.")
         distance = "No Data"
     pass
-    # Grove Light Sensor was never implemented.
-    # grove_sensor_light_data = arduino.readline()
-    # light = grove_sensor_light_data.decode(encoding = "utf-8", errors = "replace")
-    # light = light.rstrip("\n")
     print("[INFO]: Generating timestamps...")
     timestamp = objects.strftime("%b%d%Y%H%M%S"), objects.gmtime()
     timestamp_output = timestamp[0]

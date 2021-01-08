@@ -1,1 +1,0 @@
-This script is made for those using the RFP Enceladus parts set atop of the base set, however without Upgrade #1.
