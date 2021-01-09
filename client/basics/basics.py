@@ -17,27 +17,21 @@ def log_init():
     objects.log_file_handle = open("logs/log-" + make_timestamp() + ".txt", "w")
     objects.origin_stdout = objects.sys.stdout
     objects.sys.stdout = objects.log_file_handle
-pass
 
 def make_timestamp():
     """
     Generates timestamp from current UTC time.
-    :return: none.
+    :return: str, timestamp formatted as month, day, year, hour, minute, second, in that order.
     """
     print("[INFO]: Generating timestamps...")
-    timestamp = objects.strftime("%b%d%Y%H%M%S"), objects.gmtime()
-    return str(timestamp[0])
-pass
+    return str((objects.strftime("%b%d%Y%H%M%S"), objects.gmtime())[0])
 
 def window_close_exit():
     """
     Wrapper for exit, linked to protocol handler for when the GUI window is closed.
-    :return: 
+    :return: none.
     """
-    if objects.messagebox.askyesno("Raspbot RCA: Quit?", "Are you sure you want to exit?") is True:
-        exit(0)
-    pass
-pass
+    if objects.messagebox.askyesno("Raspbot RCA: Quit?", "Are you sure you want to exit?") is True: exit(0)
 
 def exit(status):
     """
@@ -48,7 +42,6 @@ def exit(status):
     objects.sys.stdout = objects.origin_stdout
     objects.log_file_handle.close()
     objects.sys.exit(status)
-pass
 
 def set_configuration(file, var, value, section, key, multi):
     """
@@ -88,4 +81,34 @@ def set_configuration(file, var, value, section, key, multi):
         pass
         config_write.close()
     pass
-pass
+
+def load_hardware_config():
+    """
+    Uses configparser to retrieve hardware configuration, and return as nested component list.
+    :return:
+    """
+    config_parse_load = objects.configparser.ConfigParser()
+    try:
+        components = [[None], [None, None, None], [None], [None, None]]
+        config_parse_load.read("hardware.cfg")
+        components[0][0] = objects.literal_eval(config_parse_load["HARDWARE"]["cam"])
+        components[1][0] = objects.literal_eval(config_parse_load["HARDWARE"]["sensehat"])
+        components[1][1] = objects.literal_eval(config_parse_load["HARDWARE"]["distance"])
+        components[1][2] = objects.literal_eval(config_parse_load["HARDWARE"]["dust"])
+        components[2][0] = objects.literal_eval(config_parse_load["HARDWARE"]["charger"])
+        components[3][0] = objects.literal_eval(config_parse_load["HARDWARE"]["arm"])
+        components[3][1] = objects.literal_eval(config_parse_load["HARDWARE"]["arm_cam"])
+        return components
+    except objects.configparser.Error as ce:
+        print("[FAIL]: Failed to load configurations! See below for details.")
+        print(ce)
+        exit(1)
+    except KeyError as ke:
+        print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
+        print(ke)
+        exit(1)
+    except FileNotFoundError as nf:
+        print("[FAIL]: Failed to load configurations! Configuration file is missing.")
+        print(nf)
+        exit(1)
+    pass

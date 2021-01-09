@@ -9,15 +9,16 @@ Other wrapper functions that make use of serial are included as well.
 
 from basics import objects
 
-def serial(port, direction, message = None):
+def serial(port = "/dev/ttyACM0", direction = "receive", message = None):
     """
     Sends or receives serial communications to the Arduino integration.
-    :param port: the port that the Arduino is connected to.
-    :param direction: whether to expect to receive or send.
-    :param message: what contents to send, or if receiving leave as None.
+    :param port: str, the port that the Arduino is connected to, default set to /dev/ttyACM0.
+    :param direction: str, whether to expect to receive or send, default set to receive.
+    :param message: str, message to send, or if receiving leave as None, default set to None automatically, can be bytestring or normal string.
     :return: if receiving, decoded string, if sending or invalid direction, none.
     """
     connect = objects.serial.Serial(port = port, timeout = 5)
+    if isinstance(message, bytes) is True: message = message.decode(encoding = "utf-8", errors = "replace")
     if direction == "receive": return connect.readline().decode(encoding = "utf-8", errors = "replace")
     elif direction == "send": connect.write(message.encode(encoding = "ascii", errors = "replace"))
     else: return None

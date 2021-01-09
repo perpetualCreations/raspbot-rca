@@ -8,40 +8,63 @@ Host-only module.
 
 print("[INFO]: Initiating led_graphics module...")
 
-from led_graphics import objects
-
-config_parse_load = objects.configparser.ConfigParser()
-
 try:
-    config_parse_load.read("hardware.cfg")
-    objects.components[0][0] = objects.literal_eval(config_parse_load["HARDWARE"]["cam"])
-    objects.components[1][0] = objects.literal_eval(config_parse_load["HARDWARE"]["sensehat"])
-    objects.components[1][1] = objects.literal_eval(config_parse_load["HARDWARE"]["distance"])
-    objects.components[1][2] = objects.literal_eval(config_parse_load["HARDWARE"]["dust"])
-    objects.components[2][0] = objects.literal_eval(config_parse_load["HARDWARE"]["charger"])
-    objects.components[3][0] = objects.literal_eval(config_parse_load["HARDWARE"]["arm"])
-    objects.components[3][1] = objects.literal_eval(config_parse_load["HARDWARE"]["arm_cam"])
-except objects.configparser.Error as ce:
-    print("[FAIL]: Failed to load configurations! See below for details.")
-    print(ce)
-    objects.basics.exit(1)
-except KeyError as ke:
-    print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
-    print(ke)
-    objects.basics.exit(1)
-except FileNotFoundError as nf:
-    print("[FAIL]: Failed to load configurations! Configuration file is missing.")
-    objects.basics.exit(1)
-pass
-
-if objects.components[1][0] is True:
-    import sense_hat
-    objects.sense = sense_hat.SenseHat()
-    objects.module_active = True
-    from led_graphics import led_graphics, errors
-else:
-    led_graphics = None
-    errors = None
+    from basics import basics
+    from time import sleep
+    from ast import literal_eval
+except ImportError as e:
+    print("[FAIL]: Imports failed! See below for details.")
+    print(e)
+    basics.exit(1)
+except ImportWarning as e:
+    print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
+    print(e)
+    basics.exit(1)
 pass
 
 print("[INFO]: Initiation of led_graphics complete!")
+
+class led_graphics:
+    """
+    Class for managing LED matrix on SenseHAT.
+    Only relevant if you have a SenseHAT as part of your hardware configuration.
+    """
+    def __init__(self):
+        """
+        Initiation function, loads hardware configuration and defines a few class variables.
+        """
+        self.components = basics.load_hardware_config()
+        if objects.components[1][0] is True:
+            import sense_hat
+            self.sense = sense_hat.SenseHat()
+        else: self.sense = None
+
+    def display(self, command, frames = None):
+        """
+        Multi-purpose function for controlling SenseHAT's LED matrix. Accepts a command and frame parameter.
+        :param command: str, either 'play', 'stop', 'image', to select mode, play accepts list format and image a set of images, stop will end display and clear.
+        :param frames: list, with pixel positions or set of image filenames/path, default NONE
+        :return: none.
+        """
+        if command == "play" and frames is not None:
+            print("[INFO]: led_graphics is now displaying frames (from list format).")
+            while True:
+                for x in frames:
+                    self.sense.set_pixels(x)
+                    sleep(1)
+                pass
+            pass
+        elif command == "stop":
+            self.sense.clear()
+            print("[INFO]: led_graphics cleared and stopped.")
+        elif command == "image" and frames is not None:
+            print("[INFO]: led_graphics is now displaying frames (from image format).")
+            for x in frames:
+                self.sense.load_image(x)
+                sleep(1)
+            pass
+        else:
+            print("[FAIL]: Entered command parameter for led_graphics module is invalid!")
+            self.sense.clear()
+        pass
+    pass

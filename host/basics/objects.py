@@ -10,6 +10,7 @@ try:
     import multiprocessing, sys, configparser, serial
     from time import gmtime, strftime
     from subprocess import call, Popen
+    from ast import literal_eval
     from basics import basics
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Import failed!")
@@ -23,3 +24,5 @@ pass
 
 log_file_handle = None # overwritten by basics module's log_init()
 origin_stdout = None # overwritten by basics module's log_init()
+
+dock_status = True

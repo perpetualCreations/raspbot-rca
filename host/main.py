@@ -14,7 +14,9 @@ try:
     import basics
     # logging initiation
     basics.basics.log_init()
-    import hardware_check, led_graphics, science, comms, power, nav
+    from led_graphics import led_graphics
+    from science import science
+    import hardware_check, comms
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
@@ -92,8 +94,9 @@ class host:
                 comms.acknowledge.send_acknowledgement(1000)
             elif command == b"rca-1.2:command_science_collect":
                 comms.acknowledge.send_acknowledgement(1000)
+                sensor_interface = science()
                 if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2]:
-                    comms.interface.send(science.get())
+                    comms.interface.send(sensor_interface.get())
                 else:
                     comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass
@@ -101,8 +104,8 @@ class host:
                 comms.acknowledge.send_acknowledgement(1000)
                 nav_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                 nav_command_list = nav_command.split()
-                basics.serial.serial("/dev/ttyACM0", "send", nav_command_list[0].encode(encoding = "ascii", errors = "replace"))
-                basics.process.create_process(host.nav_timer, (self, int(nav_command_list[1]), literal_eval(nav_command_list[2])))
+                basics.serial.serial(direction = "send", message = nav_command_list[0].encode(encoding = "ascii", errors = "replace"))
+                basics.process.create_process(basics.serial.nav_timer, (self, int(nav_command_list[1]), literal_eval(nav_command_list[2])))
             elif command == b"rca-1.2:disconnected":
                 basics.process.stop_process(comms.objects.process, True)
                 comms.objects.socket_main.close()
@@ -110,16 +113,17 @@ class host:
                 basics.restart_shutdown.restart()
             elif command == b"rca-1.2:led_graphics":
                 comms.acknowledge.send_acknowledgement(1000)
+                led_interface = led_graphics()
                 if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
                     led_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                     if led_command == b"play":
                         raise NotImplementedError
                     elif led_command == b"image":
                         comms.acknowledge.send_acknowledgement(1000)
-                        led_graphics.led_graphics.display("image", self.pattern_led[int(comms.interface.receive().decode(encoding = "utf-8", errors = "replace"))])
+                        led_interface.display("image", self.pattern_led[int(comms.interface.receive().decode(encoding = "utf-8", errors = "replace"))])
                     elif led_command == b"stop":
                         comms.acknowledge.send_acknowledgement(1000)
-                        led_graphics.led_graphics.display("stop", None)
+                        led_interface.display("stop")
                     pass
                 else:
                     comms.interface.send(b"rca-1.2:hardware_unavailable")
@@ -132,19 +136,19 @@ class host:
             elif command == b"rca-1.2:get_dock_status":
                 if self.components[2][0] is True:
                     comms.acknowledge.send_acknowledgement(1000)
-                    comms.interface.send(str(power.objects.dock_status).encode(encoding = "ascii", errors = "replace"))
+                    comms.interface.send(str(basics.objects.dock_status).encode(encoding = "ascii", errors = "replace"))
                 else:
                     comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass
             elif command == b"rca-1.2:command_dock":
                 if self.components[2][0] is True:
-                    power.dock.dock()
+                    basics.serial.dock()
                 else:
                     comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass
             elif command == b"rca-1.2:command_undock":
                 if self.components[2][0] is True:
-                    power.dock.undock()
+                    basics.serial.undock()
                 else:
                     comms.interface.send(b"rca-1.2:hardware_unavailable")
                 pass

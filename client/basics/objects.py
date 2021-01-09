@@ -10,6 +10,7 @@ try:
     import multiprocessing, sys, configparser
     from time import gmtime, strftime
     from tkinter import messagebox
+    from ast import literal_eval
     from basics import basics
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Import failed!")
