@@ -14,7 +14,11 @@ def disconnect():
     :return: none.
     """
     objects.process.stop_process(objects.process_camera_feed, True)
-    interface.send(b"rca-1.2:disconnected")
+    try:
+        interface.send(b"rca-1.2:disconnected")
+    except OSError:
+        pass
+    pass
     objects.net_status_data.set("Status: " + "Disconnected")
     print("[INFO]: Disconnected from bot.")
 pass

@@ -20,7 +20,7 @@ def evaluate():
     Evaluates objects.net_status_Data and returns True/False boolean.
     Logic is nestled in a function to allow for return.
     """
-    if objects.net_status_data.get() is "Status: Connected":
+    if objects.net_status_data.get() == "Status: Connected":
         return True
     else:
         return False
