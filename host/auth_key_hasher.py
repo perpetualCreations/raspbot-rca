@@ -9,7 +9,7 @@ from Cryptodome.Hash import SHA3_512
 
 config_parse = configparser.ConfigParser()
 config_parse["ENCRYPT"]["auth"] = SHA3_512.new(input("Please enter your chosen auth code: ").encode(encoding = "ascii", errors = "replace")).hexdigest()
-with open("main.cfg", "w") as config_write:
+with open("comms/comms.cfg", "w") as config_write:
     config_parse.write(config_write)
 pass
 config_write.close()
