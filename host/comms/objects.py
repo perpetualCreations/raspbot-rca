@@ -7,9 +7,8 @@ Contains objects for module, including any package imports. Interact with these 
 """
 
 try:
-    import tkinter, socket, configparser, imagezmq
+    import socket, configparser, imagezmq
     from imutils.video import VideoStream
-    from tkinter import messagebox
     from platform import system
     from subprocess import call, Popen
     from time import sleep

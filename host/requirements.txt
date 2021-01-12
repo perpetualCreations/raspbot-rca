@@ -6,4 +6,4 @@ pyzmq
 numpy
 imagezmq
 imutils
-opencv-contrib-python
+opencv-contrib-python-headless
