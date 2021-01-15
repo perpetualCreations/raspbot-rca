@@ -14,7 +14,7 @@ def restart():
     :return: none.
     """
     print("[INFO]: Starting new instance of application...")
-    objects.Popen("python main.py")
+    objects.Popen("python3 main.py", shell = True)
     basics.exit(0)
 pass
 

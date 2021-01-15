@@ -51,6 +51,7 @@ def send(message):
     :return: none
     """
     encrypted = encrypt(message)
+    objects.socket_main.setblocking(True)  # blocking keeps on getting disabled
     objects.socket_main.sendall(encrypted[1] + b" div " + encrypted[2] + b" div " + encrypted[0])
 pass
 
@@ -61,6 +62,7 @@ def receive():
     This no longer requires to be used as host.receive(self, socket.receive(integer)).
     :return: decrypted message.
     """
+    objects.socket_main.setblocking(True)  # blocking keeps on getting disabled
     socket_input_spliced = objects.socket_main.recv(8192).split(b" div ")
     return decrypt(socket_input_spliced[2], socket_input_spliced[1], socket_input_spliced[0])
 pass

@@ -57,8 +57,6 @@ except FileNotFoundError:
     objects.basics.exit(1)
 pass
 
-objects.host = objects.socket.gethostname()
-# uncomment line below to force host address socket to be bound to localhost
-# objects.host = "localhost"
+objects.host = objects.socket.gethostname() + ".local"
 
 print("[INFO]: Initiating of comms complete!")

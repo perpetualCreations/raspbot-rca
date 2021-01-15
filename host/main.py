@@ -13,7 +13,8 @@ try:
     # RCA Modules, basics is first to let logging start earlier
     import basics
     # logging initiation
-    basics.basics.log_init()
+    # basics.basics.log_init()
+    # TODO uncomment host logging init, this was for dev
     from led_graphics import led_graphics
     from science import science
     import hardware_check, comms

@@ -70,22 +70,20 @@ def receive_acknowledgement():
     :return: True/False boolean, only returns True when an acknowledgement is successfully received, otherwise returns False for errors.
     """
     try:
-        objects.socket_main.setblocking(True)
         objects.acknowledgement_num_id = int(objects.socket_main.recv(4).decode(encoding = "utf-8", errors = "replace"))
-        objects.socket_main.setblocking(False)
     except objects.socket.error as sae:
         print("[FAIL]: Failed to receive acknowledgement. See below for details.")
         print(sae)
         return False
     except ValueError as ve:
-        print("[FAIL]: Failed to decode acknowledgement from a byte string. See below for details.")
+        print("[FAIL]: Failed to decode acknowledgement from a byte string. Received:")
         print(ve)
         return False
     pass
     try:
         objects.acknowledgement_id = objects.acknowledgement_dictionary[objects.acknowledgement_num_id]
     except KeyError as ke:
-        print("[FAIL]: Acknowledgement number ID to alphabetical ID conversion failed! See below for more details.")
+        print("[FAIL]: Acknowledgement number ID to alphabetical ID conversion failed!")
         print(ke)
         return False
     pass

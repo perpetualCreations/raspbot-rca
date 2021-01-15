@@ -12,11 +12,10 @@ def connect_accept():
     """
     Listens for incoming connection requests, and with socket_init creates connection object socket_main.
     """
-    objects.socket_init.setblocking(False)
+    print("[INFO]: Listening for connection on port " + str(objects.port) + "...")
     objects.socket_init.settimeout(5)
     objects.socket_init.bind((objects.host, objects.port))
     objects.socket_init.setblocking(True)
     objects.socket_init.listen()
     objects.socket_main, objects.client_address = objects.socket_init.accept()
-    objects.socket_init.setblocking(False)
 pass

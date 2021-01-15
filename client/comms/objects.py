@@ -35,8 +35,8 @@ host = None # host IP address
 port = 64220 # default port config, is overwritten by configuration file read
 
 socket_main = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-socket_main.setblocking(False)
 socket_main.settimeout(10)
+socket_main.setblocking(True)
 
 dock_status = None
 components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
