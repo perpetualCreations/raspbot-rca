@@ -25,7 +25,7 @@ def nav_edit():
         graphics_title.grid(row = 0, column = 0)
         graphics_entry = objects.tkinter.Entry(root, bg = "white", fg = "black", font = ("Calibri", 12))
         graphics_entry.grid(row = 1, column = 0, padx = (10, 0))
-        graphics_confirm_button = objects.tkinter.Button(root, bg = "white", fg = "black", text = "Confirm", width = 8, height = 1, font = ("Calibri", 12), command = lambda: call(lookup[objects.system()] + graphics_entry.get(), shell = True))
+        graphics_confirm_button = objects.tkinter.Button(root, bg = "white", fg = "black", text = "Confirm", width = 8, height = 1, font = ("Calibri", 12), command = lambda: objects.call(lookup[objects.system()] + graphics_entry.get(), shell = True))
         graphics_confirm_button.grid(row = 2, column = 0, padx = (10, 0), pady = (5, 0))
         root.mainloop()
     except KeyError: objects.messagebox.showerror("Raspbot RCA: OS Unsupported", "Client OS is unsupported, please manually edit configuration! Open an issue on Github for your operating system to be supported.")

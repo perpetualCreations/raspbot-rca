@@ -10,7 +10,6 @@ Client version of comms module.
 print("[INFO]: Initiating comms module...")
 
 from comms import interface, connect, disconnect, acknowledge, objects, camera_render, net_status_data_evaluate
-# TODO add error handling for disconnect
 
 config_parse_load = objects.configparser.ConfigParser()
 try:

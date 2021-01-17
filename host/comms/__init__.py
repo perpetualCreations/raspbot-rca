@@ -11,7 +11,6 @@ To setup the communications protocol for host, connect_accept must be invoked to
 print("[INFO]: Initiating comms module...")
 
 from comms import interface, acknowledge, objects, connect_accept, camera_capture
-# TODO add error handling for disconnect
 
 config_parse_load = objects.configparser.ConfigParser()
 try:

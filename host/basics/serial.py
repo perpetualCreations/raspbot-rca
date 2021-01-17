@@ -91,7 +91,6 @@ def undock():
     objects.dock_status = False
 pass
 
-
 def voltage():
     """
     Collects battery voltage through serial.
