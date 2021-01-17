@@ -16,6 +16,7 @@ def disconnect():
     objects.process.stop_process(objects.process_camera_feed, True)
     try:
         interface.send(b"rca-1.2:disconnected")
+        objects.socket_main.close()
     except OSError:
         pass
     pass

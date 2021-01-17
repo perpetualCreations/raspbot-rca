@@ -20,6 +20,7 @@ def nav_execute(direction, run_time):
     else:
         get_distance = False
     pass
+    objects.comms.interface.send("rca-1.2:nav_start")
     objects.comms.interface.send((direction + " " + str(run_time) + " " + str(get_distance)).encode(encoding = "ascii", errors = "replace"))
     if objects.comms.acknowledge.receive_acknowledgement() is False:
         return None

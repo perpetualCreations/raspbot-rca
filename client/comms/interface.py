@@ -14,11 +14,7 @@ def encrypt(byte_input):
     :param byte_input: byte string to be encrypted.
     :return: encrypted string, nonce, and HMAC validation.
     """
-    if isinstance(byte_input, bytes):
-        pass
-    else:
-        byte_input.encode(encoding = "ascii", errors = "replace")
-    pass
+    if isinstance(byte_input, str): byte_input = byte_input.encode(encoding = "ascii", errors = "replace")
     ciphering = objects.Salsa20.new(objects.key)
     encrypted = ciphering.encrypt(byte_input)
     validation = objects.HMAC.new(objects.hmac_key.encode(encoding = "ascii", errors = "replace"), msg = encrypted, digestmod = objects.SHA256)

@@ -12,12 +12,10 @@ try:
     from platform import system
     from subprocess import call, Popen
     from time import sleep
-    import configparser
     import comms # if I import comms from main, it doesn't use the current main module instance, it starts a new one
     import basics
     from ast import literal_eval
     from os import getcwd
-    from basics import basics
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Import failed!")
     print(ImportErrorMessage)

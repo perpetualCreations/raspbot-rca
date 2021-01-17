@@ -5,8 +5,7 @@ Made by perpetualCreations
 
 try:
     print("[INFO]: Starting imports...")
-    from time import sleep
-    import socket, configparser, multiprocessing, serial, cv2
+    import cv2
     from sys import exit as app_end
     from ast import literal_eval
     from Cryptodome.Hash import SHA3_512
@@ -37,30 +36,8 @@ class host:
         print("[INFO]: Starting host Raspbot RC Application...")
         print("[INFO]: Declaring variables...")
         self.connect_retries = 0
-        self.components = [[None], [None, None, None], [None], [None, None]]  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
         print("[INFO]: Loading configurations...")
-        config_parse_load = configparser.ConfigParser()
-        try:
-            config_parse_load.read("hardware.cfg")
-            self.components[0][0] = literal_eval(config_parse_load["HARDWARE"]["cam"])
-            self.components[1][0] = literal_eval(config_parse_load["HARDWARE"]["sensehat"])
-            self.components[1][1] = literal_eval(config_parse_load["HARDWARE"]["distance"])
-            self.components[1][2] = literal_eval(config_parse_load["HARDWARE"]["dust"])
-            self.components[2][0] = literal_eval(config_parse_load["HARDWARE"]["charger"])
-            self.components[3][0] = literal_eval(config_parse_load["HARDWARE"]["arm"])
-            self.components[3][1] = literal_eval(config_parse_load["HARDWARE"]["arm_cam"])
-        except configparser.Error as ce:
-            print("[FAIL]: Failed to load configurations! See below for details.")
-            print(ce)
-            basics.basics.exit(1)
-        except KeyError as ke:
-            print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
-            print(ke)
-            basics.basics.exit(1)
-        except FileNotFoundError:
-            print("[FAIL]: Failed to load configurations! Configuration file is missing.")
-            basics.basics.exit(1)
-        pass
+        self.components = basics.basics.load_hardware_config()
         if self.components[1][0] is True:
             self.pattern_led = [["error1.png", "error2.png"], ["helloworld.png"], ["idle1.png", "idle2.png"], ["power-on.png"], ["power-off.png"], ["start1.png", "start2.png", "start3.png", "start4.png"]]
         pass
@@ -106,10 +83,10 @@ class host:
                 nav_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                 nav_command_list = nav_command.split()
                 basics.serial.serial(direction = "send", message = nav_command_list[0].encode(encoding = "ascii", errors = "replace"))
-                basics.process.create_process(basics.serial.nav_timer, (self, int(nav_command_list[1]), literal_eval(nav_command_list[2])))
+                basics.process.create_process(basics.serial.nav_timer, (self, int(float(nav_command_list[1])), literal_eval(nav_command_list[2])))
             elif command == b"rca-1.2:disconnected":
                 basics.process.stop_process(comms.objects.process, True)
-                comms.objects.socket_main.close()
+                comms.objects.socket_main.shutdown(2)
                 print("[INFO]: Client has disconnected.")
                 basics.restart_shutdown.restart()
             elif command == b"rca-1.2:led_graphics":
