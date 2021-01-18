@@ -180,11 +180,11 @@ class client:
         control_frame.grid(row = 1 , column = 1, padx = (13, 0))
         os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
         os_control_frame.grid(row = 0, column = 0, padx = (0, 8), pady = (10, 0))
-        os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", height = 1, width = 10, font = ("Calibri", 12), command = lambda: comms.interface.send(b"command_update"))
+        os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", height = 1, width = 10, font = ("Calibri", 12), command = lambda: comms.interface.send(b"rca-1.2:command_update"))
         os_control_update_button.grid(row = 0, column = 0, padx = (7, 8), pady = (40, 5))
-        os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Shutdown", height = 1, width = 10, font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper(self))
+        os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Shutdown", height = 1, width = 10, font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper())
         os_control_shutdown_button.grid(row = 1, column = 0, padx = (7, 8), pady = (0, 5))
-        os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Reboot", height = 1, width = 10, font = ("Calibri", 12),command = lambda: comms.interface.send(b"command_reboot"))
+        os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Reboot", height = 1, width = 10, font = ("Calibri", 12),command = lambda: client.os_control_reboot_wrapper())
         os_control_reboot_button.grid(row = 2, column = 0, padx = (7, 8), pady = (0, 10))
         os_control_notice_button = tkinter.Button(os_control_frame, bg = "#506a96", fg = "white", text = "!", height = 1, width = 1, command = lambda: messagebox.showinfo("Raspbot RCA: OS Command Notice", "When using this panel's functions, please note that:" + "\n" + "1. OS Update assumes that your host OS is Debian or Debian-based, and updates through APT." + "\n" + "2. Shutdown and reboot uses Linux's built-in functions to do so through shell." + "\n" + "3. After shutting down, there is no way to turn the bot back on besides cutting and restoring power. Please use cautiously."))
         os_control_notice_button.grid(row = 3, column = 0, padx = (7, 78), pady = (48, 4))
@@ -498,14 +498,28 @@ class client:
         comms.objects.dock_status = False
     pass
 
-    def os_control_shutdown_wrapper(self):
+    @staticmethod
+    def os_control_shutdown_wrapper():
         """
         Creates dialogue asking for user to confirm to shutdown bot.
         :return: none.
         """
-        confirm_dialogue = messagebox.askyesno("Raspbot RCA: Confirm Shutdown?", "Are you sure you want to shutdown the bot? There is no way to boot it besides physically restarting its power source, and if the Arduino fails, you may overdischarge your battery.")
-        if confirm_dialogue is True:
+        if messagebox.askyesno("Raspbot RCA: Confirm Shutdown?", "Are you sure you want to shutdown the bot? There is no way to boot it besides physically restarting its power source, and if the Arduino fails, you may overdischarge your battery.") is True:
             comms.interface.send(b"rca-1.2:command_shutdown")
+            comms.disconnect.disconnect()
+        else:
+            return None
+        pass
+    pass
+
+    @staticmethod
+    def os_control_reboot_wrapper():
+        """
+        Creates dialogue asking for user to confirm to shutdown bot.
+        :return: none.
+        """
+        if messagebox.askyesno("Raspbot RCA: Confirm Reboot?", "Are you sure you want to reboot the bot?") is True:
+            comms.interface.send(b"rca-1.2:command_reboot")
             comms.disconnect.disconnect()
         else:
             return None
@@ -538,7 +552,8 @@ class client:
         pass
     pass
 
-    def led_gui(self):
+    @staticmethod
+    def led_gui():
         """
         If SenseHAT is included in hardware configuration, creates GUI for controlling LED matrix on SenseHAT.
         :return: none.

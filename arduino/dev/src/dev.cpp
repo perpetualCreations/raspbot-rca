@@ -31,6 +31,10 @@ void setup() {
     Serial.begin(9600);
 }
 
+static float voltage_get() {
+    float raw = analogRead(5);
+    return ((raw * 5.0000000) / 1024.000000) / (7.50/37.50);
+}
 
 void loop() {
     // key
@@ -43,15 +47,19 @@ void loop() {
     // V = Tells Arduino Next is Angle Digit
     // * = Battery Voltage
     // (, ) = Switch Ext/Int Power Relay, when HIGH, internal
-    // <, > = Switch Motor Power Supply MOSFET, when HIGH, ON
+    // <, > = Switch Motor Power Supply MOSFET, when LOW, ON
+
+    if (9.00 >= voltage_get()) {
+        digitalWrite(2, LOW);
+        digitalWrite(4, HIGH);
+    }
 
     if (Serial.available() > 0) {
 
         incomingData = Serial.read();
 
         if (incomingData == '*') {
-            float raw = analogRead(5);
-            Serial.println(((raw * 5.0000000) / 1024.000000) / (7.50/37.50));
+            Serial.println(voltage_get());
             delay(1000);
         }
         

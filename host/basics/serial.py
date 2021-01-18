@@ -25,28 +25,15 @@ def serial(port = "/dev/ttyACM0", direction = "receive", message = None):
     pass
 pass
 
-def nav_timer(nav_run_time, nav_distance_accept):
+def nav_timer(nav_run_time):
     """
-    Navigation timer for multiprocessing, counts down until run time is over, also reads distance telemetry and forwards to client.
+    Navigation timer for multiprocessing, waits for given number of seconds and then sends arrest command to Arduino, ending the operation.
     :param nav_run_time: amount of time to run motors as an integer value.
-    :param nav_distance_accept: whether to forward ToF data signaled by a boolean.
     :return: none.
     """
-    nav_run_time_countdown = nav_run_time
-    while nav_run_time_countdown != 0:
-        nav_run_time_countdown -= 1
-        if nav_distance_accept is True and objects.components[1][1] is True:
-            host.serial("/dev/ttyACM0", "send", b"T")
-            objects.interface.send(serial.serial("/dev/ttyACM0", "receive", None))
-        else:
-            objects.interface.send(b"No Data")
-        pass
-        if nav_run_time_countdown == 0:
-            objects.interface.send(b"rca-1.2:nav_end")
-            host.serial("/dev/ttyACM0", "send", b"A")
-        pass
-        sleep(1)
-    pass
+    sleep(nav_run_time)
+    objects.interface.send(b"rca-1.2:nav_end")
+    host.serial("/dev/ttyACM0", "send", b"A")
 pass
 
 def dock():
