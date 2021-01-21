@@ -85,20 +85,17 @@ class host:
                 basics.serial.serial(direction = "send", message = nav_command_list[0].encode(encoding = "ascii", errors = "replace"))
                 basics.process.create_process(basics.serial.nav_timer, (self, int(float(nav_command_list[1])), literal_eval(nav_command_list[2])))
             elif command == b"rca-1.2:disconnected":
-                basics.process.stop_process(comms.objects.process, True)
-                comms.objects.socket_main.shutdown(2)
-                print("[INFO]: Client has disconnected.")
-                basics.restart_shutdown.restart()
+                comms.disconnect.disconnect()
             elif command == b"rca-1.2:led_graphics":
                 comms.acknowledge.send_acknowledgement(1000)
                 led_interface = led_graphics()
-                if self.components[1][0] is True and self.components[1][1] is True and self.components[1][2] is True:
+                if led_interface.sense is not None:
                     led_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
-                    if led_command == b"play":
-                        raise NotImplementedError
+                    print("[INFO]: LED display control received command: " + led_command)
+                    if led_command == b"play": raise NotImplementedError
                     elif led_command == b"image":
                         comms.acknowledge.send_acknowledgement(1000)
-                        led_interface.display("image", self.pattern_led[int(comms.interface.receive().decode(encoding = "utf-8", errors = "replace"))])
+                        led_interface.display("image", "led_graphics_patterns/" + self.pattern_led[int(comms.interface.receive().decode(encoding = "utf-8", errors = "replace"))])
                     elif led_command == b"stop":
                         comms.acknowledge.send_acknowledgement(1000)
                         led_interface.display("stop")

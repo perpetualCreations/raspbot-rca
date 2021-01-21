@@ -50,6 +50,7 @@ void loop() {
     // <, > = Switch Motor Power Supply MOSFET, when LOW, ON
 
     if (9.00 >= voltage_get()) {
+        // voltage check, if under or is 9 volts, open motor power supply MOSFET and switch power relay to external
         digitalWrite(2, LOW);
         digitalWrite(4, HIGH);
     }

@@ -27,7 +27,8 @@ pass
 
 # logging, bottom line is to stop PyCharm from throwing a warning when ImportError is raised and basics becomes a None boolean object.
 # noinspection PyUnboundLocalVariable
-basics.basics.log_init()
+# basics.basics.log_init()
+# TODO uncomment logging init, for dev
 
 class client:
     """
@@ -126,7 +127,7 @@ class client:
         net_menu.add_cascade(label = "Tools", menu = net_tools_menu)
         menu.add_cascade(label = "Net", menu = net_menu)
         addon_menu = tkinter.Menu(menu)
-        addon_menu.add_command(label = "SenseHAT LEDs", command = lambda: client.led_gui(self))
+        addon_menu.add_command(label = "SenseHAT LEDs", command = lambda: client.led_gui())
         if self.components[3][0] is True:
             addon_menu.add_command(label = "Arm Control", command = lambda: client.arm_control_gui(self))
         pass
@@ -408,26 +409,21 @@ class client:
         if report_type == "Science":
             if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2] is True:
                 comms.interface.send(b"rca-1.2:command_science_collect")
+                if comms.acknowledge.receive_acknowledgement() is False: return None
                 data = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                 if data == "rca-1.2:hardware_unavailable":
                     print("[FAIL]: Host replies that RFP Enceladus hardware is unavailable. This conflicts with current configuration, please correct configurations.")
                     return None
                 pass
                 self.report_content = data
-            else:
-                return None
-            pass
+            else: return None
         elif report_type == "CH Check":
             comms.interface.send(b"rca-1.2:command_ch_check")
-            if comms.acknowledge.receive_acknowledgement() is False:
-                return None
-            pass
+            if comms.acknowledge.receive_acknowledgement() is False: return None
             data = comms.interface.receive()
             data = data.decode(encoding="utf-8", errors="replace")
             self.report_content = data
-        else:
-            return None
-        pass
+        else: return None
     pass
 
     def report_gui(self, report_type, content):
@@ -437,9 +433,7 @@ class client:
         :param content: report contents to be displayed.
         :return: none.
         """
-        if self.report_content == "":
-            return None
-        pass
+        if self.report_content == "": return None
         print("[INFO]: Displayed report_gui.")
         report_gui = tkinter.Toplevel()
         report_gui.title("Raspbot RCA: Report Viewer, " + report_type)
@@ -464,9 +458,7 @@ class client:
         :param content: report contents to be saved.
         :return: none.
         """
-        if self.report_content == "" and report_type != "PING":
-            return None
-        pass
+        if self.report_content == "" and report_type != "PING": return None
         file_report_name = report_type + "_report-" + basics.basics.make_timestamp() + ".txt"
         print("[INFO]: Generating text file report...")
         file_report = open(file_report_name, "w+")
@@ -480,9 +472,7 @@ class client:
         Instructs host to dock with charger station.
         """
         comms.interface.send(b"rca-1.2:command_dock")
-        if comms.acknowledge.receive_acknowledgement() is False:
-            return None
-        pass
+        if comms.acknowledge.receive_acknowledgement() is False: return None
         comms.objects.dock_status = True
     pass
 
@@ -492,9 +482,7 @@ class client:
         :return: none.
         """
         comms.interface.send(b"rca-1.2:comamnd_undock")
-        if comms.acknowledge.receive_acknowledgement() is False:
-            return None
-        pass
+        if comms.acknowledge.receive_acknowledgement() is False: return None
         comms.objects.dock_status = False
     pass
 
@@ -507,9 +495,7 @@ class client:
         if messagebox.askyesno("Raspbot RCA: Confirm Shutdown?", "Are you sure you want to shutdown the bot? There is no way to boot it besides physically restarting its power source, and if the Arduino fails, you may overdischarge your battery.") is True:
             comms.interface.send(b"rca-1.2:command_shutdown")
             comms.disconnect.disconnect()
-        else:
-            return None
-        pass
+        else: return None
     pass
 
     @staticmethod
@@ -521,41 +507,30 @@ class client:
         if messagebox.askyesno("Raspbot RCA: Confirm Reboot?", "Are you sure you want to reboot the bot?") is True:
             comms.interface.send(b"rca-1.2:command_reboot")
             comms.disconnect.disconnect()
-        else:
-            return None
-        pass
+        else: return None
     pass
 
     @staticmethod
-    def led_command(command, frame):
+    def led_command(command, frame = None):
         """
         Issues commands to host for controlling LED matrix on SenseHAT by controlling transmissions.
         :param command: command to be executed by host.
         :param frame: index number for target frame set to be played, if command is not image or play, is ignored.
         :return: none.
         """
+        if self.components[1][0] is not True: return None
         comms.interface.send(b"rca-1.2:led_graphics")
-        if comms.acknowledge.receive_acknowledgement() is False:
-            return None
-        pass
-        if frame is None:
-            command_frame = "0"
-        else:
-            command_frame = frame
-        pass
-        comms.interface.send(command.encode(encoding = "ascii", errors = "replace"))
-        if comms.acknowledge.receive_acknowledgement() is False:
-            return None
-        pass
-        if command == "image":
-            comms.interface.send(command_frame.encode(encoding = "ascii", errors = "replace"))
-        pass
+        if comms.acknowledge.receive_acknowledgement() is False: return None
+        if command != "play":
+            comms.interface.send(command) # TODO command != play clause is temporary until play command is implemented
+            if comms.acknowledge.receive_acknowledgement() is False: return None
+            elif command == "image": comms.interface.send(str(frame))
     pass
 
     @staticmethod
     def led_gui():
         """
-        If SenseHAT is included in hardware configuration, creates GUI for controlling LED matrix on SenseHAT.
+        Creates GUI for controlling LED matrix on SenseHAT.
         :return: none.
         """
         print("[INFO]: Displayed led_gui.")

@@ -132,6 +132,7 @@ def collect():
     print("[INFO]: Retrieval complete.")
     print("[INFO]: All vitals retrieved. Cycle complete.")
 pass
+
 def convert():
     """
     Takes from string objects from collect function.
@@ -215,6 +216,7 @@ def convert():
     pass
     print("[INFO]: Conversion of vitals data complete.")
 pass
+
 def report():
     """
     Formats data to a string, to look like a report.
