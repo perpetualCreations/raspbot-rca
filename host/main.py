@@ -40,7 +40,8 @@ class host:
         self.components = basics.basics.load_hardware_config()
         if self.components[1][0] is True:
             self.pattern_led = [["error1.png", "error2.png"], ["helloworld.png"], ["idle1.png", "idle2.png"], ["power-on.png"], ["power-off.png"], ["start1.png", "start2.png", "start3.png", "start4.png"]]
-        pass
+            for x in range(0, len(self.pattern_led)):
+                for y in range(0, len(self.pattern_led[x])): self.pattern_led[x][y] = "led_graphics_patterns/" + self.pattern_led[x][y]
         comms.connect_accept.connect_accept()
         print("[INFO]: Received connection from ", comms.objects.client_address, ".")
         comms.acknowledge.send_acknowledgement(1000)
@@ -58,7 +59,9 @@ class host:
         comms.camera_capture.connect()
         print("[INFO]: Waiting for commands...")
         while True:
-            command = comms.interface.receive()
+            command = b"rca-1.2:disconnected"
+            try: command = comms.interface.receive()
+            except comms.objects.socket.error: print("[FAIL]: Socket error occurred while listening for command.")
             if command == b"rca-1.2:command_shutdown":
                 comms.acknowledge.send_acknowledgement(1000)
                 basics.restart_shutdown.shutdown()
@@ -71,13 +74,11 @@ class host:
             elif command == b"rca-1.2:command_battery_check":
                 comms.acknowledge.send_acknowledgement(1000)
             elif command == b"rca-1.2:command_science_collect":
-                comms.acknowledge.send_acknowledgement(1000)
                 sensor_interface = science()
                 if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2]:
+                    comms.acknowledge.send_acknowledgement(1000)
                     comms.interface.send(sensor_interface.get())
-                else:
-                    comms.interface.send(b"rca-1.2:hardware_unavailable")
-                pass
+                else: comms.acknowledge.send_acknowledgement(2003)
             elif command == b"rca-1.2:nav_start":
                 comms.acknowledge.send_acknowledgement(1000)
                 nav_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
@@ -92,17 +93,15 @@ class host:
                 if led_interface.sense is not None:
                     led_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                     print("[INFO]: LED display control received command: " + led_command)
-                    if led_command == b"play": raise NotImplementedError
-                    elif led_command == b"image":
+                    if led_command == "play": raise NotImplementedError
+                    elif led_command == "image":
                         comms.acknowledge.send_acknowledgement(1000)
-                        led_interface.display("image", "led_graphics_patterns/" + self.pattern_led[int(comms.interface.receive().decode(encoding = "utf-8", errors = "replace"))])
-                    elif led_command == b"stop":
+                        led_interface.display("image", self.pattern_led[int(comms.interface.receive().decode(encoding = "utf-8", errors = "replace"))])
+                    elif led_command == "stop":
                         comms.acknowledge.send_acknowledgement(1000)
                         led_interface.display("stop")
                     pass
-                else:
-                    comms.interface.send(b"rca-1.2:hardware_unavailable")
-                pass
+                else: comms.acknowledge.send_acknowledgement(2003)
             elif command == b"rca-1.2:command_ch_check":
                 comms.acknowledge.send_acknowledgement(1000)
                 hardware_check.computer_hardware_check.collect()
@@ -112,23 +111,14 @@ class host:
                 if self.components[2][0] is True:
                     comms.acknowledge.send_acknowledgement(1000)
                     comms.interface.send(str(basics.objects.dock_status).encode(encoding = "ascii", errors = "replace"))
-                else:
-                    comms.interface.send(b"rca-1.2:hardware_unavailable")
-                pass
+                else: comms.acknowledge.send_acknowledgement(2003)
             elif command == b"rca-1.2:command_dock":
-                if self.components[2][0] is True:
-                    basics.serial.dock()
-                else:
-                    comms.interface.send(b"rca-1.2:hardware_unavailable")
-                pass
+                if self.components[2][0] is True: basics.serial.dock()
+                else: comms.acknowledge.send_acknowledgement(2003)
             elif command == b"rca-1.2:command_undock":
-                if self.components[2][0] is True:
-                    basics.serial.undock()
-                else:
-                    comms.interface.send(b"rca-1.2:hardware_unavailable")
-                pass
-            else:
-               comms.interface.send(b"rca-1.2:unknown_command")
+                if self.components[2][0] is True: basics.serial.undock()
+                else: comms.acknowledge.send_acknowledgement(2003)
+            else: comms.acknowledge.send_acknowledgement(2002)
             pass  # add more keys here
             print("[INFO]: Executed command: " + command.decode(encoding = "utf-8", errors = "replace"))
         pass

@@ -50,14 +50,12 @@ class science:
             compass = round(self.sense.compass, 2)
             accelerometer_data = self.sense.get_accelerometer_raw()
             print("[INFO]: Collection completed.")
-            temperature = str(round(self.sense.get_temperature, 2)) + "C"
+            temperature = str(round(self.sense.get_temperature(), 2)) + "C"
             pressure = str(round(self.sense.get_pressure(), 2)) + " Millibars"
             humidity = str(round(self.sense.get_humidity(), 2)) + "% Humidity"
-            orientation = "Roll: " + str(round(orientation_raw["roll"], 2)) + ", Pitch: " + str(
-                round(orientation_raw["pitch"], 2)) + ", Yaw: " + str(round(orientation_raw["yaw"], 2))
+            orientation = "Roll: " + str(round(orientation_raw["roll"], 2)) + ", Pitch: " + str(round(orientation_raw["pitch"], 2)) + ", Yaw: " + str(round(orientation_raw["yaw"], 2))
             compass_str = str(compass) + " Degrees (0 being North)"
-            accelerometer = "X: " + str(round(accelerometer_data["x"], 2)) + ", Y: " + str(
-                round(accelerometer_data["y"], 2)) + ", Z: " + str(round(accelerometer_data["z"], 2))
+            accelerometer = "X: " + str(round(accelerometer_data["x"], 2)) + ", Y: " + str(round(accelerometer_data["y"], 2)) + ", Z: " + str(round(accelerometer_data["z"], 2))
         else:
             temperature = "No Data"
             pressure = "No Data"

@@ -45,7 +45,7 @@ root_placeholder = tkinter.Toplevel()
 root_placeholder.withdraw() # prevents Tkinter from drawing a blank window, since this isn't an actual GUI, just a Toplevel object to allow net_status_data to be a tkinter.StringVar.
 net_status_data = tkinter.StringVar(root_placeholder)
 
-acknowledgement_dictionary = {1000:"rca-1.2:connection_acknowledge", 2001:"rca-1.2:authentication_invalid", 2002:"rca-1.2:unknown_command"} # look up dictionary to convert numeric ID codes to readable alphabetical IDs
+acknowledgement_dictionary = {1000:"rca-1.2:connection_acknowledge", 2001:"rca-1.2:authentication_invalid", 2002:"rca-1.2:unknown_command", 2003:"rca-1.2:hardware_unavailable"} # look up dictionary to convert numeric ID codes to readable alphabetical IDs
 acknowledgement_id = None # placeholder, will be overwritten by lookup with acknowledgement_dictionary
 acknowledgement_num_id = None # placeholder, will be overwritten by receiving socket input
 

@@ -127,10 +127,8 @@ class client:
         net_menu.add_cascade(label = "Tools", menu = net_tools_menu)
         menu.add_cascade(label = "Net", menu = net_menu)
         addon_menu = tkinter.Menu(menu)
-        addon_menu.add_command(label = "SenseHAT LEDs", command = lambda: client.led_gui())
-        if self.components[3][0] is True:
-            addon_menu.add_command(label = "Arm Control", command = lambda: client.arm_control_gui(self))
-        pass
+        addon_menu.add_command(label = "SenseHAT LEDs", command = lambda: client.led_gui(self))
+        if self.components[3][0] is True: addon_menu.add_command(label = "Arm Control", command = lambda: client.arm_control_gui(self))
         menu.add_cascade(label = "Add-Ons", menu = addon_menu)
         vitals_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0, height = 50, width = 60)
         vitals_frame.grid(row = 0, column = 0, padx = (10, 0), pady = (15, 0))
@@ -410,12 +408,7 @@ class client:
             if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2] is True:
                 comms.interface.send(b"rca-1.2:command_science_collect")
                 if comms.acknowledge.receive_acknowledgement() is False: return None
-                data = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
-                if data == "rca-1.2:hardware_unavailable":
-                    print("[FAIL]: Host replies that RFP Enceladus hardware is unavailable. This conflicts with current configuration, please correct configurations.")
-                    return None
-                pass
-                self.report_content = data
+                self.report_content = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
             else: return None
         elif report_type == "CH Check":
             comms.interface.send(b"rca-1.2:command_ch_check")
@@ -510,8 +503,7 @@ class client:
         else: return None
     pass
 
-    @staticmethod
-    def led_command(command, frame = None):
+    def led_command(self, command, frame = None):
         """
         Issues commands to host for controlling LED matrix on SenseHAT by controlling transmissions.
         :param command: command to be executed by host.
@@ -527,8 +519,7 @@ class client:
             elif command == "image": comms.interface.send(str(frame))
     pass
 
-    @staticmethod
-    def led_gui():
+    def led_gui(self):
         """
         Creates GUI for controlling LED matrix on SenseHAT.
         :return: none.
@@ -542,11 +533,11 @@ class client:
         graphics_title = tkinter.Label(led_gui, text = "LED Controls", fg = "white", bg = "#344561", font = ("Calibri", 16))
         graphics_title.grid(row = 0, column = 0, padx = (0, 290))
         graphics_led_frame_buttons = tkinter.Frame(led_gui, bg = "#344561")
-        graphics_led_button_off = tkinter.Button(graphics_led_frame_buttons, text = "Off", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command("stop", None))
+        graphics_led_button_off = tkinter.Button(graphics_led_frame_buttons, text = "Off", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command(self, "stop"))
         graphics_led_button_off.pack(side = tkinter.TOP)
-        graphics_led_button_hello_world = tkinter.Button(graphics_led_frame_buttons, text = "Hello World", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command("image", "1"))
+        graphics_led_button_hello_world = tkinter.Button(graphics_led_frame_buttons, text = "Hello World", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command(self, "image", "1"))
         graphics_led_button_hello_world.pack(side = tkinter.BOTTOM)
-        graphics_led_button_idle = tkinter.Button(graphics_led_frame_buttons, text = "Idle", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command("image", "2"))
+        graphics_led_button_idle = tkinter.Button(graphics_led_frame_buttons, text = "Idle", fg = "white", bg = "#344561", width = 30, font = ("Calibri", 12), command = lambda: client.led_command(self, "image", "2"))
         graphics_led_button_idle.pack(side = tkinter.BOTTOM)
         graphics_led_frame_buttons.grid(row = 2, column = 0, padx = (0, 250))
         led_gui.mainloop()

@@ -16,7 +16,7 @@ try:
     from Cryptodome.Hash import HMAC, SHA256, MD5
     from ast import literal_eval
     from os import getcwd
-    from basics import basics, process
+    from basics import basics, process, restart_shutdown
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Import failed!")
     print(ImportErrorMessage)
@@ -38,7 +38,7 @@ cam_port = 64221
 dock_status = None
 components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
 
-acknowledgement_dictionary = {1000:"rca-1.2:connection_acknowledge", 2001:"rca-1.2:authentication_invalid", 2002:"rca-1.2:unknown_command"} # look up dictionary to convert numeric ID codes to readable alphabetical IDs
+acknowledgement_dictionary = {1000:"rca-1.2:connection_acknowledge", 2001:"rca-1.2:authentication_invalid", 2002:"rca-1.2:unknown_command", 2003:"rca-1.2:hardware_unavailable"} # look up dictionary to convert numeric ID codes to readable alphabetical IDs
 acknowledgement_id = None # placeholder, will be overwritten by lookup with acknowledgement_dictionary
 acknowledgement_num_id = None # placeholder, will be overwritten by receiving socket input
 

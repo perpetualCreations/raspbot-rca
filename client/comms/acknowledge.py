@@ -34,6 +34,12 @@ def send_acknowledgement(num_id):
     Description: Command sent to host was not recognized, and was not executed. This type of failure should never occur, and unless you have a modified client/host, should be reported immediately.
     ###### n/a for sending as client ######
 
+    ###### n/a for sending as client ######
+    Number ID: 2003
+    ID: rca-1.2:hardware_unavailable
+    Description: Command requires a specific hardware configuration, which was unavailable.
+    ###### n/a for sending as client ######
+
     :param num_id: ID of acknowledgement to be issued.
     :return: none.
     """
@@ -67,6 +73,10 @@ def receive_acknowledgement():
     ID: rca-1.2:unknown_command
     Description: Command sent to host was not recognized, and was not executed. This type of failure should never occur, and unless you have a modified client/host, should be reported immediately.
 
+    Number ID: 2003
+    ID: rca-1.2:hardware_unavailable
+    Description: Command requires a specific hardware configuration, which was unavailable.
+
     :return: True/False boolean, only returns True when an acknowledgement is successfully received, otherwise returns False for errors.
     """
     try:
@@ -90,15 +100,16 @@ def receive_acknowledgement():
     if objects.acknowledgement_id == "rca-1.2:connection_acknowledge":
         print("[INFO]: Received general acknowledgement.") # general acknowledgement
         return True
-    elif objects.acknowledgement_id == "rca-1.2:buffer_size_ok":
-        print("[INFO]: Received buffer-size acknowledgement.") # buffer size acknowledgement
-        return True
     elif objects.acknowledgement_id == "rca-1.2:authentication_invalid":
         print("[FAIL]: Did not receive an acknowledgement. Authentication was invalid.") # reply that the authentication values sent to the host were invalid
         objects.messagebox.showerror("Raspbot RCA: Auth Invalid", "Authentication sent to host was invalid! Are you sure the auth values are the same on both client/host configurations?")
         return False
     elif objects.acknowledgement_id == "rca-1.2:unknown_command":
         print("[FAIL]: Command unrecognized by host.") # command unrecognized warning
+        objects.messagebox.showwarning("Raspbot RCA: Unknown Command", "Command sent to host was not recognized, and was not executed. This should not be normal behavior.")
+        return False
+    elif objects.acknowledgement_id == "rca-1.2:hardware_unavailable":
+        print("[FAIL]: Command requires an unavailable hardware configuration..") # hardware unavailable warning
         objects.messagebox.showwarning("Raspbot RCA: Unknown Command", "Command sent to host was not recognized, and was not executed. This should not be normal behavior.")
         return False
     else:

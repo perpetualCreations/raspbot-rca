@@ -33,7 +33,7 @@ def send_acknowledgement(num_id):
     :param num_id: ID of acknowledgement to be issued.
     :return: none.
     """
-    if num_id in [1000, 2001, 2002]:
+    if num_id in [1000, 2001, 2002, 2003]:
         objects.socket_main.sendall(str(num_id).encode(encoding = "ascii", errors = "replace"))
         print("[INFO]: Issued acknowledgement " + '''"''' + objects.acknowledgement_dictionary[num_id] + '''"''' + " or in numeric ID form, " + str(num_id) + ".")
     else:
@@ -92,6 +92,10 @@ def receive_acknowledgement():
         return False
     elif objects.acknowledgement_id == "rca-1.2:unknown_command":
         print("[FAIL]: Command unrecognized by host.") # command unrecognized warning
+        objects.messagebox.showwarning("Raspbot RCA: Unknown Command", "Command sent to host was not recognized, and was not executed. This should not be normal behavior.")
+        return False
+    elif objects.acknowledgement_id == "rca-1.2:hardware_unavailable":
+        print("[FAIL]: Command requires an unavailable hardware configuration..") # hardware unavailable warning
         objects.messagebox.showwarning("Raspbot RCA: Unknown Command", "Command sent to host was not recognized, and was not executed. This should not be normal behavior.")
         return False
     else:

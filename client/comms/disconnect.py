@@ -17,6 +17,9 @@ def disconnect():
     try:
         interface.send(b"rca-1.2:disconnected")
         objects.socket_main.close()
+        objects.socket_main = objects.socket.socket(objects.socket.AF_INET, objects.socket.SOCK_STREAM) # reset socket, as originally defined in objects
+        objects.socket_main.settimeout(10)
+        objects.socket_main.setblocking(True)
     except OSError:
         pass
     pass

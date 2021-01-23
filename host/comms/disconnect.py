@@ -20,5 +20,5 @@ def disconnect():
         pass
     pass
     print("[INFO]: Disconnected from client.")
-    objects.basics.restart_shutdown.restart()
+    objects.restart_shutdown.restart()
 pass
