@@ -16,9 +16,7 @@ def disconnect():
     try:
         interface.send(b"rca-1.2:disconnected")
         objects.socket_main.close()
-    except OSError:
-        pass
-    pass
+    except OSError: pass
     print("[INFO]: Disconnected from client.")
     objects.restart_shutdown.restart()
 pass

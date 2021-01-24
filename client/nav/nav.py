@@ -15,19 +15,12 @@ def nav_execute(direction, run_time):
     :param run_time: amount of time to run motors in that direction.
     :return: none.
     """
-    if objects.components[1][1] is True:
-        get_distance = True
-    else:
-        get_distance = False
-    pass
+    if objects.components[1][1] is True: get_distance = True
+    else: get_distance = False
     objects.comms.interface.send("rca-1.2:nav_start")
     objects.comms.interface.send((direction + " " + str(run_time) + " " + str(get_distance)).encode(encoding = "ascii", errors = "replace"))
-    if objects.comms.acknowledge.receive_acknowledgement() is False:
-        return None
-    pass
-    if get_distance is True:
-        objects.basics.process.create_process(nav_telemetry_get, ())
-    pass
+    if objects.comms.acknowledge.receive_acknowledgement() is False: return None
+    if get_distance is True: objects.basics.process.create_process(nav_telemetry_get)
 pass
 
 def nav_load(file_name):

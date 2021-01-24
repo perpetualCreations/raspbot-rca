@@ -55,10 +55,10 @@ def set_configuration(file, var, value, section, key, multi):
     :return: None
     """
     print("[INFO]: Editing configurations...")
-    str(var)
-    str(value)
-    str(section)
-    str(key)
+    var = str(var)
+    value = str(value)
+    section = str(section)
+    key = str(key)
     if multi is True:
         cycles = len(var)
         while cycles != 0:

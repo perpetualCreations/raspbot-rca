@@ -15,7 +15,6 @@ try:
     import comms # if I import comms from main, it doesn't use the current main module instance, it starts a new one
     import basics
     from ast import literal_eval
-    from os import getcwd
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Import failed!")
     print(ImportErrorMessage)

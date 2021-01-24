@@ -15,7 +15,6 @@ try:
     from Cryptodome.Cipher import Salsa20
     from Cryptodome.Hash import HMAC, SHA256, MD5
     from ast import literal_eval
-    from os import getcwd
     from basics import basics, process
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Import failed!")
@@ -33,6 +32,7 @@ auth = None # Authentication key
 
 host = None # host IP address
 port = 64220 # default port config, is overwritten by configuration file read
+cam_port = 64221 # default port config, is overwritten by configuration file read
 
 socket_main = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_main.settimeout(10)

@@ -20,9 +20,7 @@ def disconnect():
         objects.socket_main = objects.socket.socket(objects.socket.AF_INET, objects.socket.SOCK_STREAM) # reset socket, as originally defined in objects
         objects.socket_main.settimeout(10)
         objects.socket_main.setblocking(True)
-    except OSError:
-        pass
-    pass
+    except OSError: pass
     objects.net_status_data.set("Status: " + "Disconnected")
     print("[INFO]: Disconnected from bot.")
 pass

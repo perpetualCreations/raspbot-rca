@@ -7,7 +7,7 @@ Contains objects for module, including any package imports. Interact with these 
 """
 
 try:
-    import socket, configparser, imagezmq
+    import socket, configparser, imagezmq, cv2
     from imutils.video import VideoStream
     from platform import system
     from subprocess import call, Popen
@@ -15,7 +15,6 @@ try:
     from Cryptodome.Cipher import Salsa20
     from Cryptodome.Hash import HMAC, SHA256, MD5
     from ast import literal_eval
-    from os import getcwd
     from basics import basics, process, restart_shutdown
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Import failed!")
@@ -47,7 +46,7 @@ socket_main = None # actually the connection object, gets overwritten by connect
 
 client_address = None # client IP address
 
-camera_send = None # ImageZMQ's ImageSender object, overwritten by camera_capture.connect
-camera_stream = None # VideoStream object, overwritten by camera_capture.connect
+camera_sender = None # ImageZMQ's ImageSender object
+camera_stream = None # VideoStream object
 
 process_camera_capture = None # placeholder for multiprocessing object that runs capturing

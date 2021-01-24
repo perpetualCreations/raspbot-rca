@@ -33,8 +33,8 @@ def connect():
         return None
     pass
     print("[INFO]: Trying to start camera feed...")
-    objects.image_hub = objects.imagezmq.ImageHub()
-    objects.process_camera_feed = objects.process.create_process(camera_render.render, ())
+    if objects.image_hub is None: objects.image_hub = objects.imagezmq.ImageHub(open_port = ("tcp://" + objects.socket_main.getsockname()[0] + ":" + str(objects.cam_port)))
+    objects.process_camera_feed = objects.process.create_process(camera_render.render)
     print("[INFO]: Successfully connected to host!")
     objects.socket_main.setblocking(True) # blocking keeps on getting disabled
     if objects.components[2][0]:

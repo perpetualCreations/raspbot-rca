@@ -8,27 +8,24 @@ Handles exiting and configuration editing.
 
 from basics import objects
 
-def create_process(target, args):
+def create_process(target, args = ()):
     """
     Creates a new process from multiprocessing.
     :param target: the function being processed.
     :param args: the arguments for said function being processed.
     :return: if failed, returns nothing. otherwise returns dummy variable.
     """
-    if __name__ == '__main__':
+    if __name__ == "basics.process":
         try:
-            dummy = objects.multiprocessing.Process(target=target, args=args)
+            dummy = objects.multiprocessing.Process(target = target, args = args)
             dummy.start()
-            dummy.join()
         except objects.multiprocessing.ProcessError as me:
             print("[FAIL]: Process creation failed! Details below.")
             print(me)
             return None
         pass
         return dummy
-    else:
-        return None
-    pass
+    else: pass
 pass
 
 def stop_process(target, error_ignore):

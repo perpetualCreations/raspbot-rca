@@ -11,13 +11,14 @@ from comms import objects
 def render():
     """
     Camera render function for multiprocessing.
-    TODO update from example
     :return: none.
     """
+    print("[INFO]: Camera feed render is active!")
     while True:
-        rpi_name, image = image_hub_receive
-        cv2.imshow(rpi_name, image)
-        cv2.waitKey(1)
-        image_hub.send_reply(b"OK")
+        rpi_name, image = objects.image_hub.recv_image()
+        image = objects.cv2.imdecode(image, 1)
+        objects.cv2.imshow(rpi_name, image)
+        objects.cv2.waitKey(1)
+        objects.image_hub.send_reply(b'OK')
     pass
 pass
