@@ -14,9 +14,8 @@ try:
     # logging initiation
     # basics.basics.log_init()
     # TODO uncomment host logging init, this was for dev
-    from led_graphics import led_graphics
     from science import science
-    import hardware_check, comms
+    import hardware_check, comms, led_graphics
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
@@ -64,9 +63,11 @@ class host:
             except comms.objects.socket.error: print("[FAIL]: Socket error occurred while listening for command.")
             if command == b"rca-1.2:command_shutdown":
                 comms.acknowledge.send_acknowledgement(1000)
+                comms.disconnect.disconnect()
                 basics.restart_shutdown.shutdown()
             elif command == b"rca-1.2:command_reboot":
                 comms.acknowledge.send_acknowledgement(1000)
+                comms.disconnect.disconnect()
                 basics.restart_shutdown.reboot()
             elif command == b"rca-1.2:command_update":
                 comms.acknowledge.send_acknowledgement(1000)
@@ -89,7 +90,7 @@ class host:
                 comms.disconnect.disconnect()
             elif command == b"rca-1.2:led_graphics":
                 comms.acknowledge.send_acknowledgement(1000)
-                led_interface = led_graphics()
+                led_interface = led_graphics.ledGraphics()
                 if led_interface.sense is not None:
                     led_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                     print("[INFO]: LED display control received command: " + led_command)
@@ -104,9 +105,8 @@ class host:
                 else: comms.acknowledge.send_acknowledgement(2003)
             elif command == b"rca-1.2:command_ch_check":
                 comms.acknowledge.send_acknowledgement(1000)
-                hardware_check.computer_hardware_check.collect()
-                hardware_check.computer_hardware_check.convert()
-                comms.interface.send(hardware_check.computer_hardware_check.report().encode(encoding = "ascii", errors = "replace"))
+                check_interface = hardware_check.hardwareCheck()
+                comms.interface.send(check_interface.collect().encode(encoding = "ascii", errors = "replace"))
             elif command == b"rca-1.2:get_dock_status":
                 if self.components[2][0] is True:
                     comms.acknowledge.send_acknowledgement(1000)

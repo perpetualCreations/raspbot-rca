@@ -26,5 +26,5 @@ def connect():
     objects.camera_sender = objects.imagezmq.ImageSender(connect_to = "tcp://" + objects.client_address[0] + ":" + str(objects.cam_port))
     objects.camera_stream = objects.VideoStream().start()
     objects.sleep(2)
-    objects.process_camera_capture = objects.process.create_process(capture, name = __name__)
+    objects.process_camera_capture = objects.process.create_process(capture)
 pass

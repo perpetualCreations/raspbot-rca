@@ -24,7 +24,7 @@ pass
 
 print("[INFO]: Initiation of led_graphics complete!")
 
-class led_graphics:
+class ledGraphics:
     """
     Class for managing LED matrix on SenseHAT.
     Only relevant if you have a SenseHAT as part of your hardware configuration.
