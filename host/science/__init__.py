@@ -1,6 +1,6 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.1
-science module, for collecting sensor data, made for RFP Enceladus Project with Raspbot
+science module, for collecting sensor data
 Made by perpetualCreations
 """
 
@@ -34,7 +34,7 @@ class science:
 
     def get(self):
         """
-        Calls SenseHAT Python integration package and Arduino PySerial for data inputs and collects output into self.content for displaying.
+        Calls SenseHAT Python integration package and Arduino PySerial for data inputs and returns formatted output.
         :return: formatted sensor data as: "Timestamp: " + timestamp + "\n" + "Temperature: " + temperature + "\n"\
                        + "Atm. Pressure: " + pressure + "\n" + "Atm. Humidity: " + humidity + "\n"\
                        + "Orientation: " + "\n" + orientation + "\n" + "Compass: " + compass_str + "\n" + "Acceleration: " \
@@ -68,35 +68,19 @@ class science:
         if self.components[1][2] is True:
             serial.serial(direction = "send", message = "D")
             self.sleep(0.1)
-            dust_lpo = serial.serial().decode(encoding="utf-8", errors="replace").rstrip("\n") + " (μs)"
-            dust_ratio = serial.serial().decode(encoding="utf-8", errors="replace").rstrip("\n")
-            dust_concentration = serial.serial().decode(encoding="utf-8", errors="replace").rstrip("\n") + " (pcs/L)"
+            dust_lpo = serial.serial().rstrip("\n") + " (μs)"
+            dust_ratio = serial.serial().rstrip("\n")
+            dust_concentration = serial.serial().rstrip("\n") + " (pcs/L)"
         else:
             print("[INFO]: No data for dust sensor.")
             dust_lpo = "No Data"
             dust_ratio = "No Data"
             dust_concentration = "No Data"
 
-        if self.components[1][1] is True:
-            arduino.write(b"T")
-            self.sleep(0.1)
-            distance = serial.serial().decode(encoding="utf-8", errors="replace").rstrip("\n") + " (mm)"
-        else:
-            print("[INFO]: No data for ToF sensor.")
-            distance = "No Data"
-
         timestamp = basics.make_timestamp()
         print("[INFO]: Done!")
-        return "Timestamp: " + timestamp + "\n" + "Temperature: " + temperature + "\n" \
-               + "Atm. Pressure: " + pressure + "\n" + "Atm. Humidity: " + humidity + "\n" \
-               + "Orientation: " + "\n" + orientation + "\n" + "Compass: " + compass_str + "\n" + "Acceleration: " \
-               + accelerometer + "\n" + "Dust LPO Time: " + dust_lpo + "\n" \
-               + "Dust LPO/Observation Time Ratio: " + dust_ratio + "\n" + "Dust Concentration: " \
-               + dust_concentration + "\n" + "ToF Distance: " + distance
-
-    def telemetry(self):
-        """
-        Runs sensor data collection on a smaller set of values.
-        These values would be more useful in gathering telemetry-related information.
-        :return: formatted sensor data as: TODO
-        """
+        return "Timestamp: " + timestamp + "\nTemperature: " + temperature + "\nAtm. Pressure: " + pressure \
+               + "\nAtm. Humidity: " + humidity + "\nOrientation: " + "\n" + orientation + \
+               "\nCompass: " + compass_str + "\nAcceleration: " + accelerometer + "\nDust LPO Time: " \
+               + dust_lpo + "\nDust LPO/Observation Time Ratio: " + dust_ratio + "\nDust Concentration: " \
+               + dust_concentration

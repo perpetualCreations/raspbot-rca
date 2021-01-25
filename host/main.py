@@ -15,7 +15,7 @@ try:
     # basics.basics.log_init()
     # TODO uncomment host logging init, this was for dev
     from science import science
-    import hardware_check, comms, led_graphics
+    import hardware_check, comms, led_graphics, telemetry
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
@@ -60,7 +60,9 @@ class host:
         while True:
             command = b"rca-1.2:disconnected"
             try: command = comms.interface.receive()
-            except comms.objects.socket.error: print("[FAIL]: Socket error occurred while listening for command.")
+            except comms.objects.socket.error:
+                print("[FAIL]: Socket error occurred while listening for command.")
+                comms.disconnect.disconnect()
             if command == b"rca-1.2:command_shutdown":
                 comms.acknowledge.send_acknowledgement(1000)
                 comms.disconnect.disconnect()
@@ -84,7 +86,7 @@ class host:
                 comms.acknowledge.send_acknowledgement(1000)
                 nav_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                 nav_command_list = nav_command.split()
-                basics.serial.serial(direction = "send", message = nav_command_list[0].encode(encoding = "ascii", errors = "replace"))
+                basics.serial.serial(direction = "send", message = nav_command_list[0])
                 basics.process.create_process(basics.serial.nav_timer, (self, int(float(nav_command_list[1])), literal_eval(nav_command_list[2])))
             elif command == b"rca-1.2:disconnected":
                 comms.disconnect.disconnect()
@@ -107,6 +109,10 @@ class host:
                 comms.acknowledge.send_acknowledgement(1000)
                 check_interface = hardware_check.hardwareCheck()
                 comms.interface.send(check_interface.collect().encode(encoding = "ascii", errors = "replace"))
+            elif command == b"rca-1.2:get_telemetry":
+                comms.acknowledge.send_acknowledgement(1000)
+                telemetry_interface = telemetry.telemetry()
+                comms.interface.send(telemetry_interface.get())
             elif command == b"rca-1.2:get_dock_status":
                 if self.components[2][0] is True:
                     comms.acknowledge.send_acknowledgement(1000)

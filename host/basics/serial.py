@@ -17,11 +17,12 @@ def serial(port = "/dev/ttyACM0", direction = "receive", message = None):
     :param message: str, message to send, or if receiving leave as None, default set to None automatically, can be bytestring or normal string.
     :return: if receiving, decoded string, if sending or invalid direction, none.
     """
-    connect = objects.serial.Serial(port = port, timeout = 5)
-    if isinstance(message, bytes) is True: message = message.decode(encoding = "utf-8", errors = "replace")
-    if direction == "receive": return connect.readline().decode(encoding = "utf-8", errors = "replace")
-    elif direction == "send": connect.write(message.encode(encoding = "ascii", errors = "replace"))
-    else: return None
+    if message is not None and isinstance(message, bytes): message = message.decode(encoding = "utf-8", errors = "replace")
+    with objects.serial.Serial(port = port, timeout = 5) as connect:
+        if isinstance(message, bytes) is True: message = message.decode(encoding = "utf-8", errors = "replace")
+        if direction == "receive": return connect.readline().decode(encoding = "utf-8", errors = "replace")
+        elif direction == "send": connect.write(message.encode(encoding = "ascii", errors = "replace"))
+        else: return None
     pass
 pass
 
@@ -84,5 +85,5 @@ def voltage():
     :return: float, voltage
     """
     objects.serial.serial("/dev/ttyACM0", "send", "*")
-    return float(objects.serial.serial("/dev/ttyACM0", "receive"))
+    return float(objects.serial.serial())
 pass

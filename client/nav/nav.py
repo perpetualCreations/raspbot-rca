@@ -42,20 +42,3 @@ def nav_load(file_name):
     pass
     instructions.close()
 pass
-
-def nav_telemetry_get():
-    """
-    Listens for telemetry data, made to be ran through multiprocessing.
-    :return: none
-    """
-    stop = False
-    while stop is False:
-        nav_telemetry = objects.comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
-        if nav_telemetry == "rca-1.2:nav_end":
-            stop = True
-            objects.nav_telemetry_text = "[END]"
-        else:
-            objects.nav_telemetry_text = nav_telemetry
-        pass
-    pass
-pass

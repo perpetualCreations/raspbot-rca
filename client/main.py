@@ -136,7 +136,7 @@ class client:
         vitals_label.grid(row = 0, column = 0, padx = (5, 0))
         self.vitals_text = tkinter.Text(vitals_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 50, font = ("Calibri", 10))
         self.vitals_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 0))
-        vitals_refresh_button = tkinter.Button(vitals_frame, text = "Refresh", bg = "white", fg = "black", command = lambda: client.vitals_refresh(self, False))
+        vitals_refresh_button = tkinter.Button(vitals_frame, text = "Refresh", bg = "white", fg = "black")
         vitals_refresh_button.grid(row = 2, column = 0, padx = (5, 5), pady = (10, 5))
         multi_frame = tkinter.Frame(self.root, bg = "#344561")
         multi_frame.grid(row = 1, column = 0, padx = (18, 8), pady = (10, 0))
@@ -229,7 +229,6 @@ class client:
         nav_status_refresh_button = tkinter.Button(nav_status_frame, text = "Refresh", bg = "white", fg = "black", command = lambda: client.vitals_refresh(self, False))
         nav_status_refresh_button.grid(row = 2, column = 0, padx = (5, 5), pady = (10, 5))
         print("[INFO]: Multiprocessing for main GUI starting...")
-        self.process_vitals_refresh = basics.process.create_process(client.vitals_refresh, (self, True))
         self.process_nav_telemetry_refresh = basics.process.create_process(client.nav_telemetry_refresh, (self, True))
         print("[INFO]: Loading complete. If you see a console window and wish to hide it, please disable it under the top menu, under App.")
         self.root.master.withdraw()
@@ -237,35 +236,14 @@ class client:
         self.root.mainloop()
     pass
 
-    def vitals_refresh(self, loop):
+    @staticmethod
+    def get_telemetry():
         """
-        Requests bot vitals.
-        :param loop: boolean input deciding whether the function should loop. Enable only for multiprocessing.
-        :return: none.
+        Retrieves telemetry data over comms.
+        :return: str, multi-line
         """
-        if loop is True:
-            while True:
-                comms.interface.send(b"rca-1.2:vitals_request")
-                reply = comms.interface.receive()
-                vitals_text_data = reply.decode(encoding = "utf-8", errors = "replace")
-                self.vitals_text.configure(state = tkinter.NORMAL)
-                self.vitals_text.delete("1.0", tkinter.END)
-                self.vitals_text.insert("1.0", vitals_text_data)
-                self.vitals_text.update_idletasks()
-                self.vitals_text.configure(state = tkinter.DISABLED)
-            pass
-        else:
-            comms.interface.send(b"rca-1.2:vitals_request")
-            reply = comms.interface.receive()
-            vitals_text_data = reply.decode(encoding = "utf-8", errors = "replace")
-            self.vitals_text.configure(state = tkinter.NORMAL)
-            self.vitals_text.delete("1.0", tkinter.END)
-            self.vitals_text.insert("1.0", vitals_text_data)
-            self.vitals_text.update_idletasks()
-            self.vitals_text.configure(state = tkinter.DISABLED)
-        pass
-        sleep(1)
-    pass
+        comms.interface.send("rca-1.2:get_telemetry")
+        return comms.interface.receive()
 
     def nav_telemetry_refresh(self, loop):
         """
@@ -277,14 +255,14 @@ class client:
             while True:
                 self.nav_status_text.configure(state = tkinter.NORMAL)
                 self.nav_status_text.delete("1.0", tkinter.END)
-                self.nav_status_text.insert("1.0", nav.objects.nav_telemetry_text)
+                self.nav_status_text.insert("1.0", client.get_telemetry())
                 self.nav_status_text.update_idletasks()
                 self.nav_status_text.configure(state = tkinter.DISABLED)
             pass
         else:
             self.nav_status_text.configure(state = tkinter.NORMAL)
             self.nav_status_text.delete("1.0", tkinter.END)
-            self.nav_status_text.insert("1.0", nav.objects.nav_telemetry_text)
+            self.nav_status_text.insert("1.0", client.get_telemetry())
             self.nav_status_text.update_idletasks()
             self.nav_status_text.configure(state = tkinter.DISABLED)
         pass
