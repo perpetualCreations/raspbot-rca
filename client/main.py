@@ -15,13 +15,13 @@ try:
     from platform import system
     # RCA Modules
     import basics, comms, nav
-except ImportError as e:
+except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
-    print(e)
+    print(ImportErrorWarning)
     exit(1)
-except ImportWarning as e:
+except ImportWarning as ImportWarningMessage:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
-    print(e)
+    print(ImportWarningMessage)
     exit(1)
 pass
 

@@ -1,7 +1,10 @@
-ping3
+ping3~=2.4.0
 pycryptodomex
 pyzmq
 numpy
-imagezmq
+imagezmq~=1.0.1
 imutils
 opencv-contrib-python
+PySide6
+future~=0.18.2
+configparser~=5.0.0

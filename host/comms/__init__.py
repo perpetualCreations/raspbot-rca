@@ -38,4 +38,4 @@ objects.components = objects.basics.load_hardware_config()
 
 objects.host = objects.socket.gethostname() + ".local"
 
-print("[INFO]: Initiating of comms complete!")
+print("[INFO]: Initiation of comms complete!")

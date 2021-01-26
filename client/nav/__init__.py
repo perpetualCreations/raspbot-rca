@@ -12,4 +12,4 @@ from nav import edit, gui, nav, objects
 
 objects.components = objects.basics.basics.load_hardware_config()
 
-print("[INFO]: Initiating of nav module complete!")
+print("[INFO]: Initiation of nav module complete!")

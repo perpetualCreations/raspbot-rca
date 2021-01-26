@@ -9,13 +9,13 @@ print("[INFO]: Initiating science module...")
 try:
     from time import sleep
     from basics import basics, serial
-except ImportError as e:
+except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
-    print(e)
+    print(ImportErrorMessage)
     basics.exit(1)
-except ImportWarning as e:
+except ImportWarning as ImportWarningMessage:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
-    print(e)
+    print(ImportWarningMessage)
     basics.exit(1)
 pass
 
