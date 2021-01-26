@@ -207,19 +207,6 @@
     <property name="frameShadow">
      <enum>QFrame::Plain</enum>
     </property>
-    <widget class="QGraphicsView" name="graphicsView">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>20</y>
-       <width>411</width>
-       <height>301</height>
-      </rect>
-     </property>
-     <property name="toolTip">
-      <string>Camera feed shows up here, when connected.</string>
-     </property>
-    </widget>
     <widget class="QPushButton" name="pushButton">
      <property name="geometry">
       <rect>
@@ -247,6 +234,22 @@
      </property>
      <property name="text">
       <string>Disconnected.</string>
+     </property>
+    </widget>
+    <widget class="QFrame" name="frame_2">
+     <property name="geometry">
+      <rect>
+       <x>19</x>
+       <y>19</y>
+       <width>411</width>
+       <height>301</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
      </property>
     </widget>
    </widget>
@@ -450,9 +453,94 @@
        <height>22</height>
       </rect>
      </property>
+     <property name="palette">
+      <palette>
+       <active>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>0</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Base">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>225</red>
+           <green>225</green>
+           <blue>225</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </active>
+       <inactive>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>0</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Base">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>225</red>
+           <green>225</green>
+           <blue>225</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </inactive>
+       <disabled>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>120</red>
+           <green>120</green>
+           <blue>120</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Base">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>240</red>
+           <green>240</green>
+           <blue>240</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </disabled>
+      </palette>
+     </property>
      <property name="toolTip">
       <string>Dropdown to select report type.</string>
      </property>
+     <property name="editable">
+      <bool>false</bool>
+     </property>
+     <property name="currentText">
+      <string>None</string>
+     </property>
+     <item>
+      <property name="text">
+       <string>None</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Hardw.</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Science</string>
+      </property>
+     </item>
     </widget>
    </widget>
    <widget class="QFrame" name="frame">

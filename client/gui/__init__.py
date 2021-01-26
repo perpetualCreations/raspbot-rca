@@ -13,7 +13,7 @@ try:
     from PySide6.QtUiTools import QUiLoader
     from PySide6.QtWidgets import QApplication
     from PySide6.QtCore import QFile, QIODevice
-    from PySide6.QtGui import QIcon
+    from PySide6.QtGui import *
     from sys import argv
     from basics import basics
 except ImportError as ImportErrorMessage:
@@ -37,21 +37,21 @@ class gui:
         Loads UI file and defines signals.
         """
         self.app = QApplication(argv)
-        self.app.setWindowIcon(QIcon("favicon.ico"))
+        self.app.setWindowIcon(QIcon("favicon.ico")) # it just works
         ui_file = QFile("main.ui")
         if not ui_file.open(QIODevice.ReadOnly):
             print("[FAIL]: UI XML file is not in read-only. Is it being edited by another application?")
             basics.exit(1)
         pass
-        loader = QUiLoader()
-        window = loader.load(ui_file)
+        self.loader = QUiLoader()
+        self.window = self.loader.load(ui_file)
         ui_file.close()
-        if not window:
+        if not self.window:
             print("[FAIL]: UI XML file could not be loaded to generate interface.")
-            print(loader.errorString())
+            print(self.loader.errorString())
             basics.exit(1)
         pass
-        window.show()
+        self.window.show()
         basics.exit(self.app.exec_())
 
 test = gui()
