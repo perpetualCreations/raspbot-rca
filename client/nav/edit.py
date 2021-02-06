@@ -8,11 +8,11 @@ Navigation script editing interface.
 
 from nav import objects
 
-def nav_edit():
+def nav_edit() -> None:
     """
     Opens OS built-in text editor, similarly to client.set_configuration_gui().
     Also similarly to client.set_configuration_gui() will be updated to an actual editor.
-    :return: none.
+    :return: None
     """
     lookup = {"Linux":"sudo nano", "Ubuntu":"sudo nano", "Debian":"sudo nano", "Raspbian":"sudo nano", "Windows":"notepad.exe"}
     try:

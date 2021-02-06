@@ -8,7 +8,7 @@ print("[INFO]: Initiating science module...")
 
 try:
     from time import sleep
-    from basics import basics, serial
+    from basics import basics, serial, restart_shutdown
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
@@ -25,14 +25,14 @@ class science:
     """
     Class for sensor data collection.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.components = basics.load_hardware_config()
         if self.components[1][0] is True:
             import sense_hat
             self.sense = sense_hat.SenseHat()
         else: self.sense = None
 
-    def get(self):
+    def get(self) -> str:
         """
         Calls SenseHAT Python integration package and Arduino PySerial for data inputs and returns formatted output.
         :return: formatted sensor data as: "Timestamp: " + timestamp + "\n" + "Temperature: " + temperature + "\n"\
@@ -77,9 +77,8 @@ class science:
             dust_ratio = "No Data"
             dust_concentration = "No Data"
 
-        timestamp = basics.make_timestamp()
         print("[INFO]: Done!")
-        return "Timestamp: " + timestamp + "\nTemperature: " + temperature + "\nAtm. Pressure: " + pressure \
+        return "Timestamp: " + basics.make_timestamp() + "\nTemperature: " + temperature + "\nAtm. Pressure: " + pressure \
                + "\nAtm. Humidity: " + humidity + "\nOrientation: " + "\n" + orientation + \
                "\nCompass: " + compass_str + "\nAcceleration: " + accelerometer + "\nDust LPO Time: " \
                + dust_lpo + "\nDust LPO/Observation Time Ratio: " + dust_ratio + "\nDust Concentration: " \

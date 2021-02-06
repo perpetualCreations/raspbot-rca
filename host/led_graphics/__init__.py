@@ -11,7 +11,7 @@ print("[INFO]: Initiating led_graphics module...")
 try:
     from basics import basics
     from time import sleep
-    from ast import literal_eval
+    from typing import Union
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below for details.")
     print(ImportErrorMessage)
@@ -29,7 +29,7 @@ class ledGraphics:
     Class for managing LED matrix on SenseHAT.
     Only relevant if you have a SenseHAT as part of your hardware configuration.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initiation function, loads hardware configuration and defines a few class variables.
         """
@@ -39,12 +39,12 @@ class ledGraphics:
             self.sense = sense_hat.SenseHat()
         else: self.sense = None
 
-    def display(self, command, frames = None):
+    def display(self, command: str, frames: Union[None, list] = None) -> None:
         """
         Multi-purpose function for controlling SenseHAT's LED matrix. Accepts a command and frame parameter.
         :param command: str, either 'play', 'stop', 'image', to select mode, play accepts list format and image a set of images, stop will end display and clear.
         :param frames: list, with pixel positions or set of image filenames/path, default NONE
-        :return: none.
+        :return: None
         """
         if command == "play" and frames is not None:
             print("[INFO]: led_graphics is now displaying frames (from list format).")

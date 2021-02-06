@@ -8,10 +8,10 @@ GUI wrapper for nav.nav_load.
 
 from nav import nav, objects
 
-def nav_load_gui():
+def nav_load_gui() -> None:
     """
     Creates GUI for loading navigation script.
-    :return: none.
+    :return: None
     """
     root = objects.tkinter.Toplevel()
     root.title("Raspbot RCA: Nav Load")

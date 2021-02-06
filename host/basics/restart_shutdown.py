@@ -1,6 +1,6 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
-basics module, contains basic application functions such as exiting client software, multiprocessing, and editing configs.
+basics module, contains basic application functions such as exiting client software, multithreading, and editing configs.
 Made by perpetualCreations
 
 Handles reboot, restart, and shutdown.
@@ -8,29 +8,29 @@ Handles reboot, restart, and shutdown.
 
 from basics import objects, basics
 
-def restart():
+def restart() -> None:
     """
     Restarts application.
-    :return: none.
+    :return: None
     """
     print("[INFO]: Starting new instance of application...")
-    objects.Popen("python3 main.py", shell = True)
+    objects.call("python3 main.py", shell = True)
     basics.exit(0)
 pass
 
-def shutdown():
+def shutdown() -> None:
     """
     Shuts down bot.
-    :return: none.
+    :return: None
     """
     objects.call("sudo shutdown now", shell = True)
     basics.exit(0)
 pass
 
-def reboot():
+def reboot() -> None:
     """
     Reboots bot.
-    :return: none.
+    :return: None
     """
     objects.call("sudo reboot now", shell = True)
     basics.exit(0)

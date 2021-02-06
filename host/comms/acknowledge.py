@@ -8,7 +8,7 @@ Contains acknowledgement handle functions.
 
 from comms import objects, interface
 
-def send_acknowledgement(num_id):
+def send_acknowledgement(num_id: int) -> None:
     """
     Sends an acknowledgement byte string.
     Acknowledgments are used generally for confirming authentication and other specific processes (not general data transmission).
@@ -31,17 +31,17 @@ def send_acknowledgement(num_id):
     Description: Command sent to host was not recognized, and was not executed. This type of failure should never occur, and unless you have a modified client/host, should be reported immediately.
 
     :param num_id: ID of acknowledgement to be issued.
-    :return: none.
+    :return: None
     """
     if num_id in [1000, 2001, 2002, 2003]:
         objects.socket_main.sendall(str(num_id).encode(encoding = "ascii", errors = "replace"))
         print("[INFO]: Issued acknowledgement " + '''"''' + objects.acknowledgement_dictionary[num_id] + '''"''' + " or in numeric ID form, " + str(num_id) + ".")
     else:
-        print("[FAIL]: Tried to issue invalid acknowledgement. This should not be normal behavior. Acknowledgement ID was: " + num_id)
+        print("[FAIL]: Tried to issue invalid acknowledgement. This should not be normal behavior. Acknowledgement ID was: " + str(num_id))
     pass
 pass
 
-def receive_acknowledgement():
+def receive_acknowledgement() -> bool:
     """
     Listens for an acknowledgement byte string, returns booleans whether string was received or failed.
     Acknowledgments are used generally for confirming authentication and other specific processes (not general data transmission).

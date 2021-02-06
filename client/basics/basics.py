@@ -1,6 +1,6 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
-basics module, contains basic application functions such as exiting client software, multiprocessing, and editing configs.
+basics module, contains basic application functions such as exiting client software, multithreading, and editing configs.
 Made by perpetualCreations
 
 Handles exiting and configuration editing.
@@ -8,42 +8,45 @@ Handles exiting and configuration editing.
 
 from basics import objects
 
-def log_init():
+def log_init() -> None:
     """
     Initiates logging.
-    :return: none.
+    :return: None
     """
     print("[INFO]: Output redirected from console to logging.")
     objects.log_file_handle = open("logs/log-" + make_timestamp() + ".txt", "w")
     objects.origin_stdout = objects.sys.stdout
     objects.sys.stdout = objects.log_file_handle
 
-def make_timestamp():
+def make_timestamp(log_suppress: bool = False) -> str:
     """
     Generates timestamp from current UTC time.
     :return: str, timestamp formatted as month, day, year, hour, minute, second, in that order.
     """
-    print("[INFO]: Generating timestamps...")
+    if log_suppress is False: print("[INFO]: Generating timestamps...")
     return str((objects.strftime("%b%d%Y%H%M%S"), objects.gmtime())[0])
 
-def window_close_exit():
+def window_close_exit() -> None:
     """
-    Wrapper for exit, linked to protocol handler for when the GUI window is closed.
-    :return: none.
+    Wrapper for exit, used to be linked to protocol handler for when the GUI window is closed.
+    Unused ever since migrating to PySide6.
+    :return: None
     """
     if objects.messagebox.askyesno("Raspbot RCA: Quit?", "Are you sure you want to exit?") is True: exit(0)
 
-def exit(status):
+def exit(status) -> None:
     """
     Stops application.
-    :return: none.
+    :return: None
     """
     print("[INFO]: Stopping application...")
+    from comms import disconnect
+    disconnect.disconnect()
     objects.sys.stdout = objects.origin_stdout
     objects.log_file_handle.close()
     objects.sys.exit(status)
 
-def set_configuration(file, var, value, section, key, multi):
+def set_configuration(file: str, var: str, value: str, section: str, key: str, multi: bool) -> None:
     """
     Edits entry in configuration file and applies new edit to variables.
     :param file: configuration file.
@@ -82,10 +85,10 @@ def set_configuration(file, var, value, section, key, multi):
         config_write.close()
     pass
 
-def load_hardware_config():
+def load_hardware_config() -> list:
     """
     Uses configparser to retrieve hardware configuration, and return as nested component list.
-    :return:
+    :return: list
     """
     config_parse_load = objects.configparser.ConfigParser()
     try:

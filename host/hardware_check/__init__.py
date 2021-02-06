@@ -31,7 +31,7 @@ class hardwareCheck:
     """
     Main class for hardware_check module.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.cpu_stats = ["No Data", "No Data"]
         self.memory = None
         self.memory_stats = ["No Data", "No Data", "No Data", "No Data"]
@@ -41,7 +41,7 @@ class hardwareCheck:
         self.disk_io_stats = ["No Data", "No Data", "No Data", "No Data"]
         self.sensor = ["No Data", "No Data", "No Data"]
 
-    def collect(self):
+    def collect(self) -> str:
         """
         Collects hardware data, converts and formats into multi-line string.
         :return: str, multi-line report

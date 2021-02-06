@@ -1,6 +1,6 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
-basics module, contains basic application functions such as exiting client software, multiprocessing, and editing configs.
+basics module, contains basic application functions such as exiting client software, multithreading, and editing configs.
 Made by perpetualCreations
 
 Serial communications function contained within this module.
@@ -8,14 +8,15 @@ Other wrapper functions that make use of serial are included as well.
 """
 
 from basics import objects
+from typing import Union
 
-def serial(port = "/dev/ttyACM0", direction = "receive", message = None):
+def serial(port:str = "/dev/ttyACM0", direction:str = "receive", message:Union[None, str, bytes] = None) -> Union[None, str]:
     """
     Sends or receives serial communications to the Arduino integration.
     :param port: str, the port that the Arduino is connected to, default set to /dev/ttyACM0.
     :param direction: str, whether to expect to receive or send, default set to receive.
     :param message: str, message to send, or if receiving leave as None, default set to None automatically, can be bytestring or normal string.
-    :return: if receiving, decoded string, if sending or invalid direction, none.
+    :return: if receiving, decoded string, if sending or invalid direction, None
     """
     if message is not None and isinstance(message, bytes): message = message.decode(encoding = "utf-8", errors = "replace")
     with objects.serial.Serial(port = port, timeout = 5) as connect:
@@ -26,18 +27,18 @@ def serial(port = "/dev/ttyACM0", direction = "receive", message = None):
     pass
 pass
 
-def nav_timer(nav_run_time):
+def nav_timer(nav_run_time: int) -> None:
     """
-    Navigation timer for multiprocessing, waits for given number of seconds and then sends arrest command to Arduino, ending the operation.
+    Navigation timer for multithreading, waits for given number of seconds and then sends arrest command to Arduino, ending the operation.
     :param nav_run_time: amount of time to run motors as an integer value.
-    :return: none.
+    :return: None
     """
     sleep(nav_run_time)
     objects.interface.send(b"rca-1.2:nav_end")
     host.serial("/dev/ttyACM0", "send", b"A")
 pass
 
-def dock():
+def dock() -> None:
     """
     Docks Raspbot.
 
@@ -55,7 +56,7 @@ def dock():
     objects.dock_status = True
 pass
 
-def undock():
+def undock() -> None:
     """
     Undocks Raspbot.
 
@@ -79,7 +80,7 @@ def undock():
     objects.dock_status = False
 pass
 
-def voltage():
+def voltage() -> float:
     """
     Collects battery voltage through serial.
     :return: float, voltage

@@ -9,15 +9,23 @@ try:
     print("[INFO]: Starting imports...")
     from subprocess import call, Popen
     from time import sleep
-    import socket, configparser, tkinter, ping3, imagezmq
+    import socket, configparser, ping3, webbrowser
+    import tkinter
     from tkinter import messagebox
     from ast import literal_eval
     from platform import system
+    from typing import Union
+    from sys import argv
+    # Pyside6
+    from PySide6.QtUiTools import QUiLoader
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import QFile, QIODevice
+    from PySide6.QtGui import *
     # RCA Modules
     import basics, comms, nav
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
-    print(ImportErrorWarning)
+    print(ImportErrorMessage)
     exit(1)
 except ImportWarning as ImportWarningMessage:
     print("[FAIL]: Import warnings were raised! Please proceed with caution, see below for more details.")
@@ -25,8 +33,6 @@ except ImportWarning as ImportWarningMessage:
     exit(1)
 pass
 
-# logging, bottom line is to stop PyCharm from throwing a warning when ImportError is raised and basics becomes a None boolean object.
-# noinspection PyUnboundLocalVariable
 # basics.basics.log_init()
 # TODO uncomment logging init, for dev
 
@@ -34,43 +40,22 @@ class client:
     """
     Main client class.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initiation function of Raspbot RCA. Reads configs and starts various process and GUI.
         """
         print("[INFO]: Starting client Raspbot RC Application...")
         print("[INFO]: Declaring variables...")
         self.connect_retries = 0
-        self.components = [[None], [None, None, None], [None], [None, None]] # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
         self.ping_text = None # GUI element referenced across two functions, has a class variable to allow for it
         self.ping_button = None # GUI element referenced across two functions, has a class variable to allow for it
         self.ping_results = "" # placeholder, overwritten by any return from ping functions to be displayed as results
         self.report_content = "" # placeholder, overwritten by any return from report functions
-        self.gui_hide_console = False # configuration variable to hide/show Python console
+        self.gui_hide_console = False # configuration variable to hide/show Python console, unused
+        self.process_status_refresh_kill_flag = False
+        self.process_gui_lock_from_state_kill_flag = False
         print("[INFO]: Loading configurations...")
-        config_parse_load = configparser.ConfigParser()
-        try:
-            config_parse_load.read("hardware.cfg")
-            self.components[0][0] = literal_eval(config_parse_load["HARDWARE"]["cam"])
-            self.components[1][0] = literal_eval(config_parse_load["HARDWARE"]["sensehat"])
-            self.components[1][1] = literal_eval(config_parse_load["HARDWARE"]["distance"])
-            self.components[1][2] = literal_eval(config_parse_load["HARDWARE"]["dust"])
-            self.components[2][0] = literal_eval(config_parse_load["HARDWARE"]["charger"])
-            self.components[3][0] = literal_eval(config_parse_load["HARDWARE"]["arm"])
-            self.components[3][1] = literal_eval(config_parse_load["HARDWARE"]["arm_cam"])
-        except configparser.Error as ce:
-            print("[FAIL]: Failed to load configurations! See below for details.")
-            print(ce)
-            basics.basics.exit(1)
-        except KeyError as ke:
-            print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
-            print(ke)
-            basics.basics.exit(1)
-        except FileNotFoundError as nf:
-            print("[FAIL]: Failed to load configurations! Configuration file is missing.")
-            print(nf)
-            basics.basics.exit(1)
-        pass
+        self.components = basics.basics.load_hardware_config()  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
         config_parse_load = configparser.ConfigParser()
         try:
             config_parse_load.read("main.cfg")
@@ -89,206 +74,174 @@ class client:
             basics.basics.exit(1)
         pass
         print("[INFO]: Starting GUI...")
-        hidden_root = tkinter.Tk() # placeholder Tk object to withdraw the blank window created by messagebox.
-        self.root = tkinter.Toplevel()
-        self.root.protocol("WM_DELETE_WINDOW", basics.basics.window_close_exit)
-        self.root.title("Raspbot RCA: Client")
-        self.root.configure(bg = "#344561")
-        self.root.geometry('{}x{}'.format(1200, 530))
-        self.root.resizable(width = False, height = False)
-        menu = tkinter.Menu(self.root)
-        self.root.config(menu = menu)
-        app_menu = tkinter.Menu(menu)
-        console_display_menu = tkinter.Menu(app_menu)
-        hardware_menu = tkinter.Menu(app_menu)
-        base_set_menu = tkinter.Menu(hardware_menu)
-        base_set_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.components[0][0], True, "HARDWARE", "cam", False))
-        base_set_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.components[1][0], False, "HARDWARE", "cam", False))
-        rfp_enceladus_menu = tkinter.Menu(hardware_menu)
-        rfp_enceladus_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration("hardware.cfg", [self.components[1][0], self.components[1][1], self.components[1][2]], [True, True, True], ["HARDWARE", "HARDWARE", "HARDWARE"], ["sensehat", "distance", "dust"], True))
-        rfp_enceladus_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration("hardware.cfg", [self.components[1][0], self.components[1][1], self.components[1][2]], [False, False, False], ["HARDWARE", "HARDWARE", "HARDWARE"], ["sensehat", "distance", "dust"], True))
-        upgrade_1_menu = tkinter.Menu(hardware_menu)
-        upgrade_1_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.components[2][0], True, "HARDWARE", "charger", False))
-        upgrade_1_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.components[2][0], False, "HARDWARE", "charger", False))
-        hardware_menu.add_cascade(label = "Base Set", menu = base_set_menu)
-        hardware_menu.add_cascade(label = "RFP Enceladus", menu = rfp_enceladus_menu)
-        hardware_menu.add_cascade(label = "Upgrade #1", menu = upgrade_1_menu)
-        app_menu.add_command(label = "Edit Configs", command = lambda: client.set_configuration_gui())
-        app_menu.add_cascade(label = "Edit Hardware Set", menu = hardware_menu)
-        app_menu.add_cascade(label = "Toggle Console Window at Startup", menu = console_display_menu)
-        console_display_menu.add_command(label = "Enable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.gui_hide_console, True, "GUI", "hide_console", False))
-        console_display_menu.add_command(label = "Disable", command = lambda: basics.basics.set_configuration("hardware.cfg", self.gui_hide_console, False, "GUI", "hide_console", False))
-        # app_menu.add_command(label = "AquaSilva Ops", command = None) AquaSilva project is suspended, option has been disabled.
-        app_menu.add_command(label = "Exit", command = lambda: basics.basics.exit(0))
-        menu.add_cascade(label = "App", menu = app_menu)
-        net_menu = tkinter.Menu(menu)
-        net_tools_menu = tkinter.Menu(net_menu)
-        net_tools_menu.add_command(label = "Ping", command = lambda: client.ping_gui(self))
-        net_menu.add_cascade(label = "Tools", menu = net_tools_menu)
-        menu.add_cascade(label = "Net", menu = net_menu)
-        addon_menu = tkinter.Menu(menu)
-        addon_menu.add_command(label = "SenseHAT LEDs", command = lambda: client.led_gui(self))
-        if self.components[3][0] is True: addon_menu.add_command(label = "Arm Control", command = lambda: client.arm_control_gui(self))
-        menu.add_cascade(label = "Add-Ons", menu = addon_menu)
-        vitals_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0, height = 50, width = 60)
-        vitals_frame.grid(row = 0, column = 0, padx = (10, 0), pady = (15, 0))
-        vitals_label = tkinter.Label(vitals_frame, bg = "#506a96", fg = "white", text = "Bot Vitals", font = ("Calibri", 12))
-        vitals_label.grid(row = 0, column = 0, padx = (5, 0))
-        self.vitals_text = tkinter.Text(vitals_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 50, font = ("Calibri", 10))
-        self.vitals_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 0))
-        vitals_refresh_button = tkinter.Button(vitals_frame, text = "Refresh", bg = "white", fg = "black")
-        vitals_refresh_button.grid(row = 2, column = 0, padx = (5, 5), pady = (10, 5))
-        multi_frame = tkinter.Frame(self.root, bg = "#344561")
-        multi_frame.grid(row = 1, column = 0, padx = (18, 8), pady = (10, 0))
-        net_frame = tkinter.Frame(multi_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        net_frame.grid(row = 0, column = 0, padx = (0, 8))
-        net_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", text = "Network", font = ("Calibri", 12))
-        net_label.grid(row = 0, column = 0, padx = (5, 0))
-        comms.objects.net_status_data.set("Status: " + "Disconnected")
-        net_status_label = tkinter.Label(net_frame, bg = "#506a96", fg = "white", textvariable = comms.objects.net_status_data, font = ("Calibri", 12))
-        net_status_label.grid(row = 1, column = 0, padx = (5, 0), pady = (10, 0))
-        net_disconnect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Disconnect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: comms.disconnect.disconnect())
-        net_disconnect_button.grid(row = 2, column = 0, padx = (5, 0), pady = (10, 0))
-        net_connect_button = tkinter.Button(net_frame, bg = "white", fg = "black", text = "Connect", font = ("Calibri", 12), width = 10, height = 1, command = lambda: comms.connect.connect())
-        net_connect_button.grid(row = 3, column = 0, padx = (5, 0))
-        net_help_button = tkinter.Button(net_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Net Help", "This panel controls your network connection with the bot. See the NET options in menu bar for additional tools and actions."))
-        net_help_button.grid(row = 4, column = 0, padx = (6, 149), pady = (71, 5))
-        report_frame = tkinter.Frame(multi_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        report_frame.grid(row = 0, column = 2, padx = (8, 0))
-        report_label = tkinter.Label(report_frame, bg = "#506a96", fg = "white", text = "Reports", font = ("Calibri", 12))
-        report_label.grid(row = 0, column = 0, padx = (5, 0))
-        report_type_list = [
-            "None",
-            "CH Check",
-            "Science"
-        ]
-        report_type_data = tkinter.StringVar(report_frame)
-        report_type_data.set(report_type_list[0])
-        report_dropdown = tkinter.OptionMenu(report_frame, report_type_data, report_type_list[0], report_type_list[1], report_type_list[2])
-        report_dropdown.configure(width = 7)
-        report_dropdown.grid(row = 1, column = 0, padx = (5, 0), pady = (10, 0))
-        report_collect_button = tkinter.Button(report_frame, bg = "white", fg = "black", text = "Collect", font = ("Calibri", 12), width = 10, command = lambda: client.report_collect(self, report_type_data.get()))
-        report_collect_button.grid(row = 2, column = 0, padx = (5, 0), pady = (5, 0))
-        report_view_button = tkinter.Button(report_frame, bg = "white", fg = "black", text = "View", font = ("Calibri", 12), width = 10, command = lambda: client.report_gui(self, report_type_data.get(), self.report_content))
-        report_view_button.grid(row = 3, column = 0, padx = (5, 0), pady = (5, 0))
-        report_save_button = tkinter.Button(report_frame, bg = "white", fg = "black", text = "Save", font = ("Calibri", 12), width = 10, command = lambda: client.report_save(self, report_type_data.get(), self.report_content))
-        report_save_button.grid(row = 4, column = 0, padx = (5, 0), pady = (5, 0))
-        report_help_button = tkinter.Button(report_frame, bg = "#506a96", fg = "white", text = "?", width = 1, height = 1, font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Report Help", "This panel allows you to request, view, and save reports of a vareity of types. These include computer hardware checks (CH Check) and science reports (Science, RFP Enceladus)."))
-        report_help_button.grid(row = 5, column = 0, padx = (6, 149), pady = (27, 4))
-        control_frame = tkinter.Frame(self.root, bg = "#344561")
-        control_frame.grid(row = 1 , column = 1, padx = (13, 0))
-        os_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        os_control_frame.grid(row = 0, column = 0, padx = (0, 8), pady = (10, 0))
-        os_control_update_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Update OS", height = 1, width = 10, font = ("Calibri", 12), command = lambda: comms.interface.send(b"rca-1.2:command_update"))
-        os_control_update_button.grid(row = 0, column = 0, padx = (7, 8), pady = (40, 5))
-        os_control_shutdown_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Shutdown", height = 1, width = 10, font = ("Calibri", 12), command = lambda: client.os_control_shutdown_wrapper())
-        os_control_shutdown_button.grid(row = 1, column = 0, padx = (7, 8), pady = (0, 5))
-        os_control_reboot_button = tkinter.Button(os_control_frame, bg = "white", fg = "black", text = "Reboot", height = 1, width = 10, font = ("Calibri", 12),command = lambda: client.os_control_reboot_wrapper())
-        os_control_reboot_button.grid(row = 2, column = 0, padx = (7, 8), pady = (0, 10))
-        os_control_notice_button = tkinter.Button(os_control_frame, bg = "#506a96", fg = "white", text = "!", height = 1, width = 1, command = lambda: messagebox.showinfo("Raspbot RCA: OS Command Notice", "When using this panel's functions, please note that:" + "\n" + "1. OS Update assumes that your host OS is Debian or Debian-based, and updates through APT." + "\n" + "2. Shutdown and reboot uses Linux's built-in functions to do so through shell." + "\n" + "3. After shutting down, there is no way to turn the bot back on besides cutting and restoring power. Please use cautiously."))
-        os_control_notice_button.grid(row = 3, column = 0, padx = (7, 78), pady = (48, 4))
-        nav_control_frame = tkinter.Frame(control_frame, bg = "#506a96", highlightthickness = 2, bd = 0)
-        nav_control_frame.grid(row = 0, column = 1, padx = (8, 0), pady = (10, 0))
-        nav_control_label = tkinter.Label(nav_control_frame, bg = "#506a96", fg = "white", text = "Navigation", font = ("Calibri", 12))
-        nav_control_label.grid(row = 0, column = 0, padx = (10, 20), pady = (5, 0))
-        nav_control_help = tkinter.Button(nav_control_frame, bg = "#506a96", fg = "white", text = "?", font = ("Calibri", 10), command = lambda: messagebox.showinfo("Raspbot RCA: Nav Help", "This panel allows you to control the bot's movement through selections." + "\n" + "To chose a direction or action, select an option from the dropdown menu, and then enter the number of seconds the motors should be run." + "\n" + "Alternatively, you can create and load navigations through the buttons below Execute Nav. These create another interface for you to write scripts and load them." + "\n" + "It should be noted in some cases navigation will be unavailable (i.e when charging)."))
-        nav_control_help.grid(row = 1, column = 0, padx = (0, 60))
-        nav_task_list = [
-            "None",
-            "Forwards",
-            "Backwards",
-            "Left Forwards",
-            "Left Backwards",
-            "Right Forwards",
-            "Right Backwards",
-            "Spin Clockwise",
-            "Spin Counterclockwise"
-        ]
-        nav_type_data = tkinter.StringVar(nav_control_frame)
-        nav_type_data.set(nav_task_list[0])
-        nav_control_task_dropdown = tkinter.OptionMenu(nav_control_frame, nav_type_data, nav_task_list[0], nav_task_list[1], nav_task_list[2], nav_task_list[3], nav_task_list[4], nav_task_list[5], nav_task_list[6], nav_task_list[6], nav_task_list[7], nav_task_list[8])
-        nav_control_task_dropdown.configure(width = 15)
-        nav_control_task_dropdown.grid(row = 1, column = 1, padx = (10, 10), pady = (0, 10))
-        nav_control_time_entry_data = tkinter.StringVar(nav_control_frame)
-        nav_control_time_entry_entry = tkinter.Entry(nav_control_frame, bg = "white", fg = "black", textvariable = nav_control_time_entry_data, width = 15, font = ("Calibri", 12))
-        nav_control_time_entry_entry.grid(row = 2, column = 1, padx = (10, 10))
-        nav_control_script_frame = tkinter.Frame(nav_control_frame, bg = "#506a96")
-        nav_control_script_frame.grid(row = 3, column = 1, padx = (10, 10), pady = (18, 18))
-        nav_control_execute_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Execute Nav", height = 1, width = 15, font = ("Calibri", 12), command = lambda: nav.nav.nav_execute(nav_type_data.get(), float(nav_control_time_entry_data.get())))
-        nav_control_execute_button.grid(row = 0, column = 0)
-        nav_control_load_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Load Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: nav.gui.nav_load_gui())
-        nav_control_load_button.grid(row = 1, column = 0, pady = (4, 0))
-        nav_control_edit_button = tkinter.Button(nav_control_script_frame, bg = "white", fg = "black", text = "Edit Navigation", height = 1, width = 15, font = ("Calibri", 12), command = lambda: nav.edit.nav_edit())
-        nav_control_edit_button.grid(row = 2, column = 0, pady = (4, 0))
-        nav_status_frame = tkinter.Frame(self.root, bg = "#506a96", highlightthickness = 2, bd = 0, height = 50, width = 70)
-        nav_status_frame.grid(row = 0, column = 1, padx = (12, 0), pady = (15, 0))
-        nav_status_label = tkinter.Label(nav_status_frame, bg = "#506a96", fg = "white", text = "Navigation Telemetry", font = ("Calibri", 12))
-        nav_status_label.grid(row = 0, column = 0, padx = (5, 0))
-        self.nav_status_text = tkinter.Text(nav_status_frame, bg = "white", fg = "black", state = tkinter.DISABLED, height = 10, width = 53, font = ("Calibri", 10))
-        self.nav_status_text.grid(row = 1, column = 0, padx = (5, 5), pady = (10, 0))
-        nav_status_refresh_button = tkinter.Button(nav_status_frame, text = "Refresh", bg = "white", fg = "black", command = lambda: client.vitals_refresh(self, False))
-        nav_status_refresh_button.grid(row = 2, column = 0, padx = (5, 5), pady = (10, 5))
-        print("[INFO]: Multiprocessing for main GUI starting...")
-        self.process_nav_telemetry_refresh = basics.process.create_process(client.nav_telemetry_refresh, (self, True))
-        print("[INFO]: Loading complete. If you see a console window and wish to hide it, please disable it under the top menu, under App.")
-        self.root.master.withdraw()
-        hidden_root.withdraw()
-        self.root.mainloop()
-    pass
-
-    @staticmethod
-    def get_telemetry():
-        """
-        Retrieves telemetry data over comms.
-        :return: str, multi-line
-        """
-        comms.interface.send("rca-1.2:get_telemetry")
-        return comms.interface.receive()
-
-    def nav_telemetry_refresh(self, loop):
-        """
-        Refreshes navigation telemetry display.
-        :param loop: boolean input deciding whether the function should loop. Enable only for multiprocessing.
-        :return: none.
-        """
-        if loop is True:
-            while True:
-                self.nav_status_text.configure(state = tkinter.NORMAL)
-                self.nav_status_text.delete("1.0", tkinter.END)
-                self.nav_status_text.insert("1.0", client.get_telemetry())
-                self.nav_status_text.update_idletasks()
-                self.nav_status_text.configure(state = tkinter.DISABLED)
-            pass
-        else:
-            self.nav_status_text.configure(state = tkinter.NORMAL)
-            self.nav_status_text.delete("1.0", tkinter.END)
-            self.nav_status_text.insert("1.0", client.get_telemetry())
-            self.nav_status_text.update_idletasks()
-            self.nav_status_text.configure(state = tkinter.DISABLED)
+        self.dummy_tkinter_root = tkinter.Tk() # stops tkinter.messagebox from making an empty window
+        self.dummy_tkinter_root.withdraw()
+        self.app = QApplication(argv)
+        self.app.setWindowIcon(QIcon("favicon.ico")) # it just works
+        ui_file = QFile("main.ui")
+        if not ui_file.open(QIODevice.ReadOnly):
+            print("[FAIL]: UI XML file is not in read-only. Is it being edited by another application?")
+            basics.exit(1)
         pass
-        sleep(1)
+        self.loader = QUiLoader()
+        self.window = self.loader.load(ui_file)
+        ui_file.close()
+        if not self.window:
+            print("[FAIL]: UI XML file could not be loaded to generate interface.")
+            print(self.loader.errorString())
+            basics.exit(1)
+        pass
+        self.window.connectbutton.clicked.connect(lambda: comms.connect.connect())
+        self.window.disconnectbutton.clicked.connect(lambda: comms.disconnect.disconnect())
+        self.window.updateosbutton.clicked.connect(lambda: comms.interface.send(b"rca-1.2:command_update"))
+        self.window.shutdownbutton.clicked.connect(lambda: client.os_control_shutdown_wrapper())
+        self.window.rebootbutton.clicked.connect(lambda: client.os_control_reboot_wrapper())
+        self.window.helpbutton.clicked.connect(lambda: messagebox.showinfo("Raspbot RCA: Control Help", "Use Update OS to update APT packages,\n Shutdown and Reboot perform operations as labeled."
+                                                                           + "\nA word of caution, after shutting down, there is no way to turn the bot back on besides physically power cycling.\n Please use cautiously."
+                                                                           + "\nChoose a report-type with the dropdown, select Collect Report to as labeled collect the report,\n and either use Save or View Report afterwards."))
+        self.window.executebutton.clicked.connect(lambda: print("[FAIL]: Not implemented!")) # TODO rework nav to fit new ui
+        self.window.loadbutton.clicked.connect(lambda: print("[FAIL]: Not implemented!"))
+        self.window.editbutton.clicked.connect(lambda: print("[FAIL]: Not implemented!"))
+        self.window.keyboardtogglebutton.clicked.connect(lambda: print("[FAIL]: Not implemented!")) # TODO requires keyboard nav module
+        self.window.navhelpbutton.clicked.connect(lambda: messagebox.showinfo("Raspbot RCA: Navigation Help", "This panel contains navigation controls.\nUse Load, Edit, and Execute to run scripts."
+                                                                              + "\nSee documentation regarding how to write these scripts.\nPress Toggle Keyboard Control to enable or disable keyboard controls."
+                                                                              + "\nKeyboard controls in question are:\nW - Forwards\nA - Left Turn\nS - Backwards\nD - Right Turn\nQ - Clockwise Spin\nE - Counterclockwise Spin"))
+        self.window.saveframebutton.clicked.connect(lambda: print("[FAIL]: Not implemented!")) # TODO requires camera view to work with multiprocess- i mean threading
+        self.window.collectbutton.clicked.connect(lambda: client.report_collect(self, self.window.typeselect.currentText()))
+        self.window.savebutton.clicked.connect(client.report_save(self, self.window.typeselect.currentText(), self.report_content))
+        self.window.viewbutton.clicked.connect(client.report_gui(self, self.window.typeselect.currentText(), self.report_content))
+        self.window.telemetryview.setReadOnly(True)
+        self.window.dockbutton.clicked.connect(lambda: comms.interface.send(b"rca-1.2:command_dock"))
+        self.window.undockbutton.clicked.connect(lambda: comms.interface.send(b"rca-1.2:command_undock"))
+        self.window.menubar.triggered[QAction].connect(self.menu_trigger)
+        self.window.disconnectbutton.setEnabled(False)
+        self.window.updateosbutton.setEnabled(False)
+        self.window.shutdownbutton.setEnabled(False)
+        self.window.rebootbutton.setEnabled(False)
+        self.window.executebutton.setEnabled(False)
+        self.window.keyboardtogglebutton.setEnabled(False)
+        self.window.saveframebutton.setEnabled(False)
+        self.window.collectbutton.setEnabled(False)
+        self.window.typeselect.setEnabled(False)
+        self.window.dockbutton.setEnabled(False)
+        self.window.undockbutton.setEnabled(False)
+        self.window.show()
+        print("[INFO]: Threading for main GUI starting...")
+        self.process_telemetry_refresh = basics.process.create_process(client.telemetry_refresh, (self,))
+        self.process_status_refresh = basics.process.create_process(client.status_refresh, (self,))
+        self.process_gui_lock_from_state = basics.process.create_process(client.gui_lock_from_connect_state, (self,))
+        basics.basics.exit(self.app.exec_())
+        print("[INFO]: Loading complete.")
     pass
 
+    def menu_trigger(self, qobj: object) -> None:
+        """
+        Function for executing menubar selections.
+        :param qobj: Qt object
+        :return: None
+        """
+        SWITCH = {"Exit":lambda: basics.basics.exit(0), "Edit Network":lambda: print("TODO MENU EDIT NETWORK"), "Edit Hardware":lambda: print("TODO MENU EDIT HARDWARE"), "Edit Main":lambda: print("TODO MENU EDIT MAIN"), "Ping": lambda: client.ping_gui(self), "SenseHAT LEDs":lambda: client.led_gui(self), "Arm Control":lambda: client.arm_control_gui(self), "View Documentation":lambda: webbrowser.open_new("https://dreamerslegacy.xyz/projects/raspbot/docs.html"), "Visit Github Repo":lambda: webbrowser.open_new("https://github.com/perpetualCreations/raspbot-rca/")}
+        try: SWITCH[qobj.text()]()
+        except KeyError:
+            print("[FAIL]: client.menu_trigger was unable to process given menubar action, this should never occur. Received,")
+            print(qobj.text())
+        pass
+
+    def gui_lock_from_connect_state(self) -> None:
+        """
+        Disables widgets depending on connection status.
+        This prevents certain functions from being triggered at untimely states (i.e disconnect/connect being pressed twice, commands being sent while disconnected).
+        For multithreading.
+        :return: None
+        """
+        print("[INFO]: GUI lock thread started.")
+        while self.process_gui_lock_from_state_kill_flag is False:
+            if comms.objects.is_connected is True:
+                self.window.connectbutton.setEnabled(False)
+                self.window.disconnectbutton.setEnabled(True)
+                self.window.updateosbutton.setEnabled(True)
+                self.window.shutdownbutton.setEnabled(True)
+                self.window.rebootbutton.setEnabled(True)
+                self.window.executebutton.setEnabled(True)
+                self.window.keyboardtogglebutton.setEnabled(True)
+                self.window.saveframebutton.setEnabled(True)
+                self.window.collectbutton.setEnabled(True)
+                self.window.typeselect.setEnabled(True)
+                self.window.dockbutton.setEnabled(True)
+                self.window.undockbutton.setEnabled(True)
+                if comms.objects.dock_status is False:
+                    self.window.undockbutton.setEnabled(False)
+                    self.window.dockbutton.setEnabled(True)
+                else:
+                    self.window.dockbutton.setEnabled(False)
+                    self.window.undockbutton.setEnabled(True)
+                pass
+            else:
+                self.window.connectbutton.setEnabled(True)
+                self.window.disconnectbutton.setEnabled(False)
+                self.window.updateosbutton.setEnabled(False)
+                self.window.shutdownbutton.setEnabled(False)
+                self.window.rebootbutton.setEnabled(False)
+                self.window.executebutton.setEnabled(False)
+                self.window.keyboardtogglebutton.setEnabled(False)
+                self.window.saveframebutton.setEnabled(False)
+                self.window.collectbutton.setEnabled(False)
+                self.window.typeselect.setEnabled(False)
+                self.window.dockbutton.setEnabled(False)
+                self.window.undockbutton.setEnabled(False)
+            pass
+            sleep(0.5)
+        pass
+        print("[INFO]: GUI lock thread ended.")
+
+    def telemetry_refresh(self) -> None:
+        """
+        Refreshes telemetry display. Intended solely for multithreading.
+        :return: None
+        """
+        print("[INFO]: Telemetry refresh thread started.")
+        while comms.objects.process_telemetry_refresh_kill_flag is False:
+            while comms.objects.is_connected is False: pass
+            self.window.telemetryview.setPlainText(comms.interface.receive(socket_object = comms.objects.socket_telemetry).decode(encoding = "utf-8", errors = "replace"))
+            sleep(1)
+        pass
+        print("[INFO]: Telemetry refresh thread ended.")
+
+    def status_refresh(self) -> None:
+        """
+        Refreshes status display. Intended solely for multithreading.
+        :return: None
+        """
+        print("[INFO]: Status refresh thread started.")
+        SWITCH_CONNECT = {False:"Disconnected", True:"Connected"}
+        SWITCH_DOCK = {False:"undocked", True:"docked", None:"dock status is unknown"}
+        while self.process_status_refresh_kill_flag is False:
+            try: self.window.status.setText(SWITCH_CONNECT[comms.objects.is_connected] + ", " + "currently " + SWITCH_DOCK[comms.objects.dock_status] + ".")
+            except KeyError: self.window.status.text("Unknown status.")
+            sleep(0.25)
+        pass
+        print("[INFO]: Status refresh thread ended.")
+
     @staticmethod
-    def set_configuration_gui():
+    def set_configuration_gui(file: str) -> None:
         """
         Either opens nano text editor for Linux systems or will open OS' built-in text editor if not Linux.
         In the future, does exactly what client.set_configuration does, but with a GUI window.
-
+        :param file: str, filename of config
         TODO update set_configuration_gui to tkinter GUI
         """
         platform = system()
         if platform in ["Linux", "Ubuntu", "Debian", "Raspbian", "Kubuntu", "Arch", "Arch Linux", "Fedora", "Linux Mint"]:
-            call("sudo nano main.cfg", shell = True)
+            call("sudo nano " + file, shell = True)
         elif platform == "Windows":
-            Popen(["notepad.exe", "main.cfg"])
+            Popen(["notepad.exe", file])
         else:
             messagebox.showerror("Raspbot RCA: OS Unsupported", "Client OS is unsupported, please manually edit configuration! The accepted operating systems are Linux and Linux distributions, and Windows. If you believe this is a mistake please open an issue on the repository page.")
         pass
     pass
 
     @staticmethod
-    def ping():
+    def ping() -> list:
         """
         Pings host address and records latency and losses.
         :return: average latency, nested list with individual latency values, total losses, nested list with individual losses, if host resolution failed
@@ -322,7 +275,7 @@ class client:
         pass
     pass
 
-    def ping_wrapper(self):
+    def ping_wrapper(self) -> None:
         """
         Wrapper for client.ping() for ping_gui.
         :return: none
@@ -336,15 +289,10 @@ class client:
             ping_results_raw[1][1] = round(ping_results_raw[1][1], 2)
             ping_results_raw[1][2] = round(ping_results_raw[1][2], 2)
             ping_results_raw[1][3] = round(ping_results_raw[1][3], 2)
-            if ping_results_raw[3][0] is True:
-                ping_results_raw[1][0] = "Timed out!"
-            elif ping_results_raw[3][1] is True:
-                ping_results_raw[1][1] = "Timed out!"
-            elif ping_results_raw[3][2] is True:
-                ping_results_raw[1][2] = "Timed out!"
-            elif ping_results_raw[3][3] is True:
-                ping_results_raw[1][3] = "Timed out!"
-            pass
+            if ping_results_raw[3][0] is True: ping_results_raw[1][0] = "Timed out!"
+            elif ping_results_raw[3][1] is True: ping_results_raw[1][1] = "Timed out!"
+            elif ping_results_raw[3][2] is True: ping_results_raw[1][2] = "Timed out!"
+            elif ping_results_raw[3][3] is True: ping_results_raw[1][3] = "Timed out!"
             self.ping_results = "Average Latency (ms): " + str(ping_results_raw[0]) + "\n" + "Test 1 Latency: " + str(ping_results_raw[1][0]) + "\n" + "Test 2 Latency: " + str(ping_results_raw[1][1]) + "\n" + "Test 3 Latency: " + str(ping_results_raw[1][2]) + "\n" + "Test 4 Latency: " + str(ping_results_raw[1][3]) + "\n" + str(ping_results_raw[2]) + "/4" + " Loss"
         pass
         self.ping_text.configure(state = tkinter.NORMAL)
@@ -353,10 +301,10 @@ class client:
         self.ping_text.configure(state = tkinter.DISABLED)
     pass
 
-    def ping_gui(self):
+    def ping_gui(self) -> None:
         """
         GUI tool for pinging IP addresses.
-        :return: none.
+        :return: None
         """
         print("[INFO]: Displayed ping_gui.")
         ping_gui = tkinter.Toplevel()
@@ -376,11 +324,11 @@ class client:
         ping_gui.mainloop()
     pass
 
-    def report_collect(self, report_type):
+    def report_collect(self, report_type: str) -> None:
         """
         Sends a report request to host with given type and sets self.report_content with results.
         :param report_type: type of report.
-        :return: none.
+        :return: None
         """
         if report_type == "Science":
             if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2] is True:
@@ -391,18 +339,17 @@ class client:
         elif report_type == "CH Check":
             comms.interface.send(b"rca-1.2:command_ch_check")
             if comms.acknowledge.receive_acknowledgement() is False: return None
-            data = comms.interface.receive()
-            data = data.decode(encoding="utf-8", errors="replace")
+            data = comms.interface.receive().decode(encoding="utf-8", errors="replace")
             self.report_content = data
         else: return None
     pass
 
-    def report_gui(self, report_type, content):
+    def report_gui(self, report_type: str, content: str) -> None:
         """
         Views a report with given type and contents.
         :param report_type: type of report.
         :param content: report contents to be displayed.
-        :return: none.
+        :return: None
         """
         if self.report_content == "": return None
         print("[INFO]: Displayed report_gui.")
@@ -422,12 +369,12 @@ class client:
         report_gui.mainloop()
     pass
 
-    def report_save(self, report_type, content):
+    def report_save(self, report_type: str, content: str) -> None:
         """
         Saves a report with given type and contents.
         :param report_type: type of report.
         :param content: report contents to be saved.
-        :return: none.
+        :return: None
         """
         if self.report_content == "" and report_type != "PING": return None
         file_report_name = report_type + "_report-" + basics.basics.make_timestamp() + ".txt"
@@ -438,7 +385,7 @@ class client:
         print("[INFO]: Report saved.")
     pass
 
-    def dock(self):
+    def dock(self) -> None:
         """
         Instructs host to dock with charger station.
         """
@@ -447,10 +394,10 @@ class client:
         comms.objects.dock_status = True
     pass
 
-    def undock(self):
+    def undock(self) -> None:
         """
         Instructs host to undock from charger station.
-        :return: none.
+        :return: None
         """
         comms.interface.send(b"rca-1.2:comamnd_undock")
         if comms.acknowledge.receive_acknowledgement() is False: return None
@@ -458,10 +405,10 @@ class client:
     pass
 
     @staticmethod
-    def os_control_shutdown_wrapper():
+    def os_control_shutdown_wrapper() -> None:
         """
         Creates dialogue asking for user to confirm to shutdown bot.
-        :return: none.
+        :return: None
         """
         if messagebox.askyesno("Raspbot RCA: Confirm Shutdown?", "Are you sure you want to shutdown the bot? There is no way to boot it besides physically restarting its power source, and if the Arduino fails, you may overdischarge your battery.") is True:
             comms.interface.send(b"rca-1.2:command_shutdown")
@@ -470,10 +417,10 @@ class client:
     pass
 
     @staticmethod
-    def os_control_reboot_wrapper():
+    def os_control_reboot_wrapper() -> None:
         """
         Creates dialogue asking for user to confirm to shutdown bot.
-        :return: none.
+        :return: None
         """
         if messagebox.askyesno("Raspbot RCA: Confirm Reboot?", "Are you sure you want to reboot the bot?") is True:
             comms.interface.send(b"rca-1.2:command_reboot")
@@ -481,26 +428,27 @@ class client:
         else: return None
     pass
 
-    def led_command(self, command, frame = None):
+    def led_command(self, command: str, frame: Union[None, str, int] = None) -> None:
         """
         Issues commands to host for controlling LED matrix on SenseHAT by controlling transmissions.
         :param command: command to be executed by host.
         :param frame: index number for target frame set to be played, if command is not image or play, is ignored.
-        :return: none.
+        :return: None
         """
         if self.components[1][0] is not True: return None
+        if isinstance(frame, int) is True: frame = str(frame)
         comms.interface.send(b"rca-1.2:led_graphics")
         if comms.acknowledge.receive_acknowledgement() is False: return None
         if command != "play":
             comms.interface.send(command) # TODO command != play clause is temporary until play command is implemented
             if comms.acknowledge.receive_acknowledgement() is False: return None
-            elif command == "image": comms.interface.send(str(frame))
+            elif command == "image": comms.interface.send(frame)
     pass
 
-    def led_gui(self):
+    def led_gui(self) -> None:
         """
         Creates GUI for controlling LED matrix on SenseHAT.
-        :return: none.
+        :return: None
         """
         print("[INFO]: Displayed led_gui.")
         led_gui = tkinter.Toplevel()
@@ -521,11 +469,11 @@ class client:
         led_gui.mainloop()
     pass
 
-    def arm_control_gui(self):
+    def arm_control_gui(self) -> None:
         """
         Creates GUI for user to control arm.
         This will only be available if enabled, hardware check is performed at creation of main window.
-        :return: none.
+        :return: None
         """
 
         pass

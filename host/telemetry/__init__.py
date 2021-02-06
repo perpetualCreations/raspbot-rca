@@ -25,19 +25,18 @@ class telemetry:
     """
     Class for telemetry data collection.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.components = basics.load_hardware_config()
         if self.components[1][0] is True:
             import sense_hat
             self.sense = sense_hat.SenseHat()
         else: self.sense = None
 
-    def get(self):
+    def get(self) -> str:
         """
         Calls SenseHAT Python integration package and Arduino PySerial for data inputs and returns formatted output.
         :return: str, multi-line
         """
-        print("[INFO]: Starting data collection...")
         if self.components[1][0] is True:
             self.sense.set_imu_config(True, True, True)
             orientation_raw = self.sense.get_orientation_degrees()
@@ -52,18 +51,17 @@ class telemetry:
 
         if self.components[1][1] is True:
             serial.serial(direction = "send", message = "T")
-            self.sleep(0.1)
+            sleep(0.1)
             distance = serial.serial().rstrip("\n") + " mm"
         else: distance = "No Data"
 
         if self.components[2][0] is True:
             serial.serial(direction = "send", message = "*")
-            self.sleep(0.1)
+            sleep(0.1)
             voltage = serial.serial().rstrip("\n") + " V"
         else: voltage = "No Data"
 
-        timestamp = basics.make_timestamp()
-        print("[INFO]: Done!")
+        timestamp = basics.make_timestamp(log_suppress = True)
         return "Telem. Timestamp: " + timestamp + "\nOrientation: " + orientation \
                + "\nCompass: " + compass + "\nAcceleration: " + accelerometer + "\nDistance Ahead: " + distance \
                + "\nBattery Voltage" + voltage

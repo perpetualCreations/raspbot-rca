@@ -1,50 +1,41 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
-basics module, contains basic application functions such as exiting client software, multiprocessing, and editing configs.
+basics module, contains basic application functions such as exiting client software, multithreading, and editing configs.
 Made by perpetualCreations
 
-Handles exiting and configuration editing.
+Handles multithreading.
 """
 
 from basics import objects
+from typing import Union
 
-def create_process(target, args = ()):
+def create_process(target: Union[classmethod, staticmethod, object], args: tuple = ()) -> Union[None, object]:
     """
-    Creates a new process from multiprocessing.
-    :param target: the function being processed.
-    :param args: the arguments for said function being processed.
-    :return: if failed, returns nothing. otherwise returns dummy variable.
+    Creates a new thread from multithreading.
+    @param target: the function being processed.
+    @param args: the arguments for said function being processed.
+    @return: if failed, returns nothing. otherwise returns dummy variable.
     """
     if __name__ == "basics.process":
         try:
-            dummy = objects.multiprocessing.Process(target = target, args = args)
+            dummy = objects.threading.Thread(target = target, args = args)
             dummy.start()
-        except objects.multiprocessing.ProcessError as me:
+        except objects.threading.ThreadError as ThreadErrorMessage:
             print("[FAIL]: Process creation failed! Details below.")
-            print(me)
+            print(ThreadErrorMessage)
             return None
         pass
         return dummy
     else: pass
 pass
 
-def stop_process(target, error_ignore):
+def stop_process(target: object) -> True:
     """
-    Stops target process from multiprocessing.
-    :param target: process to be stopped.
-    :param error_ignore: boolean to tell the function to throw a failure message or not when failed.
-    :return: none.
+    Returns True for termination flag for a thread, joins given target.
+    Use as thread_flag = stop_process(thread_object).
+    @param target: process to be stopped.
+    @return: bool, True
     """
-    if __name__ == '__main__':
-        try:
-            target.terminate()
-        except Exception as spe:
-            if error_ignore is True:
-                print("[INFO]: Stop process failed, however this is indicated to be normal.")
-            else:
-                print("[FAIL]: Stop process failed! See details below.")
-                print(spe)
-            pass
-        pass
-    pass
+    target.join()
+    return True
 pass

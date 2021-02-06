@@ -1,6 +1,6 @@
 """
 Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
-basics module, contains basic application functions such as exiting client software, multiprocessing, and editing configs.
+basics module, contains basic application functions such as exiting client software, multithreading, and editing configs.
 Made by perpetualCreations
 
 Handles exiting, updating, and configuration editing.
@@ -8,36 +8,38 @@ Handles exiting, updating, and configuration editing.
 
 from basics import objects
 
-def log_init():
+def log_init() -> None:
     """
     Initiates logging.
-    :return: none.
+    :return: None
     """
     print("[INFO]: Output redirected from console to logging.")
     objects.log_file_handle = open("logs/log-" + make_timestamp() + ".txt", "w")
     objects.origin_stdout = objects.sys.stdout
     objects.sys.stdout = objects.log_file_handle
 
-def make_timestamp():
+def make_timestamp(log_suppress: bool = False) -> str:
     """
     Generates timestamp from current UTC time.
-    :return: none.
+    :return: None
     """
-    print("[INFO]: Generating timestamps...")
+    if log_suppress is False: print("[INFO]: Generating timestamps...")
     timestamp = objects.strftime("%b%d%Y%H%M%S"), objects.gmtime()
     return str(timestamp[0])
 
-def exit(status):
+def exit(status: int) -> None:
     """
     Stops application.
-    :return: none.
+    :return: None
     """
     print("[INFO]: Stopping application...")
+    from comms import disconnect
+    disconnect.disconnect()
     objects.sys.stdout = objects.origin_stdout
     objects.log_file_handle.close()
     objects.sys.exit(status)
 
-def os_update():
+def os_update() -> True:
     """
     Updates all apt packages,
     :return: True
@@ -45,7 +47,7 @@ def os_update():
     objects.call("sudo apt update && sudo apt upgrade -y", shell = True)
     return True
 
-def set_configuration(file, var, value, section, key, multi):
+def set_configuration(file: str, var: str, value: str, section: str, key: str, multi: bool) -> None:
     """
     Edits entry in configuration file and applies new edit to variables.
     :param file: configuration file.
@@ -84,7 +86,7 @@ def set_configuration(file, var, value, section, key, multi):
         config_write.close()
     pass
 
-def load_hardware_config():
+def load_hardware_config() -> list:
     """
     Uses configparser to retrieve hardware configuration, and return as nested component list.
     :return:

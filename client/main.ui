@@ -162,23 +162,7 @@
     <property name="frameShadow">
      <enum>QFrame::Plain</enum>
     </property>
-    <widget class="QTextBrowser" name="telemetryview">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>40</y>
-       <width>261</width>
-       <height>301</height>
-      </rect>
-     </property>
-     <property name="toolTip">
-      <string>Incoming telemetry data shows up here, when connected.</string>
-     </property>
-     <property name="whatsThis">
-      <string/>
-     </property>
-    </widget>
-    <widget class="QLabel" name="framelabel_2">
+    <widget class="QLabel" name="title">
      <property name="geometry">
       <rect>
        <x>120</x>
@@ -189,6 +173,23 @@
      </property>
      <property name="text">
       <string>Telemetry</string>
+     </property>
+    </widget>
+    <widget class="QTextEdit" name="telemetryview">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>261</width>
+       <height>311</height>
+      </rect>
+     </property>
+     <property name="html">
+      <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </widget>
@@ -207,7 +208,7 @@
     <property name="frameShadow">
      <enum>QFrame::Plain</enum>
     </property>
-    <widget class="QPushButton" name="pushButton">
+    <widget class="QPushButton" name="saveframebutton">
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -220,12 +221,12 @@
       <string>Save Frame</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="status">
      <property name="geometry">
       <rect>
-       <x>340</x>
+       <x>110</x>
        <y>330</y>
-       <width>91</width>
+       <width>321</width>
        <height>20</height>
       </rect>
      </property>
@@ -233,10 +234,13 @@
       <enum>Qt::RightToLeft</enum>
      </property>
      <property name="text">
-      <string>Disconnected.</string>
+      <string>Disconnected, currently dock status is unknown.</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QFrame" name="frame_2">
+    <widget class="QFrame" name="cameraview">
      <property name="geometry">
       <rect>
        <x>19</x>
@@ -441,7 +445,7 @@
       <string>Press to save latest report.</string>
      </property>
      <property name="text">
-      <string>Save</string>
+      <string>Save Report</string>
      </property>
     </widget>
     <widget class="QComboBox" name="typeselect">
@@ -543,7 +547,7 @@
      </item>
     </widget>
    </widget>
-   <widget class="QFrame" name="frame">
+   <widget class="QFrame" name="navframe">
     <property name="geometry">
      <rect>
       <x>360</x>
@@ -666,6 +670,32 @@
       <string>Navigation</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="dockbutton">
+     <property name="geometry">
+      <rect>
+       <x>330</x>
+       <y>20</y>
+       <width>75</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Dock</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="undockbutton">
+     <property name="geometry">
+      <rect>
+       <x>330</x>
+       <y>50</y>
+       <width>75</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Undock</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -677,71 +707,89 @@
      <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuApp">
+   <widget class="QMenu" name="menuapp">
     <property name="title">
      <string>App</string>
     </property>
-    <widget class="QMenu" name="menuEdit_Configs">
+    <widget class="QMenu" name="menueditconfigs">
      <property name="title">
       <string>Edit Configs</string>
      </property>
-     <addaction name="actionEdit_Network"/>
-     <addaction name="actionEdit_Hardware"/>
-     <addaction name="actionEdit_Main"/>
+     <addaction name="actioneditnetwork"/>
+     <addaction name="actionedithardware"/>
+     <addaction name="actioneditmain"/>
     </widget>
-    <addaction name="menuEdit_Configs"/>
-    <addaction name="actionExit"/>
+    <addaction name="menueditconfigs"/>
+    <addaction name="actionexit"/>
    </widget>
-   <widget class="QMenu" name="menuNet">
+   <widget class="QMenu" name="menunet">
     <property name="title">
      <string>Tools</string>
     </property>
-    <addaction name="actionPing"/>
+    <addaction name="actionping"/>
    </widget>
-   <widget class="QMenu" name="menuAdd_Ons">
+   <widget class="QMenu" name="menuaddons">
     <property name="title">
      <string>Add-Ons</string>
     </property>
-    <addaction name="actionSenseHAT_LEDs"/>
-    <addaction name="actionArm"/>
+    <addaction name="actionsensehatleds"/>
+    <addaction name="actionarm"/>
    </widget>
-   <addaction name="menuApp"/>
-   <addaction name="menuNet"/>
-   <addaction name="menuAdd_Ons"/>
+   <widget class="QMenu" name="menuhelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionviewdocumentation"/>
+    <addaction name="actionvisitgithubrepo"/>
+   </widget>
+   <addaction name="menuapp"/>
+   <addaction name="menunet"/>
+   <addaction name="menuaddons"/>
+   <addaction name="menuhelp"/>
   </widget>
-  <action name="actionEdit_Network">
+  <action name="actioneditnetwork">
    <property name="text">
     <string>Edit Network</string>
    </property>
   </action>
-  <action name="actionEdit_Hardware">
+  <action name="actionedithardware">
    <property name="text">
     <string>Edit Hardware</string>
    </property>
   </action>
-  <action name="actionEdit_Main">
+  <action name="actioneditmain">
    <property name="text">
     <string>Edit Main</string>
    </property>
   </action>
-  <action name="actionExit">
+  <action name="actionexit">
    <property name="text">
     <string>Exit</string>
    </property>
   </action>
-  <action name="actionPing">
+  <action name="actionping">
    <property name="text">
     <string>Ping</string>
    </property>
   </action>
-  <action name="actionSenseHAT_LEDs">
+  <action name="actionsensehatleds">
    <property name="text">
     <string>SenseHAT LEDs</string>
    </property>
   </action>
-  <action name="actionArm">
+  <action name="actionarm">
    <property name="text">
     <string>Arm Control</string>
+   </property>
+  </action>
+  <action name="actionviewdocumentation">
+   <property name="text">
+    <string>View Documentation</string>
+   </property>
+  </action>
+  <action name="actionvisitgithubrepo">
+   <property name="text">
+    <string>Visit Github Repo</string>
    </property>
   </action>
  </widget>

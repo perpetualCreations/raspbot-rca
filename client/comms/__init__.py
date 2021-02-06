@@ -9,7 +9,7 @@ Client version of comms module.
 
 print("[INFO]: Initiating comms module...")
 
-from comms import interface, connect, disconnect, acknowledge, objects, camera_render, net_status_data_evaluate
+from comms import interface, connect, disconnect, acknowledge, objects, camera_render
 
 config_parse_load = objects.configparser.ConfigParser()
 try:
@@ -20,15 +20,19 @@ try:
     objects.host = config_parse_load["NET"]["ip"]
     objects.port = int(config_parse_load["NET"]["port"])
     objects.cam_port = int(config_parse_load["NET"]["cam_port"])
-except objects.configparser.Error as ce:
+    objects.telemetry_port = int(config_parse_load["NET"]["telemetry_port"])
+except objects.configparser.Error as ConfigParserErrorMessage:
     print("[FAIL]: Failed to load configurations! See below for details.")
-    print(ce)
-except KeyError as ke:
+    print(ConfigParserErrorMessage)
+    objects.basics.exit(1)
+except KeyError as KeyErrorMessage:
     print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
-    print(ke)
-except FileNotFoundError as nf:
+    print(KeyErrorMessage)
+    objects.basics.exit(1)
+except FileNotFoundError as FileNotFoundErrorMessage:
     print("[FAIL]: Failed to load configurations! Configuration file is missing.")
-    print(nf)
+    print(FileNotFoundErrorMessage)
+    objects.basics.exit(1)
 pass
 
 objects.components = objects.basics.load_hardware_config()

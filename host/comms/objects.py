@@ -10,7 +10,6 @@ try:
     import socket, configparser, imagezmq, cv2
     from imutils.video import VideoStream
     from platform import system
-    from subprocess import call, Popen
     from time import sleep
     from Cryptodome.Cipher import Salsa20
     from Cryptodome.Hash import HMAC, SHA256, MD5
@@ -32,7 +31,8 @@ auth = None # Authentication key
 
 host = None # host address goes here, for binding socket
 port = 64220 # default port config, is overwritten by configuration file read
-cam_port = 64221
+cam_port = 64221 # default port config, is overwritten by configuration file read
+telemetry_port = 64222 # default port config, is overwritten by configuration file read
 
 dock_status = None
 components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
@@ -42,11 +42,21 @@ acknowledgement_id = None # placeholder, will be overwritten by lookup with ackn
 acknowledgement_num_id = None # placeholder, will be overwritten by receiving socket input
 
 socket_init = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # socket object for initial connection.
-socket_main = None # actually the connection object, gets overwritten by connect_accept.
+socket_init.settimeout(10)
+socket_init.setblocking(True)
+socket_main = None # actually the connection object, gets overwritten by connection accept in main
+socket_telemetry_init = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+socket_telemetry_init.settimeout(10)
+socket_telemetry_init.setblocking(True)
+socket_telemetry = None # like socket_main, connection object for telemetry, gets overwritten by comms.telemetry
 
 client_address = None # client IP address
 
 camera_sender = None # ImageZMQ's ImageSender object
 camera_stream = None # VideoStream object
 
-process_camera_capture = None # placeholder for multiprocessing object that runs capturing
+process_camera_capture = None # placeholder for multithreading object that runs capturing
+process_camera_capture_kill_flag = False # flag variable that holds a boolean, when True camera_capture process is killed.
+
+process_telemetry_broadcast = None # placeholder for multithreading object that runs telemetry broadcast
+process_telemetry_broadcast_kill_flag = False # flag variable that holds a boolean, when True telemetry_broadcast process is killed.

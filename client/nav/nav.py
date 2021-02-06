@@ -7,29 +7,28 @@ Contains navigation load/execution and telemetry functions.
 """
 
 from nav import objects
+from typing import Union
 
-def nav_execute(direction, run_time):
+def nav_execute(direction: str, run_time: Union[str, int]) -> None:
     """
     Wrapper for client.send(), formats instructions and does hardware check for distance sensor.
     :param direction: direction of navigation.
     :param run_time: amount of time to run motors in that direction.
-    :return: none.
+    :return: None
     """
-    if objects.components[1][1] is True: get_distance = True
-    else: get_distance = False
     objects.comms.interface.send("rca-1.2:nav_start")
-    objects.comms.interface.send((direction + " " + str(run_time) + " " + str(get_distance)).encode(encoding = "ascii", errors = "replace"))
+    if isinstance(run_time, int) is True: run_time = str(run_time)
+    objects.comms.interface.send((direction + " " + run_time).encode(encoding = "ascii", errors = "replace"))
     if objects.comms.acknowledge.receive_acknowledgement() is False: return None
-    if get_distance is True: objects.basics.process.create_process(nav_telemetry_get)
 pass
 
-def nav_load(file_name):
+def nav_load(file_name: str) -> None:
     """
     Reads from a given file line-by-line for instructions, and executes them through client.nav_execute().
     Reads syntax as <NAV DIRECTION/ACTION> <RUN TIME>. It looks similar to GCODE-style syntax. Telemetry is enabled when hardware passes, cannot be custom.
     Example of syntax: F 100
     :param file_name: name of file to read from.
-    :return: none.
+    :return: None
     """
     instructions = open(file_name)
     instruction_line = sum(1 for _ in instructions)

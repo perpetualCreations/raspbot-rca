@@ -8,15 +8,19 @@ Contains disconnect function.
 
 from comms import objects, interface
 
-def disconnect():
+def disconnect() -> None:
     """
     Sends a message to host notifying that client has disconnected and then closes socket.
-    :return: none.
+    :return: None
     """
+    objects.process_camera_capture_kill_flag = True
+    objects.process_telemetry_broadcast_kill_flag = True
     try:
         interface.send(b"rca-1.2:disconnected")
+        objects.socket_init.close()
         objects.socket_main.close()
+        objects.socket_telemetry_init.close()
+        objects.socket_telemetry.close()
+        print("[INFO]: Disconnected from client.")
     except OSError: pass
-    print("[INFO]: Disconnected from client.")
-    objects.restart_shutdown.restart()
 pass
