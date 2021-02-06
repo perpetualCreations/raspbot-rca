@@ -19,7 +19,7 @@ try:
     # Pyside6
     from PySide6.QtUiTools import QUiLoader
     from PySide6.QtWidgets import QApplication
-    from PySide6.QtCore import QFile, QIODevice
+    from PySide6.QtCore import QFile, QIODevice, Signal, Slot, QObject
     from PySide6.QtGui import *
     # RCA Modules
     import basics, comms, nav
@@ -36,15 +36,21 @@ pass
 # basics.basics.log_init()
 # TODO uncomment logging init, for dev
 
-class client:
+class client(QObject):
     """
     Main client class.
     """
+
+    signal_status_refresh = Signal(object, str, str, bool)  # connect message, dock message, is in erroneous state
+    signal_telemetry_refresh = Signal(object, str)  # telemetry message
+    signal_gui_lock_from_state = Signal(object, bool, bool)  # is connected, is docked
+
     def __init__(self) -> None:
         """
         Initiation function of Raspbot RCA. Reads configs and starts various process and GUI.
         """
         print("[INFO]: Starting client Raspbot RC Application...")
+        super(client, self).__init__()
         print("[INFO]: Declaring variables...")
         self.connect_retries = 0
         self.ping_text = None # GUI element referenced across two functions, has a class variable to allow for it
@@ -60,17 +66,17 @@ class client:
         try:
             config_parse_load.read("main.cfg")
             self.gui_hide_console = literal_eval(config_parse_load["GUI"]["hide_console"])
-        except configparser.Error as ce:
+        except configparser.Error as ConfigParserErrorMessage:
             print("[FAIL]: Failed to load configurations! See below for details.")
-            print(ce)
+            print(ConfigParserErrorMessage)
             basics.basics.exit(1)
-        except KeyError as ke:
+        except KeyError as KeyErrorMessage:
             print("[FAIL]: Failed to load configurations! Configuration file is corrupted or has been edited incorrectly.")
-            print(ke)
+            print(KeyErrorMessage)
             basics.basics.exit(1)
-        except FileNotFoundError as nf:
+        except FileNotFoundError as NotFoundMessage:
             print("[FAIL]: Failed to load configurations! Configuration file is missing.")
-            print(nf)
+            print(NotFoundMessage)
             basics.basics.exit(1)
         pass
         print("[INFO]: Starting GUI...")
@@ -81,7 +87,7 @@ class client:
         ui_file = QFile("main.ui")
         if not ui_file.open(QIODevice.ReadOnly):
             print("[FAIL]: UI XML file is not in read-only. Is it being edited by another application?")
-            basics.exit(1)
+            basics.basics.exit(1)
         pass
         self.loader = QUiLoader()
         self.window = self.loader.load(ui_file)
@@ -130,6 +136,9 @@ class client:
         self.process_telemetry_refresh = basics.process.create_process(client.telemetry_refresh, (self,))
         self.process_status_refresh = basics.process.create_process(client.status_refresh, (self,))
         self.process_gui_lock_from_state = basics.process.create_process(client.gui_lock_from_connect_state, (self,))
+        self.signal_telemetry_refresh.connect(client.telemetry_refresh_commit)
+        self.signal_status_refresh.connect(client.status_refresh_commit)
+        self.signal_gui_lock_from_state.connect(client.gui_lock_from_connect_state_commit)
         basics.basics.exit(self.app.exec_())
         print("[INFO]: Loading complete.")
     pass
@@ -147,77 +156,108 @@ class client:
             print(qobj.text())
         pass
 
+    @Slot(bool, bool)
+    def gui_lock_from_connect_state_commit(self, connected: bool, docked: bool) -> None:
+        """
+        Commits setEnabled states to widgets.
+        :param connected: bool, passed from client.gui_lock_from_connect_state, is client connected
+        :param docked: bool, passed from client.gui_lock_from_connect_state, is bot docked
+        :return: None
+        """
+        if connected is True:
+            self.window.connectbutton.setEnabled(False)
+            self.window.disconnectbutton.setEnabled(True)
+            self.window.updateosbutton.setEnabled(True)
+            self.window.shutdownbutton.setEnabled(True)
+            self.window.rebootbutton.setEnabled(True)
+            self.window.executebutton.setEnabled(True)
+            self.window.keyboardtogglebutton.setEnabled(True)
+            self.window.saveframebutton.setEnabled(True)
+            self.window.collectbutton.setEnabled(True)
+            self.window.typeselect.setEnabled(True)
+            self.window.dockbutton.setEnabled(True)
+            self.window.undockbutton.setEnabled(True)
+            if docked is False:
+                self.window.undockbutton.setEnabled(False)
+                self.window.dockbutton.setEnabled(True)
+            else:
+                self.window.dockbutton.setEnabled(False)
+                self.window.undockbutton.setEnabled(True)
+            pass
+        else:
+            self.window.connectbutton.setEnabled(True)
+            self.window.disconnectbutton.setEnabled(False)
+            self.window.updateosbutton.setEnabled(False)
+            self.window.shutdownbutton.setEnabled(False)
+            self.window.rebootbutton.setEnabled(False)
+            self.window.executebutton.setEnabled(False)
+            self.window.keyboardtogglebutton.setEnabled(False)
+            self.window.saveframebutton.setEnabled(False)
+            self.window.collectbutton.setEnabled(False)
+            self.window.typeselect.setEnabled(False)
+            self.window.dockbutton.setEnabled(False)
+            self.window.undockbutton.setEnabled(False)
+        pass
+
     def gui_lock_from_connect_state(self) -> None:
         """
-        Disables widgets depending on connection status.
+        Emits signals depending on connection status.
         This prevents certain functions from being triggered at untimely states (i.e disconnect/connect being pressed twice, commands being sent while disconnected).
         For multithreading.
         :return: None
         """
         print("[INFO]: GUI lock thread started.")
         while self.process_gui_lock_from_state_kill_flag is False:
-            if comms.objects.is_connected is True:
-                self.window.connectbutton.setEnabled(False)
-                self.window.disconnectbutton.setEnabled(True)
-                self.window.updateosbutton.setEnabled(True)
-                self.window.shutdownbutton.setEnabled(True)
-                self.window.rebootbutton.setEnabled(True)
-                self.window.executebutton.setEnabled(True)
-                self.window.keyboardtogglebutton.setEnabled(True)
-                self.window.saveframebutton.setEnabled(True)
-                self.window.collectbutton.setEnabled(True)
-                self.window.typeselect.setEnabled(True)
-                self.window.dockbutton.setEnabled(True)
-                self.window.undockbutton.setEnabled(True)
-                if comms.objects.dock_status is False:
-                    self.window.undockbutton.setEnabled(False)
-                    self.window.dockbutton.setEnabled(True)
-                else:
-                    self.window.dockbutton.setEnabled(False)
-                    self.window.undockbutton.setEnabled(True)
-                pass
-            else:
-                self.window.connectbutton.setEnabled(True)
-                self.window.disconnectbutton.setEnabled(False)
-                self.window.updateosbutton.setEnabled(False)
-                self.window.shutdownbutton.setEnabled(False)
-                self.window.rebootbutton.setEnabled(False)
-                self.window.executebutton.setEnabled(False)
-                self.window.keyboardtogglebutton.setEnabled(False)
-                self.window.saveframebutton.setEnabled(False)
-                self.window.collectbutton.setEnabled(False)
-                self.window.typeselect.setEnabled(False)
-                self.window.dockbutton.setEnabled(False)
-                self.window.undockbutton.setEnabled(False)
-            pass
+            self.signal_gui_lock_from_state.emit(self, comms.objects.is_connected, comms.objects.dock_status)
             sleep(0.5)
         pass
         print("[INFO]: GUI lock thread ended.")
 
+    @Slot(str)
+    def telemetry_refresh_commit(self, content: str) -> None:
+        """
+        Refreshes telemetry display.
+        :param content: str, incoming telemetry data passed from client.telemetry_refresh
+        :return: None
+        """
+        self.window.telemetryview.setPlainText(content)
+
     def telemetry_refresh(self) -> None:
         """
-        Refreshes telemetry display. Intended solely for multithreading.
+        Produces signal and string for telemetry refresh. Intended solely for multithreading.
         :return: None
         """
         print("[INFO]: Telemetry refresh thread started.")
         while comms.objects.process_telemetry_refresh_kill_flag is False:
             while comms.objects.is_connected is False: pass
-            self.window.telemetryview.setPlainText(comms.interface.receive(socket_object = comms.objects.socket_telemetry).decode(encoding = "utf-8", errors = "replace"))
-            sleep(1)
+            self.signal_telemetry_refresh.emit(self, comms.interface.receive(socket_object = comms.objects.socket_telemetry).decode(encoding = "utf-8", errors = "replace"))
+            sleep(0.25)
         pass
         print("[INFO]: Telemetry refresh thread ended.")
 
+    @Slot(str, str, bool)
+    def status_refresh_commit(self, connect: str, dock: str, error: bool) -> None:
+        """
+        Refreshes status display.
+        :param connect: return of SWITCH_CONNECT[comms.objects.is_connected]
+        :param dock: return of SWITCH_DOCK[comms.objects.dock_status]
+        :param error: bool, if True set status as "Unknown status"
+        :return: None
+        """
+        if error is not True: self.window.status.setText(connect + ", currently " + dock + ".")
+        else: self.window.status.setText("Unknown status.")
+
     def status_refresh(self) -> None:
         """
-        Refreshes status display. Intended solely for multithreading.
+        Produces signal and strings for status refresh. Intended solely for multithreading.
         :return: None
         """
         print("[INFO]: Status refresh thread started.")
         SWITCH_CONNECT = {False:"Disconnected", True:"Connected"}
         SWITCH_DOCK = {False:"undocked", True:"docked", None:"dock status is unknown"}
         while self.process_status_refresh_kill_flag is False:
-            try: self.window.status.setText(SWITCH_CONNECT[comms.objects.is_connected] + ", " + "currently " + SWITCH_DOCK[comms.objects.dock_status] + ".")
-            except KeyError: self.window.status.text("Unknown status.")
+            try: self.signal_status_refresh.emit(self, SWITCH_CONNECT[comms.objects.is_connected], SWITCH_DOCK[comms.objects.dock_status], False)
+            except KeyError: self.signal_status_refresh.emit("UNKNOWN", "UNKNOWN", True)
             sleep(0.25)
         pass
         print("[INFO]: Status refresh thread ended.")

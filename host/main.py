@@ -66,7 +66,6 @@ class host:
             comms.objects.socket_main.close(0)
             basics.restart_shutdown.restart()
         pass
-        comms.camera_capture.connect()
         print("[INFO]: Creating telemetry stream on port " + str(comms.objects.telemetry_port) + "...")
         comms.objects.socket_telemetry_init.bind((comms.objects.host, 64222))
         print("[INFO]: Listening for telemetry stream connection...")
@@ -83,6 +82,7 @@ class host:
             basics.restart_shutdown.restart()
         pass
         comms.objects.process_telemetry_broadcast = basics.process.create_process(comms.telemetry.stream)
+        comms.camera_capture.connect()
         print("[INFO]: Waiting for commands...")
         while True:
             command = b"rca-1.2:disconnected"

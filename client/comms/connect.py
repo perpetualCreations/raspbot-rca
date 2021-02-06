@@ -32,10 +32,6 @@ def connect() -> None:
         disconnect.disconnect()
         return None
     pass
-    print("[INFO]: Trying to start camera feed...")
-    if objects.image_hub is None: objects.image_hub = objects.imagezmq.ImageHub(open_port = ("tcp://" + objects.socket_main.getsockname()[0] + ":" + str(objects.cam_port)))
-    objects.process_camera_feed_kill_flag = False
-    objects.process_camera_feed = objects.process.create_process(camera_render.render)
     print("[INFO]: Trying to connect to telemetry stream...")
     objects.process_telemetry_refresh_kill_flag = False
     try: objects.socket_telemetry.connect((objects.host, 64222))
@@ -46,6 +42,10 @@ def connect() -> None:
         disconnect.disconnect()
         return None
     pass
+    print("[INFO]: Trying to start camera feed...")
+    if objects.image_hub is None: objects.image_hub = objects.imagezmq.ImageHub(open_port = ("tcp://" + objects.socket_main.getsockname()[0] + ":" + str(objects.cam_port)))
+    objects.process_camera_feed_kill_flag = False
+    objects.process_camera_feed = objects.process.create_process(camera_render.render)
     print("[INFO]: Successfully connected to host!")
     objects.socket_main.setblocking(True) # blocking keeps on getting disabled
     if objects.components[2][0]:
