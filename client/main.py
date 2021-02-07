@@ -9,7 +9,7 @@ try:
     print("[INFO]: Starting imports...")
     from subprocess import call, Popen
     from time import sleep
-    import socket, configparser, ping3, webbrowser
+    import socket, configparser, ping3, webbrowser, cv2
     import tkinter
     from tkinter import messagebox
     from ast import literal_eval
@@ -44,6 +44,7 @@ class client(QObject):
     signal_status_refresh = Signal(object, str, str, bool)  # connect message, dock message, is in erroneous state
     signal_telemetry_refresh = Signal(object, str)  # telemetry message
     signal_gui_lock_from_state = Signal(object, bool, bool)  # is connected, is docked
+    signal_camera_refresh_clock = Signal(object) # no passed parameters
 
     def __init__(self) -> None:
         """
@@ -60,6 +61,7 @@ class client(QObject):
         self.gui_hide_console = False # configuration variable to hide/show Python console, unused
         self.process_status_refresh_kill_flag = False
         self.process_gui_lock_from_state_kill_flag = False
+        self.process_camera_view_refresh_clock_kill_flag = False
         print("[INFO]: Loading configurations...")
         self.components = basics.basics.load_hardware_config()  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
         config_parse_load = configparser.ConfigParser()
@@ -112,7 +114,7 @@ class client(QObject):
         self.window.navhelpbutton.clicked.connect(lambda: messagebox.showinfo("Raspbot RCA: Navigation Help", "This panel contains navigation controls.\nUse Load, Edit, and Execute to run scripts."
                                                                               + "\nSee documentation regarding how to write these scripts.\nPress Toggle Keyboard Control to enable or disable keyboard controls."
                                                                               + "\nKeyboard controls in question are:\nW - Forwards\nA - Left Turn\nS - Backwards\nD - Right Turn\nQ - Clockwise Spin\nE - Counterclockwise Spin"))
-        self.window.saveframebutton.clicked.connect(lambda: print("[FAIL]: Not implemented!")) # TODO requires camera view to work with multiprocess- i mean threading
+        self.window.saveframebutton.clicked.connect(lambda: cv2.imwrite("image-" + basics.basics.make_timestamp(log_suppress = True) + ".jpg", comms.objects.frame_current))
         self.window.collectbutton.clicked.connect(lambda: client.report_collect(self, self.window.typeselect.currentText()))
         self.window.savebutton.clicked.connect(client.report_save(self, self.window.typeselect.currentText(), self.report_content))
         self.window.viewbutton.clicked.connect(client.report_gui(self, self.window.typeselect.currentText(), self.report_content))
@@ -136,11 +138,17 @@ class client(QObject):
         self.process_telemetry_refresh = basics.process.create_process(client.telemetry_refresh, (self,))
         self.process_status_refresh = basics.process.create_process(client.status_refresh, (self,))
         self.process_gui_lock_from_state = basics.process.create_process(client.gui_lock_from_connect_state, (self,))
+        self.process_camera_view_refresh_clock = basics.process.create_process(client.camera_view_refresh_clock, (self,))
         self.signal_telemetry_refresh.connect(client.telemetry_refresh_commit)
         self.signal_status_refresh.connect(client.status_refresh_commit)
         self.signal_gui_lock_from_state.connect(client.gui_lock_from_connect_state_commit)
-        basics.basics.exit(self.app.exec_())
+        self.signal_camera_refresh_clock.connect(client.camera_view_commit)
         print("[INFO]: Loading complete.")
+        basics.basics.exit(self.app.exec_())
+        # once application is terminated and exit is called, thread kill flags below will turn to True
+        self.process_status_refresh_kill_flag = True
+        self.process_gui_lock_from_state_kill_flag = True
+        self.process_camera_view_refresh_clock_kill_flag = True
     pass
 
     def menu_trigger(self, qobj: object) -> None:
@@ -230,7 +238,8 @@ class client(QObject):
         print("[INFO]: Telemetry refresh thread started.")
         while comms.objects.process_telemetry_refresh_kill_flag is False:
             while comms.objects.is_connected is False: pass
-            self.signal_telemetry_refresh.emit(self, comms.interface.receive(socket_object = comms.objects.socket_telemetry).decode(encoding = "utf-8", errors = "replace"))
+            try: self.signal_telemetry_refresh.emit(self, comms.interface.receive(socket_object = comms.objects.socket_telemetry).decode(encoding = "utf-8", errors = "replace"))
+            except socket.error: pass
             sleep(0.25)
         pass
         print("[INFO]: Telemetry refresh thread ended.")
@@ -261,6 +270,28 @@ class client(QObject):
             sleep(0.25)
         pass
         print("[INFO]: Status refresh thread ended.")
+
+    @Slot(object)
+    def camera_view_commit(self) -> None:
+        """
+        Converts OpenCV image object to QImage, forwards changes to camera view widget.
+        :return: None
+        """
+        image = cv2.cvtColor(comms.objects.frame_current, cv2.COLOR_BGR2RGB)
+        self.window.cameraview.setPixmap(QPixmap.fromImage(QImage(image, image.shape[1], image.shape[0], QImage.Format_RGB888))) # ignore warnings, this actually runs just fine with no errors
+
+    def camera_view_refresh_clock(self) -> None:
+        """
+        Checks comms.object.camera_tick, if value is greater than previous value, emit signal to commit frame.
+        Intended for multithreading.
+        :return:
+        """
+        while self.process_camera_view_refresh_clock_kill_flag is False:
+            while comms.objects.is_connected is False: pass
+            previous_tick = comms.objects.camera_tick
+            sleep(0.1)
+            if previous_tick != comms.objects.camera_tick:
+                self.signal_camera_refresh_clock.emit(self)
 
     @staticmethod
     def set_configuration_gui(file: str) -> None:

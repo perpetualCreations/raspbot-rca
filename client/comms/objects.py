@@ -56,3 +56,6 @@ process_camera_feed = None # placeholder for multithreading object that runs ren
 process_camera_feed_kill_flag = False # flag variable that holds a boolean, when True camera_capture process is killed.
 
 process_telemetry_refresh_kill_flag = False # moved from main module class, so basics.basics.exit can call it
+
+frame_current = None # cv2 image object, for the current camera stream frame
+camera_tick = 0 # current frame count, for client.camera_view_refresh_clock to compare between frames and trigger frame commit as needed

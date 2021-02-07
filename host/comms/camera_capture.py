@@ -15,8 +15,13 @@ def capture() -> None:
     """
     print("[INFO]: Camera feed capture thread has started.")
     while objects.process_camera_capture_kill_flag is False:
-        result, encimg = objects.cv2.imencode('.jpg', objects.camera_stream.read(), [int(objects.cv2.IMWRITE_JPEG_QUALITY), 90]) # result is ignored, this is dirty
-        objects.camera_sender.send_image(objects.socket.gethostname(), encimg)
+        try:
+            result, encimg = objects.cv2.imencode('.jpg', objects.camera_stream.read(), [int(objects.cv2.IMWRITE_JPEG_QUALITY), 90]) # result is ignored, this is dirty
+            objects.camera_sender.send_image(objects.socket.gethostname(), encimg)
+        except objects.cv2.error as ComputerVisionErrorMessage:
+            print("[FAIL]: Camera stream is skipping a frame due to an error.")
+            print(ComputerVisionErrorMessage)
+        pass
     pass
     print("[INFO]: Camera feed capture thread has ended.")
 pass

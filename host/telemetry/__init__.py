@@ -64,4 +64,4 @@ class telemetry:
         timestamp = basics.make_timestamp(log_suppress = True)
         return "Telem. Timestamp: " + timestamp + "\nOrientation: " + orientation \
                + "\nCompass: " + compass + "\nAcceleration: " + accelerometer + "\nDistance Ahead: " + distance \
-               + "\nBattery Voltage" + voltage
+               + "\nBattery Voltage: " + voltage

@@ -115,6 +115,7 @@ class host:
                 basics.serial.serial(direction = "send", message = nav_command_list[0])
                 basics.process.create_process(basics.serial.nav_timer, (self, int(float(nav_command_list[1])), literal_eval(nav_command_list[2])))
             elif command == b"rca-1.2:disconnected":
+                print("[INFO]: Client disconnected.")
                 basics.restart_shutdown.restart()
             elif command == b"rca-1.2:led_graphics":
                 comms.acknowledge.send_acknowledgement(1000)

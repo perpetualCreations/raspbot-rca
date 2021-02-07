@@ -13,7 +13,7 @@ def restart() -> None:
     Restarts application.
     :return: None
     """
-    print("[INFO]: Starting new instance of application...")
+    print("[INFO]: Restarting. Starting new instance of application...")
     objects.call("python3 main.py", shell = True)
     basics.exit(0)
 pass
