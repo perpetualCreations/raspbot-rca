@@ -52,16 +52,19 @@ class telemetry:
         if self.components[1][1] is True:
             serial.serial(direction = "send", message = "T")
             sleep(0.1)
-            distance = serial.serial().rstrip("\n") + " mm"
+            distance = serial.serial() + " mm"
         else: distance = "No Data"
+
+        voltage_warn = ""
 
         if self.components[2][0] is True:
             serial.serial(direction = "send", message = "*")
             sleep(0.1)
-            voltage = serial.serial().rstrip("\n") + " V"
+            voltage = serial.serial() + " V"
+            if int(voltage.rstrip(" V")) <= 9.5: voltage_warn = "\nWARNING - BATTERY VOLTAGE TOO LOW\nMOTORS DISABLED, PLEASE DOCK AND CHARGE BATTERY"
         else: voltage = "No Data"
 
         timestamp = basics.make_timestamp(log_suppress = True)
         return "Telem. Timestamp: " + timestamp + "\nOrientation: " + orientation \
                + "\nCompass: " + compass + "\nAcceleration: " + accelerometer + "\nDistance Ahead: " + distance \
-               + "\nBattery Voltage: " + voltage
+               + "\nBattery Voltage: " + voltage + voltage_warn

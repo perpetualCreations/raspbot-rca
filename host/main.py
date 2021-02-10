@@ -103,17 +103,39 @@ class host:
                 comms.acknowledge.send_acknowledgement(1000)
                 comms.interface.send(str(basics.serial.voltage()))
             elif command == b"rca-1.2:command_science_collect":
+                print("[INFO]: Collecting environmental data report...")
                 sensor_interface = science()
                 if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2]:
                     comms.acknowledge.send_acknowledgement(1000)
                     comms.interface.send(sensor_interface.get())
                 else: comms.acknowledge.send_acknowledgement(2003)
             elif command == b"rca-1.2:nav_start":
+                print("[INFO]: Running navigation script from client...")
                 comms.acknowledge.send_acknowledgement(1000)
                 nav_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                 nav_command_list = nav_command.split()
                 basics.serial.serial(direction = "send", message = nav_command_list[0])
                 basics.process.create_process(basics.serial.nav_timer, (self, int(float(nav_command_list[1])), literal_eval(nav_command_list[2])))
+                comms.acknowledge.send_acknowledgement(1000)
+            elif command == b"rca-1.2:nav_keyboard_start":
+                print("[INFO]: Entering keyboard-input navigation from client.")
+                comms.acknowledge.send_acknowledgement(1000)
+                escape_nav_input_loop = False
+                NAV_LOOKUP = {"forwards":"F", "left":"W", "backwards":"B", "right":"Y", "clockwise":"S", "counterclockwise":"C", "stop":"A"} # yes, this leaves X and Z (right and left backwards) unused
+                while escape_nav_input_loop is False:
+                    try: nav_input = NAV_LOOKUP[comms.interface.receive().decode(encoding = "utf-8", errors = "replace")]
+                    except KeyError:
+                        nav_input = None
+                        basics.serial.serial(direction = "send", message = "A")
+                        escape_nav_input_loop = True
+                    pass
+                    basics.serial.serial(direction = "send", message = nav_input)
+                pass
+                print("[INFO]: Exited keyboard-input navigation from client.")
+            elif command == b"rca-1.2:nav_speed_change":
+                comms.acknowledge.send_acknowledgement(1000)
+                try: basics.serial.serial(direction = "send", message = str(int(comms.interface.receive())))
+                except ValueError: pass
             elif command == b"rca-1.2:disconnected":
                 print("[INFO]: Client disconnected.")
                 basics.restart_shutdown.restart()
@@ -147,7 +169,9 @@ class host:
             elif command == b"rca-1.2:command_undock":
                 if self.components[2][0] is True: basics.serial.undock()
                 else: comms.acknowledge.send_acknowledgement(2003)
-            else: comms.acknowledge.send_acknowledgement(2002)
+            else:
+                print("[FAIL]: Received unknown command from client, " + command.decode(encoding = "utf-8", errors = "replace") + ".")
+                comms.acknowledge.send_acknowledgement(2002)
             pass  # add more keys here
             print("[INFO]: Executed command: " + command.decode(encoding = "utf-8", errors = "replace"))
         pass

@@ -7,3 +7,5 @@ imutils
 opencv-contrib-python
 PySide6
 configparser
+future
+keyboard

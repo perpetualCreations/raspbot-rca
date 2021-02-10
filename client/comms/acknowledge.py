@@ -89,8 +89,7 @@ def receive_acknowledgement() -> bool:
         print(ve)
         return False
     pass
-    try:
-        objects.acknowledgement_id = objects.acknowledgement_dictionary[objects.acknowledgement_num_id]
+    try: objects.acknowledgement_id = objects.acknowledgement_dictionary[objects.acknowledgement_num_id]
     except KeyError as ke:
         print("[FAIL]: Acknowledgement number ID to alphabetical ID conversion failed!")
         print(ke)

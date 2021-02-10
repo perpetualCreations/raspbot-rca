@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>viewreportdialog</class>
- <widget class="QDialog" name="viewreportdialog">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>308</width>
+    <height>119</height>
    </rect>
   </property>
   <property name="palette">
@@ -75,66 +75,16 @@
    </palette>
   </property>
   <property name="windowTitle">
-   <string>Raspbot RCA: View Report</string>
+   <string>Raspbot RCA: Enter Path</string>
   </property>
   <property name="whatsThis">
-   <string>Review latest collected report.</string>
+   <string>Enter file path here.</string>
   </property>
-  <widget class="QPlainTextEdit" name="reportdisplay">
-   <property name="geometry">
-    <rect>
-     <x>13</x>
-     <y>20</y>
-     <width>371</width>
-     <height>221</height>
-    </rect>
-   </property>
-   <property name="palette">
-    <palette>
-     <active>
-      <colorrole role="Text">
-       <brush brushstyle="SolidPattern">
-        <color alpha="255">
-         <red>0</red>
-         <green>0</green>
-         <blue>0</blue>
-        </color>
-       </brush>
-      </colorrole>
-     </active>
-     <inactive>
-      <colorrole role="Text">
-       <brush brushstyle="SolidPattern">
-        <color alpha="255">
-         <red>0</red>
-         <green>0</green>
-         <blue>0</blue>
-        </color>
-       </brush>
-      </colorrole>
-     </inactive>
-     <disabled>
-      <colorrole role="Text">
-       <brush brushstyle="SolidPattern">
-        <color alpha="255">
-         <red>0</red>
-         <green>0</green>
-         <blue>0</blue>
-        </color>
-       </brush>
-      </colorrole>
-     </disabled>
-    </palette>
-   </property>
-   <property name="plainText">
-    <string/>
-   </property>
-  </widget>
   <widget class="QPushButton" name="closebutton">
    <property name="geometry">
     <rect>
-     <x>310</x>
-     <y>260</y>
+     <x>210</x>
+     <y>80</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -143,17 +93,117 @@
     <string>Close</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="savebutton">
+  <widget class="QPushButton" name="confirmbutton">
    <property name="geometry">
     <rect>
-     <x>230</x>
-     <y>260</y>
+     <x>130</x>
+     <y>80</y>
      <width>75</width>
      <height>23</height>
     </rect>
    </property>
    <property name="text">
-    <string>Save</string>
+    <string>OK</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="pathentry">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>40</y>
+     <width>271</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="palette">
+    <palette>
+     <active>
+      <colorrole role="Base">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>60</red>
+         <green>59</green>
+         <blue>65</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </active>
+     <inactive>
+      <colorrole role="Base">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>60</red>
+         <green>59</green>
+         <blue>65</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </inactive>
+     <disabled>
+      <colorrole role="Base">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>240</red>
+         <green>240</green>
+         <blue>240</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </disabled>
+    </palette>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="dialoglabel">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>261</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="palette">
+    <palette>
+     <active>
+      <colorrole role="WindowText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>255</red>
+         <green>255</green>
+         <blue>255</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </active>
+     <inactive>
+      <colorrole role="WindowText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>255</red>
+         <green>255</green>
+         <blue>255</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </inactive>
+     <disabled>
+      <colorrole role="WindowText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>120</red>
+         <green>120</green>
+         <blue>120</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </disabled>
+    </palette>
+   </property>
+   <property name="text">
+    <string>Enter path to file.</string>
    </property>
   </widget>
  </widget>

@@ -9,20 +9,20 @@ try:
     print("[INFO]: Starting imports...")
     from subprocess import call, Popen
     from time import sleep
-    import socket, configparser, ping3, webbrowser, cv2
-    import tkinter
+    import socket, configparser, ping3, webbrowser, cv2, tkinter, keyboard
     from tkinter import messagebox
     from ast import literal_eval
     from platform import system
     from typing import Union
     from sys import argv
+    from os import remove, rename, path
     # Pyside6
     from PySide6.QtUiTools import QUiLoader
-    from PySide6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication, QDialog
     from PySide6.QtCore import QFile, QIODevice, Signal, Slot, QObject
     from PySide6.QtGui import *
     # RCA Modules
-    import basics, comms, nav
+    import basics, comms
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
@@ -41,7 +41,7 @@ class client(QObject):
     Main client class.
     """
 
-    signal_status_refresh = Signal(object, str, str, bool)  # connect message, dock message, is in erroneous state
+    signal_status_refresh = Signal(object, str, str, bool, bool)  # connect message, dock message, is in erroneous state
     signal_telemetry_refresh = Signal(object, str)  # telemetry message
     signal_gui_lock_from_state = Signal(object, bool, bool)  # is connected, is docked
     signal_camera_refresh_clock = Signal(object) # no passed parameters
@@ -54,14 +54,15 @@ class client(QObject):
         super(client, self).__init__()
         print("[INFO]: Declaring variables...")
         self.connect_retries = 0
-        self.ping_text = None # GUI element referenced across two functions, has a class variable to allow for it
-        self.ping_button = None # GUI element referenced across two functions, has a class variable to allow for it
         self.ping_results = "" # placeholder, overwritten by any return from ping functions to be displayed as results
         self.report_content = "" # placeholder, overwritten by any return from report functions
         self.gui_hide_console = False # configuration variable to hide/show Python console, unused
         self.process_status_refresh_kill_flag = False
         self.process_gui_lock_from_state_kill_flag = False
         self.process_camera_view_refresh_clock_kill_flag = False
+        self.process_keyboard_listen_control_forward_kill_flag = False
+        self.keyboard_input_active = False # variable for toggling keyboard controls
+        self.nav_script = "" # placeholder, for str path to navigation script selected for execution
         print("[INFO]: Loading configurations...")
         self.components = basics.basics.load_hardware_config()  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
         config_parse_load = configparser.ConfigParser()
@@ -97,7 +98,7 @@ class client(QObject):
         if not self.window:
             print("[FAIL]: UI XML file could not be loaded to generate interface.")
             print(self.loader.errorString())
-            basics.exit(1)
+            basics.basics.exit(1)
         pass
         self.window.connectbutton.clicked.connect(lambda: comms.connect.connect())
         self.window.disconnectbutton.clicked.connect(lambda: comms.disconnect.disconnect())
@@ -107,20 +108,23 @@ class client(QObject):
         self.window.helpbutton.clicked.connect(lambda: messagebox.showinfo("Raspbot RCA: Control Help", "Use Update OS to update APT packages,\n Shutdown and Reboot perform operations as labeled."
                                                                            + "\nA word of caution, after shutting down, there is no way to turn the bot back on besides physically power cycling.\n Please use cautiously."
                                                                            + "\nChoose a report-type with the dropdown, select Collect Report to as labeled collect the report,\n and either use Save or View Report afterwards."))
-        self.window.executebutton.clicked.connect(lambda: print("[FAIL]: Not implemented!")) # TODO rework nav to fit new ui
-        self.window.loadbutton.clicked.connect(lambda: print("[FAIL]: Not implemented!"))
-        self.window.editbutton.clicked.connect(lambda: print("[FAIL]: Not implemented!"))
-        self.window.keyboardtogglebutton.clicked.connect(lambda: print("[FAIL]: Not implemented!")) # TODO requires keyboard nav module
+        self.window.executebutton.clicked.connect(lambda: client.nav_script_parse(self.nav_script))
+        self.window.loadbutton.clicked.connect(lambda: client.nav_load(self))
+        self.window.editbutton.clicked.connect(lambda: client.nav_edit())
+        self.window.keyboardtogglebutton.clicked.connect(lambda: client.keyboard_input_active_swap(self))
         self.window.navhelpbutton.clicked.connect(lambda: messagebox.showinfo("Raspbot RCA: Navigation Help", "This panel contains navigation controls.\nUse Load, Edit, and Execute to run scripts."
                                                                               + "\nSee documentation regarding how to write these scripts.\nPress Toggle Keyboard Control to enable or disable keyboard controls."
-                                                                              + "\nKeyboard controls in question are:\nW - Forwards\nA - Left Turn\nS - Backwards\nD - Right Turn\nQ - Clockwise Spin\nE - Counterclockwise Spin"))
+                                                                              + "\nDisconnect, report collection, LED controls, shutdown, reboot, update, motor speed change,\ndock, undock, and navigation script execution are disabled when\nkeyboard input is active."
+                                                                              + "\nUse the Change Speed button to enter a number 0-255, 255 being the highest speed and 0 being completely off."
+                                                                              + "\n\nKeyboard controls in question are:\nW - Forwards\nA - Left Turn\nS - Backwards\nD - Right Turn\nQ - Clockwise Spin\nE - Counterclockwise Spin"))
         self.window.saveframebutton.clicked.connect(lambda: cv2.imwrite("image-" + basics.basics.make_timestamp(log_suppress = True) + ".jpg", comms.objects.frame_current))
         self.window.collectbutton.clicked.connect(lambda: client.report_collect(self, self.window.typeselect.currentText()))
-        self.window.savebutton.clicked.connect(client.report_save(self, self.window.typeselect.currentText(), self.report_content))
-        self.window.viewbutton.clicked.connect(client.report_gui(self, self.window.typeselect.currentText(), self.report_content))
+        self.window.savebutton.clicked.connect(lambda: client.report_save(self, self.window.typeselect.currentText(), self.report_content))
+        self.window.viewbutton.clicked.connect(lambda: client.report_gui(self, self.window.typeselect.currentText(), self.report_content))
         self.window.telemetryview.setReadOnly(True)
         self.window.dockbutton.clicked.connect(lambda: comms.interface.send(b"rca-1.2:command_dock"))
         self.window.undockbutton.clicked.connect(lambda: comms.interface.send(b"rca-1.2:command_undock"))
+        self.window.changespeedbutton.clicked.connect(lambda: client.nav_request_adjust_speed())
         self.window.menubar.triggered[QAction].connect(self.menu_trigger)
         self.window.disconnectbutton.setEnabled(False)
         self.window.updateosbutton.setEnabled(False)
@@ -133,6 +137,7 @@ class client(QObject):
         self.window.typeselect.setEnabled(False)
         self.window.dockbutton.setEnabled(False)
         self.window.undockbutton.setEnabled(False)
+        self.window.changespeedbutton.setEnabled(False)
         self.window.show()
         print("[INFO]: Threading for main GUI starting...")
         self.process_telemetry_refresh = basics.process.create_process(client.telemetry_refresh, (self,))
@@ -143,13 +148,23 @@ class client(QObject):
         self.signal_status_refresh.connect(client.status_refresh_commit)
         self.signal_gui_lock_from_state.connect(client.gui_lock_from_connect_state_commit)
         self.signal_camera_refresh_clock.connect(client.camera_view_commit)
+        print("[INFO: Secondary threading starting...")
+        self.process_keyboard_listen_control_forward = basics.process.create_process(client.keyboard_listen_control_forward, (self,))
         print("[INFO]: Loading complete.")
         basics.basics.exit(self.app.exec_())
         # once application is terminated and exit is called, thread kill flags below will turn to True
         self.process_status_refresh_kill_flag = True
         self.process_gui_lock_from_state_kill_flag = True
         self.process_camera_view_refresh_clock_kill_flag = True
+        self.process_keyboard_listen_control_forward_kill_flag = True
     pass
+
+    def keyboard_input_active_swap(self) -> None:
+        """
+        Lambda statements cannot be used to assign variables, function instead to be bound to keyboardtogglebutton.
+        :return: None
+        """
+        self.keyboard_input_active = not self.keyboard_input_active
 
     def menu_trigger(self, qobj: object) -> None:
         """
@@ -157,7 +172,7 @@ class client(QObject):
         :param qobj: Qt object
         :return: None
         """
-        SWITCH = {"Exit":lambda: basics.basics.exit(0), "Edit Network":lambda: print("TODO MENU EDIT NETWORK"), "Edit Hardware":lambda: print("TODO MENU EDIT HARDWARE"), "Edit Main":lambda: print("TODO MENU EDIT MAIN"), "Ping": lambda: client.ping_gui(self), "SenseHAT LEDs":lambda: client.led_gui(self), "Arm Control":lambda: client.arm_control_gui(self), "View Documentation":lambda: webbrowser.open_new("https://dreamerslegacy.xyz/projects/raspbot/docs.html"), "Visit Github Repo":lambda: webbrowser.open_new("https://github.com/perpetualCreations/raspbot-rca/")}
+        SWITCH = {"Exit":lambda: basics.basics.exit(0), "Edit Network":lambda: client.edit_gui("comms/comms.cfg", "comms.cfg"), "Edit Hardware":lambda: client.edit_gui("hardware.cfg", "hardware.cfg"), "Edit Main":lambda: client.edit_gui("main.cfg", "main.cfg"), "Ping": lambda: client.ping_gui(self), "SenseHAT LEDs":lambda: client.led_gui(self), "Arm Control":lambda: client.arm_control_gui(self), "View Documentation":lambda: webbrowser.open_new("https://dreamerslegacy.xyz/projects/raspbot/docs.html"), "Visit Github Repo":lambda: webbrowser.open_new("https://github.com/perpetualCreations/raspbot-rca/")}
         try: SWITCH[qobj.text()]()
         except KeyError:
             print("[FAIL]: client.menu_trigger was unable to process given menubar action, this should never occur. Received,")
@@ -185,12 +200,39 @@ class client(QObject):
             self.window.typeselect.setEnabled(True)
             self.window.dockbutton.setEnabled(True)
             self.window.undockbutton.setEnabled(True)
+            self.window.changespeedbutton.setEnabled(True)
+            if self.keyboard_input_active is True:
+                self.window.disconnectbutton.setEnabled(False)
+                self.window.collectbutton.setEnabled(False)
+                self.window.shutdownbutton.setEnabled(False)
+                self.window.rebootbutton.setEnabled(False)
+                self.window.updateosbutton.setEnabled(False)
+                self.window.dockbutton.setEnabled(False)
+                self.window.undockbutton.setEnabled(False)
+                self.window.executebutton.setEnabled(False)
+                self.window.changespeedbutton.setEnabled(False)
+            else:
+                self.window.disconnectbutton.setEnabled(True)
+                self.window.collectbutton.setEnabled(True)
+                self.window.shutdownbutton.setEnabled(True)
+                self.window.rebootbutton.setEnabled(True)
+                self.window.updateosbutton.setEnabled(True)
+                self.window.dockbutton.setEnabled(True)
+                self.window.undockbutton.setEnabled(True)
+                self.window.executebutton.setEnabled(True)
+                self.window.changespeedbutton.setEnabled(True)
+            pass
             if docked is False:
                 self.window.undockbutton.setEnabled(False)
                 self.window.dockbutton.setEnabled(True)
+                self.window.keyboardtogglebutton.setEnabled(True)
+                self.window.executebutton.setEnabled(True)
             else:
                 self.window.dockbutton.setEnabled(False)
                 self.window.undockbutton.setEnabled(True)
+                self.window.keyboardtogglebutton.setEnabled(False)
+                self.window.executebutton.setEnabled(False)
+                self.keyboard_input_active = False
             pass
         else:
             self.window.connectbutton.setEnabled(True)
@@ -205,6 +247,7 @@ class client(QObject):
             self.window.typeselect.setEnabled(False)
             self.window.dockbutton.setEnabled(False)
             self.window.undockbutton.setEnabled(False)
+            self.window.changespeedbutton.setEnabled(False)
         pass
 
     def gui_lock_from_connect_state(self) -> None:
@@ -240,21 +283,25 @@ class client(QObject):
             while comms.objects.is_connected is False: pass
             try: self.signal_telemetry_refresh.emit(self, comms.interface.receive(socket_object = comms.objects.socket_telemetry).decode(encoding = "utf-8", errors = "replace"))
             except socket.error: pass
-            sleep(0.25)
+            sleep(0.1)
         pass
         print("[INFO]: Telemetry refresh thread ended.")
 
-    @Slot(str, str, bool)
-    def status_refresh_commit(self, connect: str, dock: str, error: bool) -> None:
+    @Slot(str, str, bool, bool)
+    def status_refresh_commit(self, connect: str, dock: str, error: bool, keyboard: bool) -> None:
         """
         Refreshes status display.
         :param connect: return of SWITCH_CONNECT[comms.objects.is_connected]
         :param dock: return of SWITCH_DOCK[comms.objects.dock_status]
         :param error: bool, if True set status as "Unknown status"
+        :param keyboard: bool, if True, set keyboardstatuslabel to "Keyboard control enabled."
         :return: None
         """
         if error is not True: self.window.status.setText(connect + ", currently " + dock + ".")
         else: self.window.status.setText("Unknown status.")
+        if keyboard is True: self.window.keyboardstatuslabel.setText("Keyboard control enabled.")
+        else: self.window.keyboardstatuslabel.setText("Keyboard control disabled.")
+        if isinstance(self.nav_script, str) is True: self.window.scriptlabel.setText(self.nav_script)
 
     def status_refresh(self) -> None:
         """
@@ -265,8 +312,8 @@ class client(QObject):
         SWITCH_CONNECT = {False:"Disconnected", True:"Connected"}
         SWITCH_DOCK = {False:"undocked", True:"docked", None:"dock status is unknown"}
         while self.process_status_refresh_kill_flag is False:
-            try: self.signal_status_refresh.emit(self, SWITCH_CONNECT[comms.objects.is_connected], SWITCH_DOCK[comms.objects.dock_status], False)
-            except KeyError: self.signal_status_refresh.emit("UNKNOWN", "UNKNOWN", True)
+            try: self.signal_status_refresh.emit(self, SWITCH_CONNECT[comms.objects.is_connected], SWITCH_DOCK[comms.objects.dock_status], False, self.keyboard_input_active)
+            except KeyError: self.signal_status_refresh.emit("UNKNOWN", "UNKNOWN", True, self.keyboard_input_active)
             sleep(0.25)
         pass
         print("[INFO]: Status refresh thread ended.")
@@ -283,33 +330,130 @@ class client(QObject):
     def camera_view_refresh_clock(self) -> None:
         """
         Checks comms.object.camera_tick, if value is greater than previous value, emit signal to commit frame.
+        As the name of the function suggests, this serves as a "clock signal" for updating the camera view.
         Intended for multithreading.
         :return:
         """
+        print("[INFO]: Camera view refresh clock thread started.")
         while self.process_camera_view_refresh_clock_kill_flag is False:
             while comms.objects.is_connected is False: pass
             previous_tick = comms.objects.camera_tick
-            sleep(0.1)
             if previous_tick != comms.objects.camera_tick:
                 self.signal_camera_refresh_clock.emit(self)
+        print("[INFO]: Camera view refresh clock thread ended.")
+
+    def keyboard_listen_control_forward(self) -> None:
+        """
+        Checks self.keyboard_input_active.
+        If True, check if connected, if also True listen for keyboard input.
+        Intended for multithreading.
+        :return: None
+        """
+        print("[INFO]: Keyboard listen control forward thread started.")
+        host_listening = None
+        was_exit_called = None
+        while self.process_keyboard_listen_control_forward_kill_flag is False:
+            while comms.objects.is_connected is False: pass
+            if self.keyboard_input_active is True:
+                print('this should execute')
+                comms.interface.send("rca-1.2:nav_keyboard_start")
+                if comms.acknowledge.receive_acknowledgement() is False: return None
+                host_listening = True
+            while self.keyboard_input_active is True:
+                movement_called = False
+                was_exit_called = False
+                if host_listening is True:
+                    while keyboard.is_pressed("ESC") is True: self.keyboard_input_active = False
+                    while keyboard.is_pressed("w") is True or keyboard.is_pressed("W") is True:
+                        if movement_called is not True: comms.interface.send("forwards")
+                        movement_called = True
+                    while keyboard.is_pressed("a") is True or keyboard.is_pressed("A") is True:
+                        if movement_called is not True: comms.interface.send("left")
+                        movement_called = True
+                    while keyboard.is_pressed("s") is True or keyboard.is_pressed("S") is True:
+                        if movement_called is not True: comms.interface.send("backwards")
+                        movement_called = True
+                    while keyboard.is_pressed("d") is True or keyboard.is_pressed("D") is True:
+                        if movement_called is not True: comms.interface.send("right")
+                        movement_called = True
+                    while keyboard.is_pressed("q") is True or keyboard.is_pressed("Q") is True:
+                        if movement_called is not True: comms.interface.send("clockwise")
+                        movement_called = True
+                    while keyboard.is_pressed("e") is True or keyboard.is_pressed("E") is True:
+                        if movement_called is not True: comms.interface.send("counterclockwise")
+                        movement_called = True
+                    while keyboard.is_pressed("r") is True or keyboard.is_pressed("R") is True:
+                        if movement_called is not True: comms.interface.send("stop")
+                        movement_called = True
+                    pass
+                    if movement_called is True: comms.interface.send("stop")
+                pass
+            pass
+            if was_exit_called is False:
+                comms.interface.send("cause a key error and completely exit")
+                was_exit_called = True
+            pass
+        pass
+        print("[INFO]: Keyboard listen control forward thread ended.")
+    pass
 
     @staticmethod
-    def set_configuration_gui(file: str) -> None:
+    def gui_dialog_loader(ui_file: str) -> Union[object, None]:
         """
-        Either opens nano text editor for Linux systems or will open OS' built-in text editor if not Linux.
-        In the future, does exactly what client.set_configuration does, but with a GUI window.
-        :param file: str, filename of config
-        TODO update set_configuration_gui to tkinter GUI
+        Creates QDialog from given UI file, initializes and starts window, returns QDialog object.
+        :param ui_file: str, path or filename of UI file
+        :return: QDialog
         """
-        platform = system()
-        if platform in ["Linux", "Ubuntu", "Debian", "Raspbian", "Kubuntu", "Arch", "Arch Linux", "Fedora", "Linux Mint"]:
-            call("sudo nano " + file, shell = True)
-        elif platform == "Windows":
-            Popen(["notepad.exe", file])
-        else:
-            messagebox.showerror("Raspbot RCA: OS Unsupported", "Client OS is unsupported, please manually edit configuration! The accepted operating systems are Linux and Linux distributions, and Windows. If you believe this is a mistake please open an issue on the repository page.")
+        ui_file = QFile(ui_file)
+        if not ui_file.open(QIODevice.ReadOnly):
+            print("[FAIL]: UI XML file is not in read-only. Is it being edited by another application?")
+            return None
         pass
-    pass
+        loader = QUiLoader()
+        dialog = loader.load(ui_file)
+        ui_file.close()
+        dialog.setWindowIcon(QIcon("favicon.ico"))  # it just works
+        if not dialog:
+            print("[FAIL]: UI XML file could not be loaded to generate interface.")
+            print(dialog.errorString())
+            return None
+        pass
+        dialog.show()
+        return dialog
+
+    @staticmethod
+    def edit_gui(file: str, edit_type: str) -> None:
+        """
+        Starts the EDIT dialog to open a file and allow the user to edit it.
+        :param file: str, path to file or if in working directory, filename
+        :param edit_type: str, type of file, configuration or navscript, configurations should be named
+        :return: None
+        """
+        print("[INFO]: Displayed edit_gui, with params for " + file + " and type " + edit_type + ".")
+        edit_gui = client.gui_dialog_loader("edit.ui")
+        edit_gui.editor.setReadOnly(False)
+        edit_gui.closebutton.clicked.connect(lambda: edit_gui.close())
+        edit_gui.filelabel.setText("Currently editing: " + edit_type)
+
+        def wrapper() -> None:
+            """
+    `       Wrapper function nested in edit_gui.
+            Checks if editor is empty, returns None. If not, write to file.
+            If the file that already exists, move old file to file_name.file_extension.old.
+            If a .old file already exists, overwrite previous .old file.
+            """
+            if edit_gui.editor.toPlainText() == "": return None
+            else:
+                if path.isfile(file) is True:
+                    if path.isfile(file + ".old") is True: remove(file + ".old")
+                    rename(file, file + ".old")
+
+                with open(file, "w") as write_handle: write_handle.write(edit_gui.editor.toPlainText())
+
+        try:
+            with open(file) as read_handle: edit_gui.editor.setPlainText(read_handle.read())
+        except FileNotFoundError: edit_gui.editor.setPlainText("")
+        edit_gui.savebutton.clicked.connect(lambda: wrapper())
 
     @staticmethod
     def ping() -> list:
@@ -366,10 +510,6 @@ class client(QObject):
             elif ping_results_raw[3][3] is True: ping_results_raw[1][3] = "Timed out!"
             self.ping_results = "Average Latency (ms): " + str(ping_results_raw[0]) + "\n" + "Test 1 Latency: " + str(ping_results_raw[1][0]) + "\n" + "Test 2 Latency: " + str(ping_results_raw[1][1]) + "\n" + "Test 3 Latency: " + str(ping_results_raw[1][2]) + "\n" + "Test 4 Latency: " + str(ping_results_raw[1][3]) + "\n" + str(ping_results_raw[2]) + "/4" + " Loss"
         pass
-        self.ping_text.configure(state = tkinter.NORMAL)
-        self.ping_text.insert("1.0", self.ping_results)
-        self.ping_text.update_idletasks()
-        self.ping_text.configure(state = tkinter.DISABLED)
     pass
 
     def ping_gui(self) -> None:
@@ -378,22 +518,74 @@ class client(QObject):
         :return: None
         """
         print("[INFO]: Displayed ping_gui.")
-        ping_gui = tkinter.Toplevel()
-        ping_gui.title("Raspbot RCA: Ping")
-        ping_gui.configure(bg = "#344561")
-        ping_gui.geometry('{}x{}'.format(255, 290))
-        ping_gui.resizable(width = False, height = False)
-        self.ping_text = tkinter.Text(ping_gui, height = 8, width = 30, bg = "white", fg = "black", font = ("Calibri", 12))
-        self.ping_text.grid(row = 0, column = 0, pady = (8, 14), padx = (5, 5))
-        self.ping_text.configure(state = tkinter.DISABLED)
-        self.ping_button = tkinter.Button(ping_gui, bg = "white", fg = "black", text = "Ping", width = 20, font = ("Calibri", 12), command = lambda: client.ping_wrapper(self))
-        self.ping_button.grid(row = 1, column = 0, pady = (0, 2))
-        save_button = tkinter.Button(ping_gui, bg = "white", fg = "black", text = "Save", width = 20, font = ("Calibri", 12), command = lambda: client.report_save(self, "PING", self.ping_results))
-        save_button.grid(row = 2, column = 0, pady = (0, 2))
-        close_button = tkinter.Button(ping_gui, bg = "white", fg = "black", text = "Close", width = 20, font = ("Calibri", 12), command = lambda: ping_gui.destroy())
-        close_button.grid(row = 3, column = 0, pady = (0, 10))
-        ping_gui.mainloop()
+        ping_gui = client.gui_dialog_loader("ping.ui")
+        ping_gui.pingview.setReadOnly(True)
+
+        def wrapper() -> None:
+            """
+            Wrapper function nested in ping_gui.
+            When called, calls client.ping_wrapper(self) and also updates ping_gui.pingview.
+            :return:
+            """
+            if client.ping_wrapper(self) is None: ping_gui.pingview.setPlainText(self.ping_results) # this waits until client.ping_wrapper returns None, effectively delaying setPlainText until the results have been gathered
+
+        ping_gui.closebutton.clicked.connect(lambda: ping_gui.close())
+        ping_gui.savebutton.clicked.connect(lambda: client.report_save(self, "PING", self.ping_results))
+        ping_gui.pingbutton.clicked.connect(lambda: wrapper())
     pass
+
+    def nav_load(self):
+        """
+        Shows Enter Path dialog, vets user input before dumping entry to self.nav_script.
+        :return: None
+        """
+        print("[INFO]: Displayed nav_load dialog.")
+        nav_load_gui = client.gui_dialog_loader("selectpath.ui")
+
+        def wrapper() -> None:
+            """
+            Wrapper function nested in nav_load_gui.
+            When called, gets entry input and checks if target is a valid file, and ends with .navscript.
+            If both conditions are True, cache path to self.nav_script and close dialog.
+            :return: None
+            """
+            if path.isfile(nav_load_gui.pathentry.text()) is True:
+                if nav_load_gui.pathentry.text().endswith(".navscript") is True:
+                    self.nav_script = nav_load_gui.pathentry.text()
+                    nav_load_gui.close()
+                else: messagebox.showerror("Raspbot RCA: Nav Script Error", "Selected file is not a navigation script, the accepted file extension is .navscript.")
+            else: messagebox.showerror("Raspbot RCA: Nav Script Error", "Selected file does not exist. Did you mistype the path?")
+
+        nav_load_gui.closebutton.clicked.connect(lambda: nav_load_gui.close())
+        nav_load_gui.confirmbutton.clicked.connect(lambda: wrapper())
+
+    @staticmethod
+    def nav_edit():
+        """
+        Shows Enter Path dialog, vets user input before opening it with client.edit_gui.
+        :return: None
+        """
+        print("[INFO]: Displayed nav_edit path dialog.")
+        nav_edit_gui = client.gui_dialog_loader("selectpath.ui")
+        nav_edit_gui.dialoglabel.setText("Enter path to file being edited or created.")
+
+        def wrapper() -> None:
+            """
+            Wrapper function nested in nav_edit_gui.
+            When called, gets entry input and checks if target is in valid directory.
+            If True, if target does not end with .navscript file extension, append extension to target.
+            Forward target to client.edit_gui and close dialog after.
+            :return: None
+            """
+            if path.isdir(path.split(nav_edit_gui.pathentry.text())[0]) is True:
+                target = nav_edit_gui.pathentry.text()
+                if target.endswith(".navscript") is not True: target += ".navscript"
+                client.edit_gui(target, "nav script")
+                nav_edit_gui.close()
+            else: messagebox.showerror("Raspbot RCA: Nav Script Error", "Path is not valid. Did you mistype it?")
+
+        nav_edit_gui.closebutton.clicked.connect(lambda: nav_edit_gui.close())
+        nav_edit_gui.confirmbutton.clicked.connect(lambda: wrapper())
 
     def report_collect(self, report_type: str) -> None:
         """
@@ -407,7 +599,7 @@ class client(QObject):
                 if comms.acknowledge.receive_acknowledgement() is False: return None
                 self.report_content = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
             else: return None
-        elif report_type == "CH Check":
+        elif report_type == "Hardw.":
             comms.interface.send(b"rca-1.2:command_ch_check")
             if comms.acknowledge.receive_acknowledgement() is False: return None
             data = comms.interface.receive().decode(encoding="utf-8", errors="replace")
@@ -424,20 +616,12 @@ class client(QObject):
         """
         if self.report_content == "": return None
         print("[INFO]: Displayed report_gui.")
-        report_gui = tkinter.Toplevel()
-        report_gui.title("Raspbot RCA: Report Viewer, " + report_type)
-        report_gui.configure(bg = "#344561")
-        report_gui.geometry('{}x{}'.format(400, 370))
-        report_gui.resizable(width = False, height = False)
-        graphics_report = tkinter.Text(report_gui, height = 15, bg = "white", fg = "black", font = ("Calibri", 12))
-        graphics_report.configure(state = tkinter.NORMAL)
-        graphics_report.insert("1.0", content)
-        graphics_report.update_idletasks()
-        graphics_report.configure(state = tkinter.DISABLED)
-        graphics_report.grid(row = 0, column = 0, pady = (5, 14))
-        graphics_report_close_button = tkinter.Button(report_gui, bg = "white", fg = "black", text = "Close", width = 40, font = ("Calibri", 12), command = lambda: report_gui.destroy())
-        graphics_report_close_button.grid(row = 1, column = 0, pady = (0, 10))
-        report_gui.mainloop()
+        report_gui = client.gui_dialog_loader("reportview.ui")
+        report_gui.setWindowTitle("Raspbot RCA: View Report - " + report_type)
+        report_gui.reportdisplay.setReadOnly(True)
+        report_gui.reportdisplay.setPlainText(content)
+        report_gui.closebutton.clicked.connect(lambda: report_gui.close())
+        report_gui.savebutton.clicked.connect(lambda: client.report_save(self, report_type, content))
     pass
 
     def report_save(self, report_type: str, content: str) -> None:
@@ -448,6 +632,7 @@ class client(QObject):
         :return: None
         """
         if self.report_content == "" and report_type != "PING": return None
+        if self.ping_results == "" and report_type == "PING": return None
         file_report_name = report_type + "_report-" + basics.basics.make_timestamp() + ".txt"
         print("[INFO]: Generating text file report...")
         file_report = open(file_report_name, "w+")
@@ -456,20 +641,35 @@ class client(QObject):
         print("[INFO]: Report saved.")
     pass
 
-    def dock(self) -> None:
+    @staticmethod
+    def dock() -> None:
         """
         Instructs host to dock with charger station.
+        :return: None
         """
+        if messagebox.askyesno("Raspbot RCA: Docking", "Plug in the external power supply through the two exposed pins."
+                                                       "\nPress Yes to continue once you've plugged in the external power supply,"
+                                                       "\nPress No to cancel."
+                                                       "\n\nConfirming this operation while unplugged will result in the onboard Raspi shutting down, and requiring recovery.") is True: pass
+        else: return None
+        print("[INFO]: Docking...")
         comms.interface.send(b"rca-1.2:command_dock")
         if comms.acknowledge.receive_acknowledgement() is False: return None
         comms.objects.dock_status = True
     pass
 
-    def undock(self) -> None:
+    @staticmethod
+    def undock() -> None:
         """
         Instructs host to undock from charger station.
         :return: None
         """
+        if messagebox.askyesno("Raspbot RCA: Undocking", "Unplug the external power supply from the two exposed pins."
+                                                         "\nPress Yes to continue once you've unplugged the external power supply,"
+                                                         "\nPress No to cancel."
+                                                         "\n\nNavigation will be re-enabled once undocked. \nBe sure the power supply is not obstructing or attached to the vehicle before executing navigation.") is True: pass
+        else: return None
+        print("[INFO]: Undocking...")
         comms.interface.send(b"rca-1.2:comamnd_undock")
         if comms.acknowledge.receive_acknowledgement() is False: return None
         comms.objects.dock_status = False
@@ -506,7 +706,7 @@ class client(QObject):
         :param frame: index number for target frame set to be played, if command is not image or play, is ignored.
         :return: None
         """
-        if self.components[1][0] is not True: return None
+        if self.components[1][0] is not True or self.keyboard_input_active is True: return None
         if isinstance(frame, int) is True: frame = str(frame)
         comms.interface.send(b"rca-1.2:led_graphics")
         if comms.acknowledge.receive_acknowledgement() is False: return None
@@ -546,8 +746,73 @@ class client(QObject):
         This will only be available if enabled, hardware check is performed at creation of main window.
         :return: None
         """
+        return None # TODO integrated arm hardware
+    pass
 
+    @staticmethod
+    def nav_request_adjust_speed() -> None:
+        """
+        Shows Enter Speed dialog, accepts entry input.
+        Checks if input can be converted to an integer 0-255. Make request to host and forward speed if so.
+        :return:
+        """
+        print("[INFO]: Displayed enter_speed dialog.")
+        nav_request_adjust_speed_gui = client.gui_dialog_loader("specifymotorspeed.ui")
+
+        def wrapper() -> None:
+            """
+            Wrapper function nested in nav_request_adjust_speed_gui.
+            When called, gets entry input and checks if input is an integer 0-255.
+            Make request to host as specified in previous docstring.
+            :return: None
+            """
+            try:
+                if int(nav_request_adjust_speed_gui.intentry.text()) in range(0, 256) is True:
+                    comms.interface.send("rca-1.2:nav_speed_change")
+                    if comms.acknowledge.receive_acknowledgement() is False: return None
+                    comms.interface.send(str(int(nav_request_adjust_speed_gui.intentry.text())))
+                else: messagebox.showerror("Raspbot RCA: Input Motor Speed Error", "Given motor speed is not between 0 to 255. Check your input.")
+            except ValueError: messagebox.showerror("Raspbot RCA: Input Motor Speed Error", "Given motor speed is not a number. Check your input.")
+
+        nav_request_adjust_speed_gui.closebutton.clicked.connect(lambda: nav_request_adjust_speed_gui.close())
+        nav_request_adjust_speed_gui.confirmbutton.clicked.connect(lambda: wrapper())
+
+    @staticmethod
+    def nav_execute(direction: str, run_time: Union[str, int]) -> None:
+        """
+        Wrapper for client.send(), formats instructions and does hardware check for distance sensor.
+        Only used by client.nav_script_parse.
+        :param direction: direction of navigation.
+        :param run_time: amount of time to run motors in that direction.
+        :return: None
+        """
+        comms.interface.send("rca-1.2:nav_start")
+        if objects.comms.acknowledge.receive_acknowledgement() is False: return None
+        if isinstance(run_time, int) is True: run_time = str(run_time)
+        comms.interface.send(direction + " " + run_time)
+        if objects.comms.acknowledge.receive_acknowledgement() is False: return None
+    pass
+
+    @staticmethod
+    def nav_script_parse(file_name: str) -> None:
+        """
+        Reads from a given file line-by-line for instructions, and executes them through client.nav_execute().
+        Reads syntax as <NAV DIRECTION/ACTION> <RUN TIME>. It looks similar to GCODE-style syntax. Telemetry is enabled when hardware passes, cannot be custom.
+        Example of syntax: F 100
+        :param file_name: str, name of file to read from.
+        :return: None
+        """
+        instructions = open(file_name)
+        instruction_line = sum(1 for x in instructions)
+        while instruction_line > 0:
+            raw_instructions = instructions.readline()
+            instructions_split = raw_instructions.split()
+            print(instructions_split)
+            client.nav_execute(instructions_split[0], instructions_split[1])
+            sleep(int(instructions_split[1]))
+            instruction_line -= 1
         pass
+        instructions.close()
     pass
 pass
 

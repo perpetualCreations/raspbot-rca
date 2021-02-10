@@ -6,7 +6,7 @@ Made by perpetualCreations
 Handles exiting, updating, and configuration editing.
 """
 
-from basics import objects
+from basics import objects, serial
 
 def log_init() -> None:
     """
@@ -35,6 +35,7 @@ def exit(status: int) -> None:
     print("[INFO]: Stopping application...")
     from comms import disconnect
     disconnect.disconnect()
+    serial.arrest()
     objects.sys.stdout = objects.origin_stdout
     objects.log_file_handle.close()
     objects.sys.exit(status)

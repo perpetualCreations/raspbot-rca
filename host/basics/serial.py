@@ -19,10 +19,15 @@ def serial(port:str = "/dev/ttyACM0", direction:str = "receive", message:Union[N
     :return: if receiving, decoded string, if sending or invalid direction, None
     """
     if message is not None and isinstance(message, bytes): message = message.decode(encoding = "utf-8", errors = "replace")
-    with objects.serial.Serial(port = port, timeout = 5) as connect:
+    with objects.serial.Serial(port = port, timeout = 0) as connect:
+        connect.flush()
+        connect.readline()
+        connect.timeout(2)
         if isinstance(message, bytes) is True: message = message.decode(encoding = "utf-8", errors = "replace")
-        if direction == "receive": return connect.readline().decode(encoding = "utf-8", errors = "replace")
-        elif direction == "send": connect.write(message.encode(encoding = "ascii", errors = "replace"))
+        if direction == "receive": return connect.readline().rstrip(b"\n").decode(encoding = "utf-8", errors = "replace")
+        elif direction == "send":
+            for x in range(0, len(message)): connect.write(message[x].encode(encoding = "ascii", errors = "replace"))
+            connect.write(b"\x0A") # hexcode for newline character, signals the end of the message and for accumulator dump
         else: return None
     pass
 pass
@@ -37,6 +42,16 @@ def nav_timer(nav_run_time: int) -> None:
     objects.interface.send(b"rca-1.2:nav_end")
     host.serial("/dev/ttyACM0", "send", b"A")
 pass
+
+def nav_adjust_speed(speed: int) -> None:
+    """
+    Changes motor speed through serial, with vetting before executing user input.
+    @param speed:
+    @return:
+    """
+    if speed not in range(0, 256): return None
+    print("[INFO]: Changing motor speed to " + str(speed) + "/255.")
+    serial(direction = "send", message = "MS " + str(speed))
 
 def dock() -> None:
     """
@@ -87,4 +102,12 @@ def voltage() -> float:
     """
     objects.serial.serial("/dev/ttyACM0", "send", "*")
     return float(objects.serial.serial())
+pass
+
+def arrest() -> None:
+    """
+    Stop all motor movement.
+    @return: None
+    """
+    serial(direction = "send", message = "A")
 pass
