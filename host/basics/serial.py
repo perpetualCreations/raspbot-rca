@@ -19,7 +19,7 @@ def serial(port:str = "/dev/ttyACM0", direction:str = "receive", message:Union[N
     :return: if receiving, decoded string, if sending or invalid direction, None
     """
     if message is not None and isinstance(message, bytes): message = message.decode(encoding = "utf-8", errors = "replace")
-    with objects.serial.Serial(port = port, timeout = 0) as connect:
+    with objects.serial.Serial(port = port, timeout = 3) as connect:
         connect.flush()
         connect.readline()
         connect.timeout(2)

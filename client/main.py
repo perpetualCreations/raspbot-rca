@@ -7,7 +7,7 @@ Main client class.
 
 try:
     print("[INFO]: Starting imports...")
-    from subprocess import call, Popen
+    from subprocess import Popen
     from time import sleep
     import socket, configparser, ping3, webbrowser, cv2, tkinter, keyboard
     from tkinter import messagebox
@@ -63,6 +63,8 @@ class client(QObject):
         self.process_keyboard_listen_control_forward_kill_flag = False
         self.keyboard_input_active = False # variable for toggling keyboard controls
         self.nav_script = "" # placeholder, for str path to navigation script selected for execution
+        self.no_signal_frame = cv2.imread("camera_fail.png")
+        self.locks_hardened = [[False, False], [False, False], [False, False]] # first list for connect lock, second list for dock lock, third list for keyboard lock
         print("[INFO]: Loading configurations...")
         self.components = basics.basics.load_hardware_config()  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
         config_parse_load = configparser.ConfigParser()
@@ -157,6 +159,7 @@ class client(QObject):
         self.process_gui_lock_from_state_kill_flag = True
         self.process_camera_view_refresh_clock_kill_flag = True
         self.process_keyboard_listen_control_forward_kill_flag = True
+        comms.objects.process_telemetry_refresh_kill_flag = True
     pass
 
     def keyboard_input_active_swap(self) -> None:
@@ -166,13 +169,22 @@ class client(QObject):
         """
         self.keyboard_input_active = not self.keyboard_input_active
 
+    @staticmethod
+    def toggle_camera_view_popout() -> None:
+        """
+        Lambda statements cannot be used to assign variables, function instead tobe bound to menubar's expandcamera option.
+        :return: None
+        """
+        comms.objects.popout_camera_feed = not comms.objects.popout_camera_feed
+        if comms.objects.popout_camera_feed is False: cv2.destroyAllWindows()
+
     def menu_trigger(self, qobj: object) -> None:
         """
         Function for executing menubar selections.
         :param qobj: Qt object
         :return: None
         """
-        SWITCH = {"Exit":lambda: basics.basics.exit(0), "Edit Network":lambda: client.edit_gui("comms/comms.cfg", "comms.cfg"), "Edit Hardware":lambda: client.edit_gui("hardware.cfg", "hardware.cfg"), "Edit Main":lambda: client.edit_gui("main.cfg", "main.cfg"), "Ping": lambda: client.ping_gui(self), "SenseHAT LEDs":lambda: client.led_gui(self), "Arm Control":lambda: client.arm_control_gui(self), "View Documentation":lambda: webbrowser.open_new("https://dreamerslegacy.xyz/projects/raspbot/docs.html"), "Visit Github Repo":lambda: webbrowser.open_new("https://github.com/perpetualCreations/raspbot-rca/")}
+        SWITCH = {"Exit":lambda: basics.basics.exit(0), "Edit Network":lambda: client.edit_gui("comms/comms.cfg", "comms.cfg"), "Edit Hardware":lambda: client.edit_gui("hardware.cfg", "hardware.cfg"), "Edit Main":lambda: client.edit_gui("main.cfg", "main.cfg"), "Ping": lambda: client.ping_gui(self), "SenseHAT LEDs":lambda: client.led_gui(self), "Arm Control":lambda: client.arm_control_gui(self), "View Documentation":lambda: Popen("python3 webhelper.py https://dreamerslegacy.xyz/projects/raspbot/docs.html"), "Visit Github Repo":lambda: Popen("python3 webhelper.py https://github.com/perpetualCreations/raspbot-rca/"), "Expand Camera":lambda: client.toggle_camera_view_popout()}
         try: SWITCH[qobj.text()]()
         except KeyError:
             print("[FAIL]: client.menu_trigger was unable to process given menubar action, this should never occur. Received,")
@@ -259,8 +271,10 @@ class client(QObject):
         """
         print("[INFO]: GUI lock thread started.")
         while self.process_gui_lock_from_state_kill_flag is False:
-            self.signal_gui_lock_from_state.emit(self, comms.objects.is_connected, comms.objects.dock_status)
-            sleep(0.5)
+            previous_connect = comms.objects.is_connected
+            previous_dock = comms.objects.dock_status
+            sleep(1)
+            if previous_connect != comms.objects.is_connected or previous_dock != comms.objects.dock_status: self.signal_gui_lock_from_state.emit(self, comms.objects.is_connected, comms.objects.dock_status)
         pass
         print("[INFO]: GUI lock thread ended.")
 
@@ -281,9 +295,9 @@ class client(QObject):
         print("[INFO]: Telemetry refresh thread started.")
         while comms.objects.process_telemetry_refresh_kill_flag is False:
             while comms.objects.is_connected is False: pass
+            sleep(0.1)
             try: self.signal_telemetry_refresh.emit(self, comms.interface.receive(socket_object = comms.objects.socket_telemetry).decode(encoding = "utf-8", errors = "replace"))
             except socket.error: pass
-            sleep(0.1)
         pass
         print("[INFO]: Telemetry refresh thread ended.")
 
@@ -314,7 +328,7 @@ class client(QObject):
         while self.process_status_refresh_kill_flag is False:
             try: self.signal_status_refresh.emit(self, SWITCH_CONNECT[comms.objects.is_connected], SWITCH_DOCK[comms.objects.dock_status], False, self.keyboard_input_active)
             except KeyError: self.signal_status_refresh.emit("UNKNOWN", "UNKNOWN", True, self.keyboard_input_active)
-            sleep(0.25)
+            sleep(1)
         pass
         print("[INFO]: Status refresh thread ended.")
 
@@ -324,22 +338,25 @@ class client(QObject):
         Converts OpenCV image object to QImage, forwards changes to camera view widget.
         :return: None
         """
-        image = cv2.cvtColor(comms.objects.frame_current, cv2.COLOR_BGR2RGB)
+        try: image = cv2.cvtColor(comms.objects.frame_current, cv2.COLOR_BGR2RGB)
+        except cv2.error: image = cv2.cvtColor(self.no_signal_frame, cv2.COLOR_BGR2RGB) # exception usually occurs if source is empty, this just replaces camera image with an error message
         self.window.cameraview.setPixmap(QPixmap.fromImage(QImage(image, image.shape[1], image.shape[0], QImage.Format_RGB888))) # ignore warnings, this actually runs just fine with no errors
+        if comms.objects.popout_camera_feed is True:
+            cv2.imshow("Raspbot RCA: Expanded Camera Feed", comms.objects.frame_current)
 
     def camera_view_refresh_clock(self) -> None:
         """
         Checks comms.object.camera_tick, if value is greater than previous value, emit signal to commit frame.
         As the name of the function suggests, this serves as a "clock signal" for updating the camera view.
         Intended for multithreading.
-        :return:
+        :return: None
         """
         print("[INFO]: Camera view refresh clock thread started.")
         while self.process_camera_view_refresh_clock_kill_flag is False:
             while comms.objects.is_connected is False: pass
-            previous_tick = comms.objects.camera_tick
-            if previous_tick != comms.objects.camera_tick:
+            if comms.objects.camera_updated is True:
                 self.signal_camera_refresh_clock.emit(self)
+                comms.objects.camera_updated = False
         print("[INFO]: Camera view refresh clock thread ended.")
 
     def keyboard_listen_control_forward(self) -> None:
@@ -355,7 +372,6 @@ class client(QObject):
         while self.process_keyboard_listen_control_forward_kill_flag is False:
             while comms.objects.is_connected is False: pass
             if self.keyboard_input_active is True:
-                print('this should execute')
                 comms.interface.send("rca-1.2:nav_keyboard_start")
                 if comms.acknowledge.receive_acknowledgement() is False: return None
                 host_listening = True

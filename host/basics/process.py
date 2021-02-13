@@ -18,7 +18,7 @@ def create_process(target: Union[classmethod, staticmethod, object], args: tuple
     """
     if __name__ == "basics.process":
         try:
-            dummy = objects.threading.Thread(target = target, args = args)
+            dummy = objects.threading.Thread(target = target, args = args, daemon = True)
             dummy.start()
         except objects.threading.ThreadError as ThreadErrorMessage:
             print("[FAIL]: Process creation failed! Details below.")

@@ -40,6 +40,10 @@ void setup() {
         digitalWrite(2, HIGH);
         digitalWrite(4, LOW);
     }
+    else {
+        digitalWrite(2, LOW);
+        digitalWrite(4, HIGH);
+    }
 
     digitalWrite(9, HIGH);
     digitalWrite(8, HIGH);
@@ -67,7 +71,13 @@ void loop() {
     }
 
     if (9.50 >= voltage_get() && 9 < voltage_get()) {
-        // secondary voltage check, if over 9 volts but less than or equal to 9.5 volts, only open motor power supply
+        // secondary voltage check, if over 9 volts but less than or equal to 9.5 volts, only close motor power supply
+        digitalWrite(4, LOW);
+    }
+
+    if (voltage_get() > 9.50) {
+        // if voltage is greater than 9.5, power is within in spec, close motor power supply MOSFET and switch relay to internal
+        digitalWrite(2, HIGH);
         digitalWrite(4, LOW);
     }
 

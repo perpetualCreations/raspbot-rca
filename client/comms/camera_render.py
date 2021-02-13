@@ -17,6 +17,7 @@ def render() -> None:
     while objects.process_camera_feed_kill_flag is False:
         rpi_name, image = objects.image_hub.recv_image()
         objects.frame_current = objects.cv2.imdecode(image, 1)
+        objects.camera_updated = True
         objects.camera_tick += 1
         objects.image_hub.send_reply(b'OK')
     pass

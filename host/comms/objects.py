@@ -60,3 +60,8 @@ process_camera_capture_kill_flag = False # flag variable that holds a boolean, w
 
 process_telemetry_broadcast = None # placeholder for multithreading object that runs telemetry broadcast
 process_telemetry_broadcast_kill_flag = False # flag variable that holds a boolean, when True telemetry_broadcast process is killed.
+
+camera_restarts = 0 # number of times VideoStream has been restarted, increases delay until next attempt in seconds linearly
+camera_is_restarting_flag = False # flag for if comms.camera_capture.restart() is active, pauses process_camera_capture if True
+
+camera_quality = 75 # int 0-100, noting camera image quality for broadcast

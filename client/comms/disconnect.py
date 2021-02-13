@@ -14,7 +14,6 @@ def disconnect() -> None:
     :return: None
     """
     objects.process_camera_feed_kill_flag = True
-    objects.process_telemetry_refresh_kill_flag = True
     objects.is_connected = False
     try:
         interface.send(b"rca-1.2:disconnected")

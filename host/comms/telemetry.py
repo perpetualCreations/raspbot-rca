@@ -18,8 +18,8 @@ def stream() -> None:
     """
     telemetry_interface = telemetry.telemetry()
     while objects.process_telemetry_broadcast_kill_flag is False:
-        interface.send(telemetry_interface.get(), objects.socket_telemetry)
-        sleep(0.25)
-    pass
+        if objects.camera_is_restarting_flag: is_camera_restarting = "\nVideo stream stopped, camera is restarting..."
+        else: is_camera_restarting = "\nCamera stream up. "
+        interface.send(telemetry_interface.get() + is_camera_restarting, objects.socket_telemetry)
     print("[INFO]: Telemetry stream has ended.")
 pass

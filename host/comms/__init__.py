@@ -21,6 +21,8 @@ try:
     objects.port = int(config_parse_load["NET"]["port"])
     objects.cam_port = int(config_parse_load["NET"]["cam_port"])
     objects.telemetry_port = int(config_parse_load["NET"]["telemetry_port"])
+    objects.camera_quality = int(config_parse_load["CAMERA"]["quality"])
+    if objects.camera_quality not in range(0, 101): objects.camera_quality = 75
 except objects.configparser.Error as ce:
     print("[FAIL]: Failed to load configurations! See below for details.")
     print(ce)

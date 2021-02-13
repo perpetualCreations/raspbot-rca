@@ -42,7 +42,7 @@ class telemetry:
             orientation_raw = self.sense.get_orientation_degrees()
             accelerometer_data = self.sense.get_accelerometer_raw()
             orientation = "Roll: " + str(round(orientation_raw["roll"], 2)) + ", Pitch: " + str(round(orientation_raw["pitch"], 2)) + ", Yaw: " + str(round(orientation_raw["yaw"], 2))
-            compass = str(round(self.sense.compass, 2)) + " Degrees (0 being North)"
+            compass = str(round(self.sense.compass, 2))
             accelerometer = "X: " + str(round(accelerometer_data["x"], 2)) + ", Y: " + str(round(accelerometer_data["y"], 2)) + ", Z: " + str(round(accelerometer_data["z"], 2))
         else:
             orientation = "No Data"
@@ -61,10 +61,15 @@ class telemetry:
             serial.serial(direction = "send", message = "*")
             sleep(0.1)
             voltage = serial.serial() + " V"
-            if int(voltage.rstrip(" V")) <= 9.5: voltage_warn = "\nWARNING - BATTERY VOLTAGE TOO LOW\nMOTORS DISABLED, PLEASE DOCK AND CHARGE BATTERY"
+            try:
+                if int(voltage.rstrip(" V")) <= 9.5: voltage_warn = "WARNING - BATTERY VOLTAGE TOO LOW, DOCK AND CHARGE BATTERY"
+            except ValueError:
+                voltage_warn = "Arduino isn't responding..."
+                voltage = "NaN"
+            pass
         else: voltage = "No Data"
 
         timestamp = basics.make_timestamp(log_suppress = True)
         return "Telem. Timestamp: " + timestamp + "\nOrientation: " + orientation \
                + "\nCompass: " + compass + "\nAcceleration: " + accelerometer + "\nDistance Ahead: " + distance \
-               + "\nBattery Voltage: " + voltage + voltage_warn
+               + "\nBattery Voltage: " + voltage + "\n" + voltage_warn

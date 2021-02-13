@@ -59,3 +59,6 @@ process_telemetry_refresh_kill_flag = False # moved from main module class, so b
 
 frame_current = None # cv2 image object, for the current camera stream frame
 camera_tick = 0 # current frame count, for client.camera_view_refresh_clock to compare between frames and trigger frame commit as needed
+camera_updated = False
+
+popout_camera_feed = False # whether camera feed should also show up as a separate window
