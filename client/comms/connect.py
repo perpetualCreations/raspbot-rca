@@ -13,6 +13,7 @@ def connect() -> None:
     Connects to an IP with port number, and starts an encrypted connection.
     :return: None
     """
+    if objects.is_connected is True: return None
     print("[INFO]: Creating socket connection with " + objects.host + " on port " + str(objects.port) + "...")
     try: objects.socket_main.connect((objects.host, objects.port))
     except objects.socket.error as SocketErrorMessage:

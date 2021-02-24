@@ -13,21 +13,45 @@ from typing import Union
 def serial(port:str = "/dev/ttyACM0", direction:str = "receive", message:Union[None, str, bytes] = None) -> Union[None, str]:
     """
     Sends or receives serial communications to the Arduino integration.
+    ===
+    Dear Dev(s),
+    If you're trying to run a unit test using this function on Windows, please set the port to 'COM<X>'.
+    Also please ignore the "could not open port" message in console.
+    Regards, PC
+    ===
     :param port: str, the port that the Arduino is connected to, default set to /dev/ttyACM0.
     :param direction: str, whether to expect to receive or send, default set to receive.
     :param message: str, message to send, or if receiving leave as None, default set to None automatically, can be bytestring or normal string.
     :return: if receiving, decoded string, if sending or invalid direction, None
     """
-    if message is not None and isinstance(message, bytes): message = message.decode(encoding = "utf-8", errors = "replace")
-    with objects.serial.Serial(port = port, timeout = 3) as connect:
-        connect.flush()
-        connect.readline()
-        connect.timeout(2)
-        if isinstance(message, bytes) is True: message = message.decode(encoding = "utf-8", errors = "replace")
-        if direction == "receive": return connect.readline().rstrip(b"\n").decode(encoding = "utf-8", errors = "replace")
-        elif direction == "send":
-            for x in range(0, len(message)): connect.write(message[x].encode(encoding = "ascii", errors = "replace"))
-            connect.write(b"\x0A") # hexcode for newline character, signals the end of the message and for accumulator dump
+    if port != objects.serial_connection.port:
+        while objects.serial_lock is True: pass
+        objects.serial_lock = True
+        if objects.serial_connection.is_open is True: objects.serial_connection.close()
+        objects.serial_connection.port = port
+        objects.serial_connection.open()
+        objects.sleep(4)
+        objects.serial_lock = False
+    pass
+    if message is None: return None
+    if isinstance(message, bytes): message = message.decode(encoding = "utf-8", errors = "replace")
+    try:
+        while objects.serial_lock is True: pass
+        objects.serial_lock = True
+        for x in range(0, len(message)): objects.serial_connection.write(message[x].encode(encoding = "ascii", errors = "replace"))
+        objects.serial_connection.write(b"\x0A") # hexcode for newline character, signals the end of the message and for accumulator dump
+        if direction == "receive":
+            response = objects.serial_connection.read_until(b"\x0A").rstrip(b"\n").decode(encoding = "utf-8", errors = "replace")
+            objects.serial_lock = False
+            return response
+        else:
+            objects.serial_lock = False
+            return None
+    except objects.serial.serialposix.SerialException as SerialExceptionMessage:
+        print("[FAIL]: Unable to access serial!")
+        print(SerialExceptionMessage)
+        objects.serial_lock = False
+        if direction == "receive": return "ERROR"
         else: return None
     pass
 pass
@@ -40,18 +64,19 @@ def nav_timer(nav_run_time: int) -> None:
     """
     sleep(nav_run_time)
     objects.interface.send(b"rca-1.2:nav_end")
-    host.serial("/dev/ttyACM0", "send", b"A")
+    serial(direction = "send", message = b"A")
 pass
 
 def nav_adjust_speed(speed: int) -> None:
     """
     Changes motor speed through serial, with vetting before executing user input.
-    @param speed:
-    @return:
+    @param speed: int, must be in range 0-255 or return None with no execution, signals motor speed
+    @return: None
     """
     if speed not in range(0, 256): return None
     print("[INFO]: Changing motor speed to " + str(speed) + "/255.")
     serial(direction = "send", message = "MS " + str(speed))
+pass
 
 def dock() -> None:
     """
@@ -66,8 +91,8 @@ def dock() -> None:
     A. The relay controlling the power supply for Raspi is to be switched to external, which is normally closed.
     B. The MOSFET switch for the motors is to be opened, disabling them.
     """
-    objects.serial.serial("/dev/ttyACM0", "send", ")")
-    objects.serial.serial("/dev/ttyACM0", "send", "<")
+    objects.serial.serial(direction = "send", message = ")")
+    objects.serial.serial(direction = "send", message = "<")
     objects.dock_status = True
 pass
 
@@ -88,20 +113,20 @@ def undock() -> None:
     B. The MOSFET switch for motor is to be closed, enabling them.
       1. Because the motors are powered, any connectors still connected must be disconnected, for safety.
     """
-    objects.serial.serial("/dev/ttyACM0", "send", "*")
-    if float(objects.serial.serial("/dev/ttyACM0", "receive")) <= 9: return None # TODO add proper error handle
-    objects.serial.serial("/dev/ttyACM0", "send", "(")
-    objects.serial.serial("/dev/ttyACM0", "send", ">")
+    if float(objects.serial.serial(direction = "receive", message = "*")) <= 9: return None # TODO add proper error handle
+    objects.serial.serial(direction = "send", message = "(")
+    objects.serial.serial(direction = "send", message = ">")
     objects.dock_status = False
 pass
 
-def voltage() -> float:
+def voltage() -> Union[float, str]:
     """
     Collects battery voltage through serial.
     :return: float, voltage
     """
-    objects.serial.serial("/dev/ttyACM0", "send", "*")
-    return float(objects.serial.serial())
+    raw = serial(message = "*")
+    if raw == "ERROR": return "NaN"
+    else: return float(raw)
 pass
 
 def arrest() -> None:

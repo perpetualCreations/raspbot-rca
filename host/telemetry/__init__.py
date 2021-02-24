@@ -32,16 +32,20 @@ class telemetry:
             self.sense = sense_hat.SenseHat()
         else: self.sense = None
 
-    def get(self) -> str:
+    def get(self, no_serial: bool = False) -> str:
         """
         Calls SenseHAT Python integration package and Arduino PySerial for data inputs and returns formatted output.
+        :param no_serial: bool, if True no serial data will be collected
         :return: str, multi-line
         """
         if self.components[1][0] is True:
             self.sense.set_imu_config(True, True, True)
             orientation_raw = self.sense.get_orientation_degrees()
             accelerometer_data = self.sense.get_accelerometer_raw()
-            orientation = "Roll: " + str(round(orientation_raw["roll"], 2)) + ", Pitch: " + str(round(orientation_raw["pitch"], 2)) + ", Yaw: " + str(round(orientation_raw["yaw"], 2))
+            roll_raw = round(orientation_raw["roll"], 2)
+            if (roll_raw - 90) < 0: roll = 360 - abs(roll_raw - 90)
+            else: roll = roll_raw - 90
+            orientation = "Roll: " + str(roll) + ", Pitch: " + str(round(orientation_raw["pitch"], 2)) + ", Yaw: " + str(round(orientation_raw["yaw"], 2)) # subtract 90 deg from roll for mounting position offset
             compass = str(round(self.sense.compass, 2))
             accelerometer = "X: " + str(round(accelerometer_data["x"], 2)) + ", Y: " + str(round(accelerometer_data["y"], 2)) + ", Z: " + str(round(accelerometer_data["z"], 2))
         else:
@@ -49,22 +53,17 @@ class telemetry:
             compass = "No Data"
             accelerometer = "No Data"
 
-        if self.components[1][1] is True:
-            serial.serial(direction = "send", message = "T")
-            sleep(0.1)
-            distance = serial.serial() + " mm"
+        if self.components[1][1] is True and no_serial is False: distance = serial.serial(message = "T") + " mm"
         else: distance = "No Data"
 
         voltage_warn = ""
 
-        if self.components[2][0] is True:
-            serial.serial(direction = "send", message = "*")
-            sleep(0.1)
-            voltage = serial.serial() + " V"
+        if self.components[2][0] is True and no_serial is False:
+            voltage = str(serial.voltage()) + " V"
             try:
-                if int(voltage.rstrip(" V")) <= 9.5: voltage_warn = "WARNING - BATTERY VOLTAGE TOO LOW, DOCK AND CHARGE BATTERY"
+                if float(voltage.rstrip(" V")) <= 9.5: voltage_warn = "WARNING - BATTERY VOLTAGE TOO LOW, DOCK AND CHARGE BATTERY"
             except ValueError:
-                voltage_warn = "Arduino isn't responding..."
+                voltage_warn = "\nArduino isn't responding..."
                 voltage = "NaN"
             pass
         else: voltage = "No Data"
@@ -72,4 +71,4 @@ class telemetry:
         timestamp = basics.make_timestamp(log_suppress = True)
         return "Telem. Timestamp: " + timestamp + "\nOrientation: " + orientation \
                + "\nCompass: " + compass + "\nAcceleration: " + accelerometer + "\nDistance Ahead: " + distance \
-               + "\nBattery Voltage: " + voltage + "\n" + voltage_warn
+               + "\nBattery Voltage: " + voltage + voltage_warn

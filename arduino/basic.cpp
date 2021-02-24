@@ -49,11 +49,11 @@ void loop() {
     if (incomingData == 'F') {
       digitalWrite(12, LOW);
       digitalWrite(9, LOW);
-      analogWrite(3, 255);
+      analogWrite(3, 190);
       
       digitalWrite(13, HIGH);
       digitalWrite(8, LOW);
-      analogWrite(11, 255);
+      analogWrite(11, 190);
       
       delay(1000);
     }
@@ -61,12 +61,12 @@ void loop() {
     if (incomingData == 'B') {
       digitalWrite(12, HIGH);
       digitalWrite(9, LOW);
-      analogWrite(3, 255);
+      analogWrite(3, 190);
       
       digitalWrite(13, LOW);
       digitalWrite(8, LOW);
-      analogWrite(11, 255);
-      
+      digitalWrite(11, 190);
+
       delay(1000);
     }
     
@@ -81,7 +81,7 @@ void loop() {
     if (incomingData == 'Z') {
       digitalWrite(13, LOW);
       digitalWrite(8, LOW);
-      analogWrite(11, 255);
+      analogWrite(11, 190);
       
       digitalWrite(9, HIGH);
       analogWrite(3, 0);
@@ -92,7 +92,7 @@ void loop() {
     if (incomingData == 'Y') {
       digitalWrite(13, HIGH);
       digitalWrite(8, LOW);
-      analogWrite(11, 255);
+      analogWrite(11, 190);
       
       digitalWrite(9, HIGH);
       analogWrite(3, 0);
@@ -106,7 +106,7 @@ void loop() {
       
       digitalWrite(12, HIGH);
       digitalWrite(9, LOW);
-      analogWrite(3, 255); 
+      analogWrite(3, 190); 
       
       delay(1000);
     }
@@ -117,7 +117,7 @@ void loop() {
       
       digitalWrite(12, LOW);
       digitalWrite(9, LOW);
-      analogWrite(3, 255); 
+      analogWrite(3, 190); 
       
       delay(1000);
     }
@@ -125,11 +125,11 @@ void loop() {
     if (incomingData == 'S') {
       digitalWrite(13, HIGH);
       digitalWrite(8, LOW);
-      analogWrite(11, 255); 
+      analogWrite(11, 190); 
       
       digitalWrite(12, HIGH);
       digitalWrite(9, LOW);
-      analogWrite(3, 255);
+      analogWrite(3, 190);
       
       delay(1000);
     }
@@ -137,11 +137,11 @@ void loop() {
     if (incomingData == 'C') {
       digitalWrite(13, HIGH);
       digitalWrite(8, LOW);
-      analogWrite(11, 255); 
+      analogWrite(11, 190); 
       
       digitalWrite(12, LOW);
       digitalWrite(9, LOW);
-      analogWrite(3, 255);
+      analogWrite(3, 190);
       
       delay(1000);
     }

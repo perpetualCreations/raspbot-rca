@@ -66,11 +66,9 @@ class science:
 
         print("[INFO]: Collecting data from serial...")
         if self.components[1][2] is True:
-            serial.serial(direction = "send", message = "D")
-            self.sleep(0.1)
-            dust_lpo = serial.serial() + " (μs)"
-            dust_ratio = serial.serial()
-            dust_concentration = serial.serial() + " (pcs/L)"
+            dust_lpo = serial.serial(message = "DUST LPO") + " (μs)"
+            dust_ratio = serial.serial(message = "DUST RATIO")
+            dust_concentration = serial.serial(message = "DUST CONC") + " (pcs/L)"
         else:
             print("[INFO]: No data for dust sensor.")
             dust_lpo = "No Data"

@@ -77,12 +77,13 @@ class host:
             basics.restart_shutdown.restart()
         pass
         comms.objects.socket_telemetry, client_address_from_telemetry = comms.objects.socket_telemetry_init.accept()
+        comms.objects.socket_telemetry.setblocking(True)
         if client_address_from_telemetry[0] != comms.objects.client_address[0]:
             print("[FAIL]: Client address is mismatched across telemetry and main socket stream!")
             basics.restart_shutdown.restart()
         pass
-        comms.objects.process_telemetry_broadcast = basics.process.create_process(comms.telemetry.stream)
         comms.camera_capture.connect()
+        comms.objects.process_telemetry_broadcast = basics.process.create_process(comms.telemetry.stream)
         print("[INFO]: Waiting for commands...")
         while True:
             command = b"rca-1.2:disconnected"
@@ -120,15 +121,15 @@ class host:
             elif command == b"rca-1.2:nav_keyboard_start":
                 print("[INFO]: Entering keyboard-input navigation from client.")
                 comms.acknowledge.send_acknowledgement(1000)
-                escape_nav_input_loop = False
                 NAV_LOOKUP = {"forwards":"F", "left":"W", "backwards":"B", "right":"Y", "clockwise":"S", "counterclockwise":"C", "stop":"A"} # yes, this leaves X and Z (right and left backwards) unused
-                while escape_nav_input_loop is False:
+                while True:
                     try: nav_input = NAV_LOOKUP[comms.interface.receive().decode(encoding = "utf-8", errors = "replace")]
                     except KeyError:
-                        nav_input = None
                         basics.serial.serial(direction = "send", message = "A")
-                        escape_nav_input_loop = True
+                        break
                     pass
+                    print("from client:")
+                    print(nav_input) # TODO DEBUG
                     basics.serial.serial(direction = "send", message = nav_input)
                 pass
                 print("[INFO]: Exited keyboard-input navigation from client.")

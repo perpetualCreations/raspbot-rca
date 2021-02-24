@@ -9,7 +9,7 @@ try:
     print("[INFO]: Starting imports...")
     from subprocess import Popen
     from time import sleep
-    import socket, configparser, ping3, webbrowser, cv2, tkinter, keyboard
+    import socket, configparser, ping3, webbrowser, cv2, tkinter
     from tkinter import messagebox
     from ast import literal_eval
     from platform import system
@@ -141,7 +141,9 @@ class client(QObject):
         self.window.undockbutton.setEnabled(False)
         self.window.changespeedbutton.setEnabled(False)
         self.window.show()
-        print("[INFO]: Threading for main GUI starting...")
+        print("[INFO: Threading starting...")
+        self.process_keyboard_listen_control_forward = basics.process.create_process(client.keyboard_test, (self,))
+        print("[INFO]: Additional threading for main GUI starting...")
         self.process_telemetry_refresh = basics.process.create_process(client.telemetry_refresh, (self,))
         self.process_status_refresh = basics.process.create_process(client.status_refresh, (self,))
         self.process_gui_lock_from_state = basics.process.create_process(client.gui_lock_from_connect_state, (self,))
@@ -150,8 +152,6 @@ class client(QObject):
         self.signal_status_refresh.connect(client.status_refresh_commit)
         self.signal_gui_lock_from_state.connect(client.gui_lock_from_connect_state_commit)
         self.signal_camera_refresh_clock.connect(client.camera_view_commit)
-        print("[INFO: Secondary threading starting...")
-        self.process_keyboard_listen_control_forward = basics.process.create_process(client.keyboard_listen_control_forward, (self,))
         print("[INFO]: Loading complete.")
         basics.basics.exit(self.app.exec_())
         # once application is terminated and exit is called, thread kill flags below will turn to True
@@ -213,6 +213,18 @@ class client(QObject):
             self.window.dockbutton.setEnabled(True)
             self.window.undockbutton.setEnabled(True)
             self.window.changespeedbutton.setEnabled(True)
+            if docked is False:
+                self.window.undockbutton.setEnabled(False)
+                self.window.dockbutton.setEnabled(True)
+                self.window.keyboardtogglebutton.setEnabled(True)
+                self.window.executebutton.setEnabled(True)
+            else:
+                self.window.dockbutton.setEnabled(False)
+                self.window.undockbutton.setEnabled(True)
+                self.window.keyboardtogglebutton.setEnabled(False)
+                self.window.executebutton.setEnabled(False)
+                self.keyboard_input_active = False
+            pass
             if self.keyboard_input_active is True:
                 self.window.disconnectbutton.setEnabled(False)
                 self.window.collectbutton.setEnabled(False)
@@ -233,18 +245,6 @@ class client(QObject):
                 self.window.undockbutton.setEnabled(True)
                 self.window.executebutton.setEnabled(True)
                 self.window.changespeedbutton.setEnabled(True)
-            pass
-            if docked is False:
-                self.window.undockbutton.setEnabled(False)
-                self.window.dockbutton.setEnabled(True)
-                self.window.keyboardtogglebutton.setEnabled(True)
-                self.window.executebutton.setEnabled(True)
-            else:
-                self.window.dockbutton.setEnabled(False)
-                self.window.undockbutton.setEnabled(True)
-                self.window.keyboardtogglebutton.setEnabled(False)
-                self.window.executebutton.setEnabled(False)
-                self.keyboard_input_active = False
             pass
         else:
             self.window.connectbutton.setEnabled(True)
@@ -273,8 +273,9 @@ class client(QObject):
         while self.process_gui_lock_from_state_kill_flag is False:
             previous_connect = comms.objects.is_connected
             previous_dock = comms.objects.dock_status
+            previous_keyboard = self.keyboard_input_active
             sleep(1)
-            if previous_connect != comms.objects.is_connected or previous_dock != comms.objects.dock_status: self.signal_gui_lock_from_state.emit(self, comms.objects.is_connected, comms.objects.dock_status)
+            if previous_connect != comms.objects.is_connected or previous_dock != comms.objects.dock_status or previous_keyboard != self.keyboard_input_active: self.signal_gui_lock_from_state.emit(self, comms.objects.is_connected, comms.objects.dock_status)
         pass
         print("[INFO]: GUI lock thread ended.")
 
@@ -295,8 +296,9 @@ class client(QObject):
         print("[INFO]: Telemetry refresh thread started.")
         while comms.objects.process_telemetry_refresh_kill_flag is False:
             while comms.objects.is_connected is False: pass
-            sleep(0.1)
-            try: self.signal_telemetry_refresh.emit(self, comms.interface.receive(socket_object = comms.objects.socket_telemetry).decode(encoding = "utf-8", errors = "replace"))
+            try:
+                self.signal_telemetry_refresh.emit(self, comms.interface.receive(socket_object = comms.objects.socket_telemetry).decode(encoding = "utf-8", errors = "replace"))
+                comms.interface.send("rca-1.2:ok", socket_object = comms.objects.socket_telemetry)
             except socket.error: pass
         pass
         print("[INFO]: Telemetry refresh thread ended.")
@@ -359,53 +361,76 @@ class client(QObject):
                 comms.objects.camera_updated = False
         print("[INFO]: Camera view refresh clock thread ended.")
 
+    def keyboard_test(self) -> None:
+        """
+        TODO nuke this function after testing
+        :return: None
+        """
+        import keyboard
+        sleep(10)
+        while True:
+            print("cycling!")
+            if keyboard.is_pressed("j") is True: print("test!!!")
+
     def keyboard_listen_control_forward(self) -> None:
         """
         Checks self.keyboard_input_active.
         If True, check if connected, if also True listen for keyboard input.
         Intended for multithreading.
+        TODO DEBUG
         :return: None
         """
         print("[INFO]: Keyboard listen control forward thread started.")
-        host_listening = None
         was_exit_called = None
         while self.process_keyboard_listen_control_forward_kill_flag is False:
             while comms.objects.is_connected is False: pass
-            if self.keyboard_input_active is True:
-                comms.interface.send("rca-1.2:nav_keyboard_start")
-                if comms.acknowledge.receive_acknowledgement() is False: return None
-                host_listening = True
+            host_listening = False
             while self.keyboard_input_active is True:
+                if host_listening is False:
+                    comms.interface.send("rca-1.2:nav_keyboard_start")
+                    if comms.acknowledge.receive_acknowledgement() is False: self.keyboard_input_active = False
+                    host_listening = True
+                pass
                 movement_called = False
                 was_exit_called = False
-                if host_listening is True:
-                    while keyboard.is_pressed("ESC") is True: self.keyboard_input_active = False
-                    while keyboard.is_pressed("w") is True or keyboard.is_pressed("W") is True:
-                        if movement_called is not True: comms.interface.send("forwards")
-                        movement_called = True
-                    while keyboard.is_pressed("a") is True or keyboard.is_pressed("A") is True:
-                        if movement_called is not True: comms.interface.send("left")
-                        movement_called = True
-                    while keyboard.is_pressed("s") is True or keyboard.is_pressed("S") is True:
-                        if movement_called is not True: comms.interface.send("backwards")
-                        movement_called = True
-                    while keyboard.is_pressed("d") is True or keyboard.is_pressed("D") is True:
-                        if movement_called is not True: comms.interface.send("right")
-                        movement_called = True
-                    while keyboard.is_pressed("q") is True or keyboard.is_pressed("Q") is True:
-                        if movement_called is not True: comms.interface.send("clockwise")
-                        movement_called = True
-                    while keyboard.is_pressed("e") is True or keyboard.is_pressed("E") is True:
-                        if movement_called is not True: comms.interface.send("counterclockwise")
-                        movement_called = True
-                    while keyboard.is_pressed("r") is True or keyboard.is_pressed("R") is True:
-                        if movement_called is not True: comms.interface.send("stop")
-                        movement_called = True
-                    pass
-                    if movement_called is True: comms.interface.send("stop")
-                pass
+                print("loop active") # this could be refactored down to be more compact and efficient with a switch statement
+                print("is the statement the problem?")
+                while keyboard.is_pressed("ESC") is True:
+                    print("ESC")
+                    self.keyboard_input_active = False
+                print("does it hang?")
+                while keyboard.is_pressed("w") is True:
+                    print("W")
+                    # if movement_called is not True: comms.interface.send("forwards")
+                    movement_called = True
+                while keyboard.is_pressed("a") is True:
+                    print("A")
+                    # if movement_called is not True: comms.interface.send("left")
+                    movement_called = True
+                while keyboard.is_pressed("s") is True:
+                    print("S")
+                    # if movement_called is not True: comms.interface.send("backwards")
+                    movement_called = True
+                while keyboard.is_pressed("d") is True:
+                    print("D")
+                    # if movement_called is not True: comms.interface.send("right")
+                    movement_called = True
+                while keyboard.is_pressed("q") is True:
+                    print("Q")
+                    # if movement_called is not True: comms.interface.send("clockwise")
+                    movement_called = True
+                while keyboard.is_pressed("e") is True:
+                    print("E")
+                    # if movement_called is not True: comms.interface.send("counterclockwise")
+                    movement_called = True
+                while keyboard.is_pressed("r") is True:
+                    # if movement_called is not True: comms.interface.send("stop")
+                    movement_called = True
+                # if movement_called is True: comms.interface.send("stop")
+                print("down here")
             pass
             if was_exit_called is False:
+                print("exited")
                 comms.interface.send("cause a key error and completely exit")
                 was_exit_called = True
             pass

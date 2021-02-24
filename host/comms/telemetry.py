@@ -19,7 +19,8 @@ def stream() -> None:
     telemetry_interface = telemetry.telemetry()
     while objects.process_telemetry_broadcast_kill_flag is False:
         if objects.camera_is_restarting_flag: is_camera_restarting = "\nVideo stream stopped, camera is restarting..."
-        else: is_camera_restarting = "\nCamera stream up. "
-        interface.send(telemetry_interface.get() + is_camera_restarting, objects.socket_telemetry)
+        else: is_camera_restarting = "\nCamera stream up."
+        interface.send(message = telemetry_interface.get() + is_camera_restarting, socket_object = objects.socket_telemetry)
+        if interface.receive(socket_object = objects.socket_telemetry).decode(encoding = "utf-8", errors = "replace") != "rca-1.2:ok": print("[FAIL]: Received invalid telemetry stream confirmation message.")
     print("[INFO]: Telemetry stream has ended.")
 pass
