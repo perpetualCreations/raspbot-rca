@@ -42,10 +42,10 @@ class telemetry:
             self.sense.set_imu_config(True, True, True)
             orientation_raw = self.sense.get_orientation_degrees()
             accelerometer_data = self.sense.get_accelerometer_raw()
-            roll_raw = round(orientation_raw["roll"], 2)
-            if (roll_raw - 90) < 0: roll = 360 - abs(roll_raw - 90)
-            else: roll = roll_raw - 90
-            orientation = "Roll: " + str(roll) + ", Pitch: " + str(round(orientation_raw["pitch"], 2)) + ", Yaw: " + str(round(orientation_raw["yaw"], 2)) # subtract 90 deg from roll for mounting position offset
+            roll_raw = orientation_raw["roll"]
+            if (roll_raw - 90) < 0: roll = round(360 - abs(roll_raw - 90), 2)
+            else: roll = round(roll_raw - 90, 2) # subtract 90 deg from roll for mounting position offset
+            orientation = "\nRoll: " + str(roll) + "\nPitch: " + str(round(orientation_raw["pitch"], 2)) + "\nYaw: " + str(round(orientation_raw["yaw"], 2))
             compass = str(round(self.sense.compass, 2))
             accelerometer = "X: " + str(round(accelerometer_data["x"], 2)) + ", Y: " + str(round(accelerometer_data["y"], 2)) + ", Z: " + str(round(accelerometer_data["z"], 2))
         else:
@@ -69,6 +69,6 @@ class telemetry:
         else: voltage = "No Data"
 
         timestamp = basics.make_timestamp(log_suppress = True)
-        return "Telem. Timestamp: " + timestamp + "\nOrientation: " + orientation \
+        return "Telem. Timestamp: " + timestamp + orientation \
                + "\nCompass: " + compass + "\nAcceleration: " + accelerometer + "\nDistance Ahead: " + distance \
                + "\nBattery Voltage: " + voltage + voltage_warn

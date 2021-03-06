@@ -11,8 +11,7 @@ try:
     # RCA Modules, basics is first to let logging start earlier
     import basics
     # logging initiation
-    # basics.basics.log_init()
-    # TODO uncomment host logging init, this was for dev
+    basics.basics.log_init()
     from science import science
     import hardware_check, comms, led_graphics, telemetry
 except ImportError as ImportErrorMessage:
@@ -128,14 +127,13 @@ class host:
                         basics.serial.serial(direction = "send", message = "A")
                         break
                     pass
-                    print("from client:")
-                    print(nav_input) # TODO DEBUG
                     basics.serial.serial(direction = "send", message = nav_input)
                 pass
                 print("[INFO]: Exited keyboard-input navigation from client.")
             elif command == b"rca-1.2:nav_speed_change":
+                print("[INFO]: Changing motor speed requested by client.")
                 comms.acknowledge.send_acknowledgement(1000)
-                try: basics.serial.serial(direction = "send", message = str(int(comms.interface.receive())))
+                try: basics.serial.serial(direction = "send", message = "MS " + str(int(comms.interface.receive())))
                 except ValueError: pass
             elif command == b"rca-1.2:disconnected":
                 print("[INFO]: Client disconnected.")

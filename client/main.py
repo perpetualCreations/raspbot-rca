@@ -16,13 +16,16 @@ try:
     from typing import Union
     from sys import argv
     from os import remove, rename, path
+    from pynput.keyboard import Key, Listener
     # Pyside6
     from PySide6.QtUiTools import QUiLoader
     from PySide6.QtWidgets import QApplication, QDialog
     from PySide6.QtCore import QFile, QIODevice, Signal, Slot, QObject
     from PySide6.QtGui import *
     # RCA Modules
-    import basics, comms
+    import basics
+    basics.basics.log_init()
+    import comms
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
@@ -32,9 +35,6 @@ except ImportWarning as ImportWarningMessage:
     print(ImportWarningMessage)
     exit(1)
 pass
-
-# basics.basics.log_init()
-# TODO uncomment logging init, for dev
 
 class client(QObject):
     """
@@ -60,11 +60,11 @@ class client(QObject):
         self.process_status_refresh_kill_flag = False
         self.process_gui_lock_from_state_kill_flag = False
         self.process_camera_view_refresh_clock_kill_flag = False
-        self.process_keyboard_listen_control_forward_kill_flag = False
         self.keyboard_input_active = False # variable for toggling keyboard controls
         self.nav_script = "" # placeholder, for str path to navigation script selected for execution
         self.no_signal_frame = cv2.imread("camera_fail.png")
-        self.locks_hardened = [[False, False], [False, False], [False, False]] # first list for connect lock, second list for dock lock, third list for keyboard lock
+        self.is_holding = False
+        self.host_listening = False
         print("[INFO]: Loading configurations...")
         self.components = basics.basics.load_hardware_config()  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
         config_parse_load = configparser.ConfigParser()
@@ -141,8 +141,56 @@ class client(QObject):
         self.window.undockbutton.setEnabled(False)
         self.window.changespeedbutton.setEnabled(False)
         self.window.show()
-        print("[INFO: Threading starting...")
-        self.process_keyboard_listen_control_forward = basics.process.create_process(client.keyboard_test, (self,))
+        print("[INFO]: Keyboard initializing...")
+
+        class globalsAreForNerds:
+            """
+            An extremely dirty and depressing hack to get keyboard_listen handlers to accept non-local variables.
+            pynput back-end shenanigans and irresponsible use of positional arguments has forced my hand.
+            """
+            def __init__(self, outer_self): self.outer_self = outer_self
+
+            def keyboard_listen_press_handler(self, key) -> None:
+                """
+                Event function, called upon keypress event by the keyboard listener under the keyboard listen control forward thread.
+                :param key: key pressed, object key.x
+                :return: None
+                """
+                SWITCH = {"w": "forwards", "a": "left", "s": "backwards", "d": "right", "q": "clockwise", "e": "counterclockwise", "r": "stop"}
+                try:
+                    if self.outer_self.is_holding is False and self.outer_self.keyboard_input_active and self.outer_self.host_listening is True:
+                        comms.interface.send(SWITCH[str(key).rstrip("'").lstrip("'")])
+                        self.outer_self.is_holding = True
+                except KeyError: pass  # KeyError is ignored, this likely will occur when a non-nav-control key is pressed
+            pass
+
+            def keyboard_listen_release_handler(self, key) -> Union[None, bool]:
+                """
+                Wrapper event function, called upon key release event by the keyboard listener.
+                :param key: key released, object key.x
+                :return: None or False, False upon escape
+                """
+                SWITCH = {"w": "forwards", "a": "left", "s": "backwards", "d": "right", "q": "clockwise", "e": "counterclockwise", "r": "stop"}
+
+                if self.outer_self.keyboard_input_active is True and self.outer_self.host_listening is True:
+                    self.outer_self.is_holding = False
+                    if key == Key.esc:
+                        comms.interface.send("stop")
+                        self.outer_self.keyboard_input_active = False
+                        return False
+                    else:
+                        try:
+                            if SWITCH[str(key).rstrip("'").lstrip("'")] is not None: comms.interface.send("stop")
+                        except KeyError: return None
+                    pass
+                pass
+            pass
+        pass
+
+        handlerInstance = globalsAreForNerds(self)
+        self.listener = Listener(on_press = handlerInstance.keyboard_listen_press_handler, on_release = handlerInstance.keyboard_listen_release_handler)
+        self.listener.start()
+        basics.process.create_process(self.listener.join, ())
         print("[INFO]: Additional threading for main GUI starting...")
         self.process_telemetry_refresh = basics.process.create_process(client.telemetry_refresh, (self,))
         self.process_status_refresh = basics.process.create_process(client.status_refresh, (self,))
@@ -154,12 +202,6 @@ class client(QObject):
         self.signal_camera_refresh_clock.connect(client.camera_view_commit)
         print("[INFO]: Loading complete.")
         basics.basics.exit(self.app.exec_())
-        # once application is terminated and exit is called, thread kill flags below will turn to True
-        self.process_status_refresh_kill_flag = True
-        self.process_gui_lock_from_state_kill_flag = True
-        self.process_camera_view_refresh_clock_kill_flag = True
-        self.process_keyboard_listen_control_forward_kill_flag = True
-        comms.objects.process_telemetry_refresh_kill_flag = True
     pass
 
     def keyboard_input_active_swap(self) -> None:
@@ -168,6 +210,19 @@ class client(QObject):
         :return: None
         """
         self.keyboard_input_active = not self.keyboard_input_active
+        if self.keyboard_input_active is True and self.host_listening is False:
+            print("[INFO]: Entered keyboard navigation.")
+            comms.interface.send("rca-1.2:nav_keyboard_start")
+            if comms.acknowledge.receive_acknowledgement() is False:
+                print("[FAIL]: Failed to enter keyboard navigation! Host did not acknowledge request, exiting state.")
+                self.keyboard_input_active = False
+            self.host_listening = True
+        if self.keyboard_input_active is False and self.host_listening is True:
+            comms.interface.send("exit nav input stream")
+            self.host_listening = False
+            print("[INFO]: Exited keyboard navigation.")
+        pass
+    pass
 
     @staticmethod
     def toggle_camera_view_popout() -> None:
@@ -360,83 +415,6 @@ class client(QObject):
                 self.signal_camera_refresh_clock.emit(self)
                 comms.objects.camera_updated = False
         print("[INFO]: Camera view refresh clock thread ended.")
-
-    def keyboard_test(self) -> None:
-        """
-        TODO nuke this function after testing
-        :return: None
-        """
-        import keyboard
-        sleep(10)
-        while True:
-            print("cycling!")
-            if keyboard.is_pressed("j") is True: print("test!!!")
-
-    def keyboard_listen_control_forward(self) -> None:
-        """
-        Checks self.keyboard_input_active.
-        If True, check if connected, if also True listen for keyboard input.
-        Intended for multithreading.
-        TODO DEBUG
-        :return: None
-        """
-        print("[INFO]: Keyboard listen control forward thread started.")
-        was_exit_called = None
-        while self.process_keyboard_listen_control_forward_kill_flag is False:
-            while comms.objects.is_connected is False: pass
-            host_listening = False
-            while self.keyboard_input_active is True:
-                if host_listening is False:
-                    comms.interface.send("rca-1.2:nav_keyboard_start")
-                    if comms.acknowledge.receive_acknowledgement() is False: self.keyboard_input_active = False
-                    host_listening = True
-                pass
-                movement_called = False
-                was_exit_called = False
-                print("loop active") # this could be refactored down to be more compact and efficient with a switch statement
-                print("is the statement the problem?")
-                while keyboard.is_pressed("ESC") is True:
-                    print("ESC")
-                    self.keyboard_input_active = False
-                print("does it hang?")
-                while keyboard.is_pressed("w") is True:
-                    print("W")
-                    # if movement_called is not True: comms.interface.send("forwards")
-                    movement_called = True
-                while keyboard.is_pressed("a") is True:
-                    print("A")
-                    # if movement_called is not True: comms.interface.send("left")
-                    movement_called = True
-                while keyboard.is_pressed("s") is True:
-                    print("S")
-                    # if movement_called is not True: comms.interface.send("backwards")
-                    movement_called = True
-                while keyboard.is_pressed("d") is True:
-                    print("D")
-                    # if movement_called is not True: comms.interface.send("right")
-                    movement_called = True
-                while keyboard.is_pressed("q") is True:
-                    print("Q")
-                    # if movement_called is not True: comms.interface.send("clockwise")
-                    movement_called = True
-                while keyboard.is_pressed("e") is True:
-                    print("E")
-                    # if movement_called is not True: comms.interface.send("counterclockwise")
-                    movement_called = True
-                while keyboard.is_pressed("r") is True:
-                    # if movement_called is not True: comms.interface.send("stop")
-                    movement_called = True
-                # if movement_called is True: comms.interface.send("stop")
-                print("down here")
-            pass
-            if was_exit_called is False:
-                print("exited")
-                comms.interface.send("cause a key error and completely exit")
-                was_exit_called = True
-            pass
-        pass
-        print("[INFO]: Keyboard listen control forward thread ended.")
-    pass
 
     @staticmethod
     def gui_dialog_loader(ui_file: str) -> Union[object, None]:
@@ -676,9 +654,7 @@ class client(QObject):
         if self.ping_results == "" and report_type == "PING": return None
         file_report_name = report_type + "_report-" + basics.basics.make_timestamp() + ".txt"
         print("[INFO]: Generating text file report...")
-        file_report = open(file_report_name, "w+")
-        file_report.write(content)
-        file_report.close()
+        with open(file_report_name, "w+") as file_report: file_report.write(content)
         print("[INFO]: Report saved.")
     pass
 
@@ -808,10 +784,11 @@ class client(QObject):
             :return: None
             """
             try:
-                if int(nav_request_adjust_speed_gui.intentry.text()) in range(0, 256) is True:
+                if int(nav_request_adjust_speed_gui.intentry.text()) in range(0, 256):
                     comms.interface.send("rca-1.2:nav_speed_change")
                     if comms.acknowledge.receive_acknowledgement() is False: return None
                     comms.interface.send(str(int(nav_request_adjust_speed_gui.intentry.text())))
+                    nav_request_adjust_speed_gui.close()
                 else: messagebox.showerror("Raspbot RCA: Input Motor Speed Error", "Given motor speed is not between 0 to 255. Check your input.")
             except ValueError: messagebox.showerror("Raspbot RCA: Input Motor Speed Error", "Given motor speed is not a number. Check your input.")
 
@@ -848,7 +825,6 @@ class client(QObject):
         while instruction_line > 0:
             raw_instructions = instructions.readline()
             instructions_split = raw_instructions.split()
-            print(instructions_split)
             client.nav_execute(instructions_split[0], instructions_split[1])
             sleep(int(instructions_split[1]))
             instruction_line -= 1

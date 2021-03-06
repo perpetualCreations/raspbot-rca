@@ -1,21 +1,44 @@
-// Raspbot Remote Control Application, Arduino Instructions for Serial Commandment
+"""
+Raspbot Remote Control Application (Raspbot RCA, Raspbot RCA-G), v1.2
+Made by perpetualCreations
+
+Arduino script generation tool.
+
+You may edit generation below, or edit scripts that already have been generated.
+"""
+
+import configparser
+from random import randint
+from ast import literal_eval
+
+config = configparser.ConfigParser()
+config.read(input("Path to hardware configuration: "))
+
+with open("rca_upload_me_" + str(randint(1, 9999)) + ".cpp", "w") as script_export:
+    script = """// Raspbot Remote Control Application, Arduino Instructions for Serial Commandment
+// Auto-Generated
+
 // See documentation on pinouts and additional information.
 
-// development script
-
 #include <Arduino.h>
+"""
 
+    script += """
 // Variable Declaration
 int incomingData;
 int accumulatorIndex = 0;
 char accumulator[64]; 
 int initialMotorSpeed = 200; // must be 0-255
-                       
+"""
+    if literal_eval(config["HARDWARE"]["charger"]):
+        script += """
 static float voltage_get() {
     float raw = analogRead(5);
     return ((raw * 5.0000000) / 1024.000000) / (7.50/37.50);
 }
+"""
 
+    script += """
 void setup() {
     Serial.begin(9600);
     
@@ -27,8 +50,10 @@ void setup() {
     pinMode(11, OUTPUT);
     
     pinMode(9, OUTPUT);
-    pinMode(8, OUTPUT);
-    
+    pinMode(8, OUTPUT); """
+
+    if literal_eval(config["HARDWARE"]["charger"]):
+        script += """
     // Power Distribution System Control Pins
     pinMode(4, OUTPUT);
     pinMode(2, OUTPUT);
@@ -42,13 +67,17 @@ void setup() {
         digitalWrite(2, LOW);
         digitalWrite(4, HIGH);
     }
+    """
 
+    script += """
     digitalWrite(9, HIGH);
     digitalWrite(8, HIGH);
     analogWrite(3, initialMotorSpeed);
     analogWrite(11, initialMotorSpeed);
 }
+"""
 
+    script += """
 void loop() {
     // key
     // F, B = Forwards, Backwards
@@ -60,8 +89,11 @@ void loop() {
     // V = Tells Arduino Next is Angle Digit
     // * = Battery Voltage
     // (, ) = Switch Ext/Int Power Relay, when HIGH, internal
-    // <, > = Switch Motor Power Supply MOSFET, when LOW, ON
+    // <, > = Switch Motor Power Supply MOSFET, when LOW, ON 
+"""
 
+    if literal_eval(config["HARDWARE"]["charger"]):
+        script += """
     if (9.00 >= voltage_get()) {
         // voltage check, if under or is 9 volts, open motor power supply MOSFET and switch power relay to external
         digitalWrite(2, LOW);
@@ -77,22 +109,26 @@ void loop() {
         // if voltage is greater than 9.5, power is within in spec, close motor power supply MOSFET and switch relay to internal
         digitalWrite(2, HIGH);
         digitalWrite(4, LOW);
-    }
+    }"""
 
+    script += """
     if (Serial.available() > 0) {
         
         incomingData = Serial.read();
 
         if (incomingData == 0x0A) { // 0x0A is the decimal code for a newline character, when it's received, the accumulator is dumped and evaluated
-            accumulatorIndex = 0; // reset accumulator write index
+            accumulatorIndex = 0; // reset accumulator write index"""
 
+    if literal_eval(config["HARDWARE"]["charger"]):
+        script += """
             if (strcmp(accumulator, "*") == 0) {
                 static char converted_voltage[5];
                 dtostrf(voltage_get(), 5, 3, converted_voltage);
                 Serial.write(converted_voltage);
-                Serial.write("\n");
-            }
-            
+                Serial.write("\\n");
+            }"""
+
+    script += """
             if (strcmp(accumulator, "(") == 0) {
                 digitalWrite(2, HIGH);
             }
@@ -176,7 +212,7 @@ void loop() {
             }
 
             if (strcmp(accumulator, "T") == 0) {
-                Serial.write("9999\n"); // TODO time-of-flight distance sensor
+                Serial.write("9999\\n"); // TODO time-of-flight distance sensor
             }
 
             char conditionalMotorSpeedChange[3] = {accumulator[0], accumulator[1]};
@@ -199,3 +235,8 @@ void loop() {
         }
     }
 }
+    """
+    script_export.write(script)
+pass
+
+print("Script generated. Please upload file to Arduino board.")
