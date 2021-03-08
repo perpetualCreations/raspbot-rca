@@ -12,7 +12,7 @@ generation = SHA3_512.new(input("Please enter your chosen auth code: ").encode(e
 config_parse = configparser.ConfigParser()
 config_parse.read("comms/comms.cfg")
 config_parse["ENCRYPT"]["auth"] = generation
-with open("comms/comms.cfg", "w") as config_write:
+with open("../../../comms/comms.cfg", "w") as config_write:
     config_parse.write(config_write)
 pass
 config_write.close()

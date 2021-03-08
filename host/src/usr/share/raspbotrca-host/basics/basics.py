@@ -14,7 +14,7 @@ def log_init() -> None:
     :return: None
     """
     print("[INFO]: Output redirected from console to logging.")
-    objects.log_file_handle = open("logs/log-" + make_timestamp() + ".txt", "w")
+    objects.log_file_handle = open("/var/log/raspbotrca-host/logs/" + make_timestamp() + ".txt", "w")
     objects.origin_stdout = objects.sys.stdout
     objects.sys.stdout = objects.log_file_handle
 
@@ -95,7 +95,7 @@ def load_hardware_config() -> list:
     config_parse_load = objects.configparser.ConfigParser()
     try:
         components = [[None], [None, None, None], [None], [None, None]]
-        config_parse_load.read("hardware.cfg")
+        config_parse_load.read("/etc/raspbotrca-host/hardware.cfg")
         components[0][0] = objects.literal_eval(config_parse_load["HARDWARE"]["cam"])
         components[1][0] = objects.literal_eval(config_parse_load["HARDWARE"]["sensehat"])
         components[1][1] = objects.literal_eval(config_parse_load["HARDWARE"]["distance"])

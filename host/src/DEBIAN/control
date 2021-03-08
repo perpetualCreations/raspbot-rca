@@ -1,0 +1,10 @@
+Package: raspbotrca-host
+Version: 1.2
+Section: custom
+Priority: optional
+Architecture: all
+Essential: no
+Depends: python3 (>= 3.7.3-1)
+Homepage: https://dreamerslegacy.xyz/
+Maintainer: perpetualCreations <tchen0584@gmail.com>
+Description: Host application for controlling Raspbot.

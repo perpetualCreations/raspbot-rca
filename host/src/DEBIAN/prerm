@@ -1,0 +1,4 @@
+#!/bin/bash
+echo Removing automatic start on boot script...
+sudo rm /etc/init.d/rca-startup.sh
+echo Done.
