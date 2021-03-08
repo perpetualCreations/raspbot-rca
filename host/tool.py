@@ -19,7 +19,10 @@ with open("rca_upload_me_" + str(randint(1, 9999)) + ".cpp", "w") as script_expo
 // Auto-Generated
 
 // See documentation on pinouts and additional information.
+"""
 
+    if input("Using the stock Arduino IDE to upload? [y/n]: ").lower() is "n":
+        script += """
 #include <Arduino.h>
 """
 

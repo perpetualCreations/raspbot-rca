@@ -13,8 +13,13 @@ def restart() -> None:
     Restarts application.
     :return: None
     """
+    if objects.restart_lock is True:
+        print("[INFO]: Restart was called more than once. Ignoring excess call.")
+        return None
+    pass
+    objects.restart_lock = True
     print("[INFO]: Restarting. Starting new instance of application...")
-    objects.call("python3 main.py", shell = True)
+    objects.Popen("python3 main.py", shell = True)
     basics.exit(0)
 pass
 

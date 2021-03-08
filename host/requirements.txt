@@ -7,3 +7,4 @@ numpy
 imagezmq
 imutils
 opencv-contrib-python-headless
+gpiozero

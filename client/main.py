@@ -343,6 +343,7 @@ class client(QObject):
         """
         self.window.telemetryview.setPlainText(content)
 
+    # noinspection PyBroadException
     def telemetry_refresh(self) -> None:
         """
         Produces signal and string for telemetry refresh. Intended solely for multithreading.
@@ -354,7 +355,11 @@ class client(QObject):
             try:
                 self.signal_telemetry_refresh.emit(self, comms.interface.receive(socket_object = comms.objects.socket_telemetry).decode(encoding = "utf-8", errors = "replace"))
                 comms.interface.send("rca-1.2:ok", socket_object = comms.objects.socket_telemetry)
-            except socket.error: pass
+            except BaseException: # no john, I'm not going to write 60 exception clauses for every possible error that could occur at runtime, when they're all going to do the same thing
+                print("[FAIL]: Telemetry stream raised exception. Host has disconnected/failed abruptly.")
+                comms.disconnect.disconnect()
+                self.keyboard_input_active = False
+            pass
         pass
         print("[INFO]: Telemetry refresh thread ended.")
 
@@ -481,8 +486,8 @@ class client(QObject):
         :return: average latency, nested list with individual latency values, total losses, nested list with individual losses, if host resolution failed
         """
         print("[INFO]: Starting PING test...")
-        scans = [ping3.ping(comms.objects.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(comms.objects.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(comms.objects.host, timeout = 10, size = 64, unit = "ms"), ping3.ping(comms.objects.host, timeout = 10, size = 64, unit = "ms")]
-        if False in scans:
+        scans = [ping3.ping(comms.objects.host, timeout = 5, size = 64, unit = "ms"), ping3.ping(comms.objects.host, timeout = 5, size = 64, unit = "ms"), ping3.ping(comms.objects.host, timeout = 5, size = 64, unit = "ms"), ping3.ping(comms.objects.host, timeout = 5, size = 64, unit = "ms")]
+        if None in scans or False in scans:
             return [None, [None, None, None, None], 4, [True, True, True, True], True]
         else:
             result = [0, [scans[0], scans[1], scans[2], scans[3]], 0, [False, False, False, False], None]
@@ -503,6 +508,7 @@ class client(QObject):
                 result[2] += 1
                 result[3][3] = True
             pass
+            print(scans)
             result[0] = (result[1][0] + result[1][1] + result[1][2] + result[1][3])/4
             print("[INFO]: PING test complete.")
             return result
@@ -516,7 +522,7 @@ class client(QObject):
         """
         ping_results_raw = client.ping()
         if ping_results_raw[4] is True:
-            self.ping_results = "Unable to resolve hostname," + "\n" + "is the NET configuration correct?" + "\n" + "Host IP was:" + "\n" + comms.objects.host
+            self.ping_results = "Unable to resolve hostname," + "\n" + "is the NET configuration correct, or is the host down?" + "\n" + "Host IP was:" + "\n" + comms.objects.host
         else:
             ping_results_raw[0] = round(ping_results_raw[0], 2)
             ping_results_raw[1][0] = round(ping_results_raw[1][0], 2)
@@ -805,10 +811,10 @@ class client(QObject):
         :return: None
         """
         comms.interface.send("rca-1.2:nav_start")
-        if objects.comms.acknowledge.receive_acknowledgement() is False: return None
+        if comms.acknowledge.receive_acknowledgement() is False: return None
         if isinstance(run_time, int) is True: run_time = str(run_time)
         comms.interface.send(direction + " " + run_time)
-        if objects.comms.acknowledge.receive_acknowledgement() is False: return None
+        if comms.acknowledge.receive_acknowledgement() is False: return None
     pass
 
     @staticmethod
@@ -820,16 +826,17 @@ class client(QObject):
         :param file_name: str, name of file to read from.
         :return: None
         """
-        instructions = open(file_name)
-        instruction_line = sum(1 for x in instructions)
-        while instruction_line > 0:
-            raw_instructions = instructions.readline()
-            instructions_split = raw_instructions.split()
-            client.nav_execute(instructions_split[0], instructions_split[1])
-            sleep(int(instructions_split[1]))
-            instruction_line -= 1
+        with open(file_name) as script_handle: instructions = script_handle.read()
+        instructions = instructions.split("\n")
+        for x in range(0, len(instructions)):
+            try:
+                client.nav_execute(instructions[x].split()[0], instructions[x].split()[1])
+                sleep(int(instructions[x].split()[1]))
+            except IndexError:
+                messagebox.showerror("Raspbot RCA: Nav Script Error", "Nav script raised an error while executing. Check syntax.")
+                return None
+            pass
         pass
-        instructions.close()
     pass
 pass
 

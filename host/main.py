@@ -40,12 +40,15 @@ class host:
             for x in range(0, len(self.pattern_led)):
                 for y in range(0, len(self.pattern_led[x])): self.pattern_led[x][y] = "led_graphics_patterns/" + self.pattern_led[x][y]
         print("[INFO]: Listening for connection on port " + str(comms.objects.port) + "...")
-        try: comms.objects.socket_init.bind((comms.objects.host, comms.objects.port))
-        except comms.objects.socket.error:
-            print("[INFO]: Failed. Attempting to rebind socket...")
-            comms.objects.socket_init.setsockopt(comms.objects.socket.SOL_SOCKET, comms.objects.socket.SO_REUSEADDR, 1)
-            comms.objects.socket_init.bind((comms.objects.host, comms.objects.port))
-        pass
+        # noinspection PyBroadException
+        try:
+            try: comms.objects.socket_init.bind((comms.objects.host, comms.objects.port))
+            except comms.objects.socket.error:
+                print("[INFO]: Failed. Attempting to rebind socket...")
+                comms.objects.socket_init.setsockopt(comms.objects.socket.SOL_SOCKET, comms.objects.socket.SO_REUSEADDR, 1)
+                comms.objects.socket_init.bind((comms.objects.host, comms.objects.port))
+            pass
+        except BaseException: print("[FAIL]: Unable to bind socket, likely coming from restart.")
         try: comms.objects.socket_init.listen()
         except comms.objects.socket.error as SocketErrorMessage:
             print("[FAIL]: Failed to listen for client connection.")
@@ -115,7 +118,7 @@ class host:
                 nav_command = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
                 nav_command_list = nav_command.split()
                 basics.serial.serial(direction = "send", message = nav_command_list[0])
-                basics.process.create_process(basics.serial.nav_timer, (self, int(float(nav_command_list[1])), literal_eval(nav_command_list[2])))
+                basics.process.create_process(basics.serial.nav_timer, (int(float(nav_command_list[1])),))
                 comms.acknowledge.send_acknowledgement(1000)
             elif command == b"rca-1.2:nav_keyboard_start":
                 print("[INFO]: Entering keyboard-input navigation from client.")

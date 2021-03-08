@@ -9,7 +9,7 @@ Contains objects for module, including any package imports. Interact with these 
 try:
     import threading, sys, configparser, serial
     from time import gmtime, strftime
-    from subprocess import call
+    from subprocess import call, Popen
     from ast import literal_eval
     from basics import basics
     from time import sleep
@@ -30,3 +30,6 @@ serial_connection = serial.Serial(timeout = 5)
 serial_connection.port = "/dev/ttyACM0"
 
 serial_lock = False # bool, if True new serial operations cannot be made until changed back to False
+
+restart_lock = False # bool, restart_shutdown.restart() checks if this is False, if True the call to the function is ignored, it will only execute if False
+                     # this also exists because for some reason, restart() is getting called twice and instead of being responsible and finding out why, I decided to just throw in a lock variable

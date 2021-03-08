@@ -11,3 +11,5 @@ A Debian package is available for patching the host application with updates (TO
 
 ## Preliminary READMEs
 Additional READMEs are included in the host and client application directories, review them for subsequent installation instructions.
+
+More up to date instructions can be found at the documentation page as mentioned before.

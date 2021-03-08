@@ -9,6 +9,7 @@ print("[INFO]: Initiating science module...")
 try:
     from time import sleep
     from basics import basics, serial, restart_shutdown
+    from gpiozero import CPUTemperature
 except ImportError as ImportErrorMessage:
     print("[FAIL]: Imports failed! See below.")
     print(ImportErrorMessage)
@@ -50,7 +51,8 @@ class science:
             compass = round(self.sense.compass, 2)
             accelerometer_data = self.sense.get_accelerometer_raw()
             print("[INFO]: Collection completed.")
-            temperature = str(round(self.sense.get_temperature(), 2)) + "C"
+            temperature_raw = self.sense.get_temperature()
+            temperature = str(round(temperature_raw - ((CPUTemperature() - temperature_raw)/5.466), 2)) + "C" # calibration ref, https://github.com/initialstate/wunderground-sensehat/wiki/Part-3.-Sense-HAT-Temperature-Correction
             pressure = str(round(self.sense.get_pressure(), 2)) + " Millibars"
             humidity = str(round(self.sense.get_humidity(), 2)) + "% Humidity"
             orientation = "Roll: " + str(round(orientation_raw["roll"], 2)) + ", Pitch: " + str(round(orientation_raw["pitch"], 2)) + ", Yaw: " + str(round(orientation_raw["yaw"], 2))

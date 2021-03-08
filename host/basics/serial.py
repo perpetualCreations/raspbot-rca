@@ -62,8 +62,7 @@ def nav_timer(nav_run_time: int) -> None:
     :param nav_run_time: amount of time to run motors as an integer value.
     :return: None
     """
-    sleep(nav_run_time)
-    objects.interface.send(b"rca-1.2:nav_end")
+    objects.sleep(nav_run_time)
     serial(direction = "send", message = b"A")
 pass
 
