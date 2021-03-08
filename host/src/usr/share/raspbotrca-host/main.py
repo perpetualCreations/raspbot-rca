@@ -129,6 +129,11 @@ class host:
                     except KeyError:
                         basics.serial.serial(direction = "send", message = "A")
                         break
+                    except comms.objects.socket.error:
+                        print("[FAIL]: Client disconnected during navigation. Stopping vehicle and restarting...")
+                        basics.serial.serial(direction = "send", message = "A")
+                        basics.restart_shutdown.restart()
+                        break
                     pass
                     basics.serial.serial(direction = "send", message = nav_input)
                 pass

@@ -1,2 +1,2 @@
-#!/usr/bin/env bash
-raspbotrca-host-manualstart
+#!/bin/sh
+sudo raspbotrca-host-manualstart
