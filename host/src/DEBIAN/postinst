@@ -1,8 +1,9 @@
 # !/bin/bash
-echo Setting up automatic start on boot...
+echo Setting up scripting...
 sudo cp /usr/share/raspbotrca-host/rca-startup.sh /etc/init.d/
 sudo chmod +x /etc/init.d/rca-startup.sh
 sudo chmod +x /usr/bin/raspbotrca-host-manualstart
+sudo chmod +x /usr/bin/raspbotrca-host-authhasher
 sudo update-rc.d rca-startup.sh defaults
 echo Installing Python3 dependencies...
 sudo pip3 install -r /usr/share/raspbotrca-host/requirements.txt

@@ -27,7 +27,7 @@ class telemetry:
     """
     def __init__(self) -> None:
         self.components = basics.load_hardware_config()
-        if self.components[1][0] is True:
+        if self.components[0][0] is True:
             import sense_hat
             self.sense = sense_hat.SenseHat()
         else: self.sense = None
@@ -38,7 +38,7 @@ class telemetry:
         :param no_serial: bool, if True no serial data will be collected
         :return: str, multi-line
         """
-        if self.components[1][0] is True:
+        if self.components[0][0] is True:
             self.sense.set_imu_config(True, True, True)
             orientation_raw = self.sense.get_orientation_degrees()
             accelerometer_data = self.sense.get_accelerometer_raw()
@@ -53,12 +53,12 @@ class telemetry:
             compass = "No Data"
             accelerometer = "No Data"
 
-        if self.components[1][1] is True and no_serial is False: distance = serial.serial(message = "T") + " mm"
+        if self.components[0][2] is True and no_serial is False: distance = serial.serial(message = "T") + " mm"
         else: distance = "No Data"
 
         voltage_warn = ""
 
-        if self.components[2][0] is True and no_serial is False:
+        if no_serial is False:
             voltage = str(serial.voltage()) + " V"
             try:
                 if float(voltage.rstrip(" V")) <= 9.5: voltage_warn = "WARNING - BATTERY VOLTAGE TOO LOW, DOCK AND CHARGE BATTERY"

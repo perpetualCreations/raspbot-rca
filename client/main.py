@@ -66,7 +66,7 @@ class client(QObject):
         self.is_holding = False
         self.host_listening = False
         print("[INFO]: Loading configurations...")
-        self.components = basics.basics.load_hardware_config()  # [Base Set [cam], RFP Enceladus [sensehat, distance, dust], Upgrade #1 [charger], Robotic Arm Kit [arm, arm_cam]]
+        self.components = basics.basics.load_hardware_config()  # [[sensehat, distance, dust], [arm, arm_cam]]
         config_parse_load = configparser.ConfigParser()
         try:
             config_parse_load.read("main.cfg")
@@ -619,7 +619,7 @@ class client(QObject):
         :return: None
         """
         if report_type == "Science":
-            if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2] is True:
+            if self.components[0][0] is True or self.components[0][2] is True:
                 comms.interface.send(b"rca-1.2:command_science_collect")
                 if comms.acknowledge.receive_acknowledgement() is False: return None
                 self.report_content = comms.interface.receive().decode(encoding = "utf-8", errors = "replace")
@@ -729,7 +729,7 @@ class client(QObject):
         :param frame: index number for target frame set to be played, if command is not image or play, is ignored.
         :return: None
         """
-        if self.components[1][0] is not True or self.keyboard_input_active is True: return None
+        if self.components[0][0] is not True or self.keyboard_input_active is True: return None
         if isinstance(frame, int) is True: frame = str(frame)
         comms.interface.send(b"rca-1.2:led_graphics")
         if comms.acknowledge.receive_acknowledgement() is False: return None

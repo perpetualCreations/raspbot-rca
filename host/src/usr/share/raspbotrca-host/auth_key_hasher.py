@@ -10,11 +10,10 @@ from Cryptodome.Hash import SHA3_512
 generation = SHA3_512.new(input("Please enter your chosen auth code: ").encode(encoding = "ascii", errors = "replace")).hexdigest()
 
 config_parse = configparser.ConfigParser()
-config_parse.read("comms/comms.cfg")
+config_parse.read("/etc/raspbotrca-host/comms.cfg")
 config_parse["ENCRYPT"]["auth"] = generation
-with open("../../../comms/comms.cfg", "w") as config_write:
+with open("/etc/raspbotrca-host/comms.cfg", "w") as config_write:
     config_parse.write(config_write)
 pass
-config_write.close()
 print("[INFO]: Generated hash was: " + generation)
 print("[INFO]: Done.")

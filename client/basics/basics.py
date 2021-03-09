@@ -92,15 +92,13 @@ def load_hardware_config() -> list:
     """
     config_parse_load = objects.configparser.ConfigParser()
     try:
-        components = [[None], [None, None, None], [None], [None, None]]
+        components = [[None, None, None], [None, None]]
         config_parse_load.read("hardware.cfg")
-        components[0][0] = objects.literal_eval(config_parse_load["HARDWARE"]["cam"])
-        components[1][0] = objects.literal_eval(config_parse_load["HARDWARE"]["sensehat"])
-        components[1][1] = objects.literal_eval(config_parse_load["HARDWARE"]["distance"])
-        components[1][2] = objects.literal_eval(config_parse_load["HARDWARE"]["dust"])
-        components[2][0] = objects.literal_eval(config_parse_load["HARDWARE"]["charger"])
-        components[3][0] = objects.literal_eval(config_parse_load["HARDWARE"]["arm"])
-        components[3][1] = objects.literal_eval(config_parse_load["HARDWARE"]["arm_cam"])
+        components[0][0] = objects.literal_eval(config_parse_load["HARDWARE"]["sensehat"])
+        components[0][1] = objects.literal_eval(config_parse_load["HARDWARE"]["distance"])
+        components[0][2] = objects.literal_eval(config_parse_load["HARDWARE"]["dust"])
+        components[1][0] = objects.literal_eval(config_parse_load["HARDWARE"]["arm"])
+        components[1][1] = objects.literal_eval(config_parse_load["HARDWARE"]["arm_cam"])
         return components
     except objects.configparser.Error as ce:
         print("[FAIL]: Failed to load configurations! See below for details.")

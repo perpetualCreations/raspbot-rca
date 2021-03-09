@@ -19,7 +19,7 @@ def restart() -> None:
     pass
     objects.restart_lock = True
     print("[INFO]: Restarting. Starting new instance of application...")
-    objects.Popen("python3 main.py", shell = True)
+    objects.Popen("sudo raspbotrca-host-manualstart", shell = True)
     basics.exit(0)
 pass
 

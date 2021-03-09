@@ -43,7 +43,7 @@ socket_telemetry.settimeout(10)
 socket_telemetry.setblocking(True)
 
 dock_status = None
-components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
+components = None # components list, overwritten by __init__
 
 is_connected = False
 

@@ -1,0 +1,2 @@
+#!/bin/bash
+sudo python3 /usr/share/raspbotrca-host/auth_key_hasher.py

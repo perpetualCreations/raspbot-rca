@@ -35,7 +35,7 @@ class host:
         self.connect_retries = 0
         print("[INFO]: Loading configurations...")
         self.components = basics.basics.load_hardware_config()
-        if self.components[1][0] is True:
+        if self.components[0][0] is True:
             self.pattern_led = [["error1.png", "error2.png"], ["helloworld.png"], ["idle1.png", "idle2.png"], ["power-on.png"], ["power-off.png"], ["start1.png", "start2.png", "start3.png", "start4.png"]]
             for x in range(0, len(self.pattern_led)):
                 for y in range(0, len(self.pattern_led[x])): self.pattern_led[x][y] = "led_graphics_patterns/" + self.pattern_led[x][y]
@@ -108,7 +108,7 @@ class host:
             elif command == b"rca-1.2:command_science_collect":
                 print("[INFO]: Collecting environmental data report...")
                 sensor_interface = science()
-                if self.components[1][0] is True or self.components[1][1] is True or self.components[1][2]:
+                if self.components[0][0] is True or self.components[0][2]:
                     comms.acknowledge.send_acknowledgement(1000)
                     comms.interface.send(sensor_interface.get())
                 else: comms.acknowledge.send_acknowledgement(2003)
@@ -166,16 +166,12 @@ class host:
                 check_interface = hardware_check.hardwareCheck()
                 comms.interface.send(check_interface.collect().encode(encoding = "ascii", errors = "replace"))
             elif command == b"rca-1.2:get_dock_status":
-                if self.components[2][0] is True:
-                    comms.acknowledge.send_acknowledgement(1000)
-                    comms.interface.send(str(comms.objects.dock_status).encode(encoding = "ascii", errors = "replace"))
-                else: comms.acknowledge.send_acknowledgement(2003)
+                comms.acknowledge.send_acknowledgement(1000)
+                comms.interface.send(str(comms.objects.dock_status).encode(encoding = "ascii", errors = "replace"))
             elif command == b"rca-1.2:command_dock":
-                if self.components[2][0] is True: basics.serial.dock()
-                else: comms.acknowledge.send_acknowledgement(2003)
+                basics.serial.dock()
             elif command == b"rca-1.2:command_undock":
-                if self.components[2][0] is True: basics.serial.undock()
-                else: comms.acknowledge.send_acknowledgement(2003)
+                basics.serial.undock()
             else:
                 print("[FAIL]: Received unknown command from client, " + command.decode(encoding = "utf-8", errors = "replace") + ".")
                 comms.acknowledge.send_acknowledgement(2002)

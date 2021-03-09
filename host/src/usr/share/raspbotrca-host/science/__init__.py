@@ -28,7 +28,7 @@ class science:
     """
     def __init__(self) -> None:
         self.components = basics.load_hardware_config()
-        if self.components[1][0] is True:
+        if self.components[0][0] is True:
             import sense_hat
             self.sense = sense_hat.SenseHat()
         else: self.sense = None
@@ -44,7 +44,7 @@ class science:
                        + dust_concentration + "\n" + "ToF Distance: " + distance
         """
         print("[INFO]: Starting data collection...")
-        if self.components[1][0] is True:
+        if self.components[0][0] is True:
             print("[INFO]: Collecting data from sensors on SenseHAT...")
             self.sense.set_imu_config(True, True, True)
             orientation_raw = self.sense.get_orientation_degrees()
@@ -67,7 +67,7 @@ class science:
             accelerometer = "No Data"
 
         print("[INFO]: Collecting data from serial...")
-        if self.components[1][2] is True:
+        if self.components[0][2] is True:
             dust_lpo = serial.serial(message = "DUST LPO") + " (μs)"
             dust_ratio = serial.serial(message = "DUST RATIO")
             dust_concentration = serial.serial(message = "DUST CONC") + " (pcs/L)"

@@ -35,7 +35,7 @@ cam_port = 64221 # default port config, is overwritten by configuration file rea
 telemetry_port = 64222 # default port config, is overwritten by configuration file read
 
 dock_status = None
-components = [[None], [None, None, None], [None], [None, None]] # components list, overwritten by __init__
+components = None # components list, overwritten by __init__
 
 acknowledgement_dictionary = {1000:"rca-1.2:connection_acknowledge", 2001:"rca-1.2:authentication_invalid", 2002:"rca-1.2:unknown_command", 2003:"rca-1.2:hardware_unavailable"} # look up dictionary to convert numeric ID codes to readable alphabetical IDs
 acknowledgement_id = None # placeholder, will be overwritten by lookup with acknowledgement_dictionary

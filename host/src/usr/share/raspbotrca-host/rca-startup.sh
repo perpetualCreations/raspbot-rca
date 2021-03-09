@@ -12,6 +12,8 @@ case "$1" in
        sudo pkill -9 -f /usr/share/raspbotrca-host/main.py
        sudo python3 /usr/bin/raspbotrca-host-manualstart
        ;;
+    *)
+      echo "Usage: /etc/init.d/rca-startup.sh {start|stop|restart}"
 esac
 
 exit 0

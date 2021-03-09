@@ -34,7 +34,7 @@ class ledGraphics:
         Initiation function, loads hardware configuration and defines a few class variables.
         """
         self.components = basics.load_hardware_config()
-        if self.components[1][0] is True:
+        if self.components[0][0] is True:
             import sense_hat
             self.sense = sense_hat.SenseHat()
         else: self.sense = None

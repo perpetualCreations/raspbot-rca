@@ -49,16 +49,14 @@ def connect() -> None:
     objects.process_camera_feed = objects.process.create_process(camera_render.render)
     print("[INFO]: Successfully connected to host!")
     objects.socket_main.setblocking(True) # blocking keeps on getting disabled
-    if objects.components[2][0]:
-        interface.send(b"rca-1.2:get_dock_status")
-        if acknowledge.receive_acknowledgement() is False:
-            print("[FAIL]: Closing connection due to failure to retrieve dock status...")
-            disconnect.disconnect()
-            return None
-        pass
-        objects.dock_status = objects.literal_eval(interface.receive().decode(encoding = "utf-8", errors = "replace"))
-        print("[INFO]: Updated dock status from host.")
+    interface.send(b"rca-1.2:get_dock_status")
+    if acknowledge.receive_acknowledgement() is False:
+        print("[FAIL]: Closing connection due to failure to retrieve dock status...")
+        disconnect.disconnect()
+        return None
     pass
+    objects.dock_status = objects.literal_eval(interface.receive().decode(encoding = "utf-8", errors = "replace"))
+    print("[INFO]: Updated dock status from host.")
     objects.messagebox.showinfo("Raspbot RCA: Connection Successful", "You are now connected to the bot." + "\n Bot IP (in case you want to use SSH): " + objects.host)
     objects.is_connected = True
 pass
