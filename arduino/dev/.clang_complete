@@ -1,0 +1,21 @@
+-IF:/RaspBot Rover/Raspbot RCA/arduino/dev/include
+-IF:/RaspBot Rover/Raspbot RCA/arduino/dev/src
+-IF:/RaspBot Rover/Raspbot RCA/arduino/dev/lib/vl53l0x-arduino-1.3.0
+-IC:/Users/tchen/.platformio/packages/framework-arduino-avr/libraries/Wire/src
+-IF:/RaspBot Rover/Raspbot RCA/arduino/dev/.pio/libdeps/uno/Servo/src
+-IC:/Users/tchen/.platformio/packages/framework-arduino-avr/cores/arduino
+-IC:/Users/tchen/.platformio/packages/framework-arduino-avr/variants/standard
+-IC:/Users/tchen/.platformio/packages/framework-arduino-avr/libraries/EEPROM/src
+-IC:/Users/tchen/.platformio/packages/framework-arduino-avr/libraries/HID/src
+-IC:/Users/tchen/.platformio/packages/framework-arduino-avr/libraries/SPI/src
+-IC:/Users/tchen/.platformio/packages/framework-arduino-avr/libraries/SoftwareSerial/src
+-IC:/Users/tchen/.platformio/packages/toolchain-atmelavr/lib/gcc/avr/7.3.0/include
+-IC:/Users/tchen/.platformio/packages/toolchain-atmelavr/lib/gcc/avr/7.3.0/include-fixed
+-IC:/Users/tchen/.platformio/packages/toolchain-atmelavr/avr/include
+-IC:/Users/tchen/.platformio/packages/tool-unity
+-DPLATFORMIO=50101
+-DARDUINO_AVR_UNO
+-DF_CPU=16000000L
+-DARDUINO_ARCH_AVR
+-DARDUINO=10808
+-D__AVR_ATmega328P__

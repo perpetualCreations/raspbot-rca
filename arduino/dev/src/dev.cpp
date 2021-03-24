@@ -4,35 +4,43 @@
 // development script
 
 #include <Arduino.h>
+#include <Wire.h>
+#include <VL53L0X.h>
 
 // Variable Declaration
 int incomingData;
 int accumulatorIndex = 0;
-char accumulator[64]; 
+char accumulator[64];
 int initialMotorSpeed = 200; // must be 0-255
-                       
+
+VL53L0X sensor;
+
 static float voltage_get() {
-    float raw = analogRead(5);
+    float raw = analogRead(3);
     return ((raw * 5.0000000) / 1024.000000) / (7.50/37.50);
 }
 
 void setup() {
     Serial.begin(9600);
-    
+    Wire.begin();
+
     // Reserved Motor Pins
     pinMode(12, OUTPUT);
     pinMode(13, OUTPUT);
 
     pinMode(3, OUTPUT);
     pinMode(11, OUTPUT);
-    
+
     pinMode(9, OUTPUT);
     pinMode(8, OUTPUT);
-    
+
     // Power Distribution System Control Pins
     pinMode(4, OUTPUT);
     pinMode(2, OUTPUT);
-    
+
+    // XSHUT of VL53L0X ToF Sensor
+    pinMode(7, OUTPUT);
+
     if (voltage_get() > 9.50) {
         // if battery voltage over 9.5, close motor power supply MOSFET and switch power relay to internal
         digitalWrite(2, HIGH);
@@ -47,6 +55,11 @@ void setup() {
     digitalWrite(8, HIGH);
     analogWrite(3, initialMotorSpeed);
     analogWrite(11, initialMotorSpeed);
+
+    // TOF Init
+    sensor.setTimeout(500);
+    sensor.init();
+    sensor.startContinuous(200000);
 }
 
 void loop() {
@@ -80,7 +93,7 @@ void loop() {
     }
 
     if (Serial.available() > 0) {
-        
+
         incomingData = Serial.read();
 
         if (incomingData == 0x0A) { // 0x0A is the decimal code for a newline character, when it's received, the accumulator is dumped and evaluated
@@ -92,19 +105,19 @@ void loop() {
                 Serial.write(converted_voltage);
                 Serial.write("\n");
             }
-            
+
             if (strcmp(accumulator, "(") == 0) {
                 digitalWrite(2, HIGH);
             }
-            
+
             if (strcmp(accumulator, ")") == 0) {
                 digitalWrite(2, LOW);
             }
-            
+
             if (strcmp(accumulator, "<") == 0) {
                 digitalWrite(4, HIGH);
             }
-            
+
             if (strcmp(accumulator, ">") == 0) {
                 digitalWrite(4, LOW);
             }
@@ -147,14 +160,14 @@ void loop() {
 
             if (strcmp(accumulator, "X") == 0) {
                 digitalWrite(8, HIGH);
-                
+
                 digitalWrite(12, HIGH);
                 digitalWrite(9, LOW);
             }
 
             if (strcmp(accumulator, "W") == 0) {
                 digitalWrite(8, HIGH);
-                
+
                 digitalWrite(12, LOW);
                 digitalWrite(9, LOW);
             }
@@ -162,7 +175,7 @@ void loop() {
             if (strcmp(accumulator, "S") == 0) {
                 digitalWrite(13, HIGH);
                 digitalWrite(8, LOW);
-                
+
                 digitalWrite(12, HIGH);
                 digitalWrite(9, LOW);
             }
@@ -170,13 +183,17 @@ void loop() {
             if (strcmp(accumulator, "C") == 0) {
                 digitalWrite(13, LOW);
                 digitalWrite(8, LOW);
-                
+
                 digitalWrite(12, LOW);
                 digitalWrite(9, LOW);
             }
 
             if (strcmp(accumulator, "T") == 0) {
-                Serial.write("9999\n"); // TODO time-of-flight distance sensor
+                Serial.print(sensor.readRangeSingleMillimeters());
+                if (sensor.timeoutOccurred()) {
+                    Serial.write("TIMEOUT");
+                }
+                Serial.write("\n");
             }
 
             char conditionalMotorSpeedChange[3] = {accumulator[0], accumulator[1]};

@@ -1,0 +1,8 @@
+{
+  "execPath": "C:/Users/tchen/.platformio/packages/toolchain-atmelavr/bin/avr-g++.exe",
+  "gccDefaultCFlags": "-fsyntax-only -std=gnu11 -fno-fat-lto-objects -Os -Wall -ffunction-sections -fdata-sections -flto -mmcu=atmega328p -DPLATFORMIO=50101 -DARDUINO_AVR_UNO -DF_CPU=16000000L -DARDUINO_ARCH_AVR -DARDUINO=10808 -D__AVR_ATmega328P__",
+  "gccDefaultCppFlags": "-fsyntax-only -fno-exceptions -fno-threadsafe-statics -fpermissive -std=gnu++11 -Os -Wall -ffunction-sections -fdata-sections -flto -mmcu=atmega328p -DPLATFORMIO=50101 -DARDUINO_AVR_UNO -DF_CPU=16000000L -DARDUINO_ARCH_AVR -DARDUINO=10808 -D__AVR_ATmega328P__",
+  "gccErrorLimit": 15,
+  "gccIncludePaths": "F:/RaspBot Rover/Raspbot RCA/arduino/dev/include,F:/RaspBot Rover/Raspbot RCA/arduino/dev/src,F:/RaspBot Rover/Raspbot RCA/arduino/dev/lib/vl53l0x-arduino-1.3.0,C:/Users/tchen/.platformio/packages/framework-arduino-avr/libraries/Wire/src,F:/RaspBot Rover/Raspbot RCA/arduino/dev/.pio/libdeps/uno/Servo/src,C:/Users/tchen/.platformio/packages/framework-arduino-avr/cores/arduino,C:/Users/tchen/.platformio/packages/framework-arduino-avr/variants/standard,C:/Users/tchen/.platformio/packages/framework-arduino-avr/libraries/EEPROM/src,C:/Users/tchen/.platformio/packages/framework-arduino-avr/libraries/HID/src,C:/Users/tchen/.platformio/packages/framework-arduino-avr/libraries/SPI/src,C:/Users/tchen/.platformio/packages/framework-arduino-avr/libraries/SoftwareSerial/src,C:/Users/tchen/.platformio/packages/toolchain-atmelavr/lib/gcc/avr/7.3.0/include,C:/Users/tchen/.platformio/packages/toolchain-atmelavr/lib/gcc/avr/7.3.0/include-fixed,C:/Users/tchen/.platformio/packages/toolchain-atmelavr/avr/include,C:/Users/tchen/.platformio/packages/tool-unity",
+  "gccSuppressWarnings": false
+}

@@ -26,17 +26,23 @@ with open("rca_upload_me_" + str(randint(1, 9999)) + ".cpp", "w") as script_expo
 #include <Arduino.h>
 """
 
+    if literal_eval(config["HARDWARE"]["distance"]):
+        script += """
+#include <Wire.h>
+#include <VL53L0X.h>
+
+VL53L0X sensor;
+"""
+
     script += """
 // Variable Declaration
 int incomingData;
 int accumulatorIndex = 0;
 char accumulator[64]; 
 int initialMotorSpeed = 200; // must be 0-255
-"""
-    if literal_eval(config["HARDWARE"]["charger"]):
-        script += """
+
 static float voltage_get() {
-    float raw = analogRead(5);
+    float raw = analogRead(3);
     return ((raw * 5.0000000) / 1024.000000) / (7.50/37.50);
 }
 """
@@ -53,10 +59,8 @@ void setup() {
     pinMode(11, OUTPUT);
     
     pinMode(9, OUTPUT);
-    pinMode(8, OUTPUT); """
-
-    if literal_eval(config["HARDWARE"]["charger"]):
-        script += """
+    pinMode(8, OUTPUT);
+    
     // Power Distribution System Control Pins
     pinMode(4, OUTPUT);
     pinMode(2, OUTPUT);
@@ -70,6 +74,18 @@ void setup() {
         digitalWrite(2, LOW);
         digitalWrite(4, HIGH);
     }
+    """
+
+    if literal_eval(config["HARDWARE"]["distance"]):
+        script += """
+    // XSHUT of VL53L0X ToF Sensor    
+    pinMode(7, OUTPUT);
+    
+    // TOF INIT
+    sensor.setTimeout(500);
+    sensor.init();
+    sensor.startContinuous(200000);
+    
     """
 
     script += """
@@ -213,11 +229,20 @@ void loop() {
                 digitalWrite(12, LOW);
                 digitalWrite(9, LOW);
             }
+            """
 
+    script += """
             if (strcmp(accumulator, "T") == 0) {
-                Serial.write("9999\\n"); // TODO time-of-flight distance sensor
+                Serial.print(sensor.readRangeSingleMillimeters());
+                if (sensor.timeoutOccurred()) {
+                    Serial.write("TIMEOUT");
+                }
+                Serial.write("\n");
             }
+            
+            """
 
+    script += """
             char conditionalMotorSpeedChange[3] = {accumulator[0], accumulator[1]};
 
             if (strcmp(conditionalMotorSpeedChange, "MS") == 0) {

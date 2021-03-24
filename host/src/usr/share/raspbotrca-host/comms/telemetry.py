@@ -10,7 +10,6 @@ from comms import objects, interface
 import telemetry
 from time import sleep
 
-
 # noinspection PyBroadException
 def stream() -> None:
     """
